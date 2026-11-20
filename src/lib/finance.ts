@@ -1,9 +1,16 @@
 export const currencies = ["EUR", "BGN", "USD", "GBP", "TRY", "CHF", "CAD", "AUD"] as const
 export const colours = ["green", "blue", "orange", "purple", "rose", "grey"] as const
 export const icons = ["wallet", "basket", "utensils", "bus", "home", "heart", "bolt", "briefcase"] as const
+export const profileColours = ["green", "blue", "orange", "purple", "rose", "teal", "amber", "slate"] as const
+export const profileIcons = ["user", "home", "company", "bank", "briefcase", "wallet", "shop", "group"] as const
+export const MAX_PROFILES = 50
 export type Currency = typeof currencies[number]
 export type Theme = "light" | "dark" | "system"
 export type Kind = "expense" | "income"
+export type ProfileColour = typeof profileColours[number]
+export type ProfileIcon = typeof profileIcons[number]
+export type Profile = { id: string; name: string; colour: ProfileColour; icon: ProfileIcon }
+export type NewProfile = Omit<Profile, "id">
 export type Category = { id: string; name: string; kind: Kind; colour: typeof colours[number]; icon: typeof icons[number] }
 export type Entry = { id: string; kind: Kind; name: string; amount: number; date: string; category: string; account: string; notes: string }
 export type Budget = { id: string; category: string; amount: number }
@@ -18,6 +25,8 @@ export type Data = {
   contributions: Contribution[]
   preferences: Preferences
 }
+
+export const defaultProfile: Profile = { id: "personal", name: "Personal", colour: "green", icon: "user" }
 
 export const MAX_AMOUNT = 99_999_999_999
 export const defaultPreferences: Preferences = { currency: "EUR", theme: "light", reducedMotion: null }
