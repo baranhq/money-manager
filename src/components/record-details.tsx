@@ -19,8 +19,8 @@ export function EntryDetail({ row, data, close, edit, remove }: {
 }) {
   return <Modal title={row.name} description={row.kind === "expense" ? "Expense details" : "Income details"} close={close}>
     <Details rows={[
-      ["Amount", money(row.kind === "expense" ? -row.amount : row.amount, data.preferences.currency)],
-      ["Date", dateLabel(row.date)], ["Category", data.categories.find(item => item.id === row.category)?.name ?? ""],
+      ["Amount", money(row.kind === "expense" ? -row.amount : row.amount, data.preferences)],
+      ["Date", dateLabel(row.date, undefined, data.preferences)], ["Category", data.categories.find(item => item.id === row.category)?.name ?? ""],
       ["Account", row.account], ...(row.notes ? [["Notes", row.notes] as [string, string]] : []),
     ]} />
     <div className="flex justify-end gap-2"><Button variant="outline" onClick={remove}>Delete</Button><Button onClick={edit}>Edit transaction</Button></div>
@@ -31,10 +31,10 @@ export function BudgetDetail({ row, data, month, close, edit, remove }: {
   row: Budget; data: Data; month: string; close: () => void; edit: () => void; remove: () => void
 }) {
   const spent = spending(data, month).get(row.category) ?? 0
-  const currency = data.preferences.currency
+  const preferences = data.preferences
   return <Modal title={data.categories.find(item => item.id === row.category)?.name ?? "Budget"} description="Spending for the selected reporting month." close={close}>
-    <Details rows={[["Monthly limit", money(row.amount, currency)], ["Spent", money(spent, currency)],
-      [spent > row.amount ? "Over limit" : "Remaining", money(Math.abs(row.amount - spent), currency)]]} />
+    <Details rows={[["Monthly limit", money(row.amount, preferences)], ["Spent", money(spent, preferences)],
+      [spent > row.amount ? "Over limit" : "Remaining", money(Math.abs(row.amount - spent), preferences)]]} />
     <div className="text-primary"><Meter label="Budget used" amount={spent} target={row.amount} /></div>
     <div className="flex justify-end gap-2"><Button variant="outline" onClick={remove}>Remove</Button><Button onClick={edit}>Edit budget</Button></div>
   </Modal>
@@ -45,19 +45,19 @@ export function GoalDetail({ row, data, close, edit, remove, contribute, editCon
   editContribution: (row: Contribution) => void; removeContribution: (row: Contribution) => void
 }) {
   const total = goalSaved(data, row.id)
-  const currency = data.preferences.currency
+  const preferences = data.preferences
   const contributions = data.contributions.filter(item => item.goal === row.id).sort((a, b) => b.date.localeCompare(a.date))
-  return <Modal title={row.name} description={row.date ? `Savings pot · target ${dateLabel(row.date)}` : "Savings pot · no target date"} close={close}>
-    <Details rows={[["Current balance", money(total, currency)], ...(row.amount !== null ? [["Target amount", money(row.amount, currency)] as [string, string]] : []), ...(row.notes ? [["Notes", row.notes] as [string, string]] : [])]} />
+  return <Modal title={row.name} description={row.date ? `Savings pot · target ${dateLabel(row.date, undefined, preferences)}` : "Savings pot · no target date"} close={close}>
+    <Details rows={[["Current balance", money(total, preferences)], ...(row.amount !== null ? [["Target amount", money(row.amount, preferences)] as [string, string]] : []), ...(row.notes ? [["Notes", row.notes] as [string, string]] : [])]} />
     {row.amount !== null && <div className="text-primary"><Meter label="Savings pot target progress" amount={total} target={row.amount} /></div>}
     <div className="flex items-center justify-between gap-2"><h3 className="font-semibold">Transfer history</h3>
       <Menu label="Savings pot actions" actions={[{ label: "Edit pot", run: edit }, { label: "Delete pot", run: remove, destructive: true }]} />
     </div>
     {contributions.length ? <ul className="max-h-56 divide-y overflow-auto rounded-lg border">
       {contributions.map(item => <li className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm" key={item.id}>
-        <div className="min-w-0"><p className="font-medium tabular-nums">{contributionDelta(item) > 0 ? "+" : "−"}{money(item.amount, currency)} · {item.direction === "deposit" ? "Added" : "Taken out"}</p>
-          <p className="break-words text-xs text-muted-foreground">{dateLabel(item.date)}{item.notes && ` · ${item.notes}`}</p></div>
-        <Menu label={`Transfer on ${dateLabel(item.date)}`} actions={[
+        <div className="min-w-0"><p className="font-medium tabular-nums">{contributionDelta(item) > 0 ? "+" : "−"}{money(item.amount, preferences)} · {item.direction === "deposit" ? "Added" : "Taken out"}</p>
+          <p className="break-words text-xs text-muted-foreground">{dateLabel(item.date, undefined, preferences)}{item.notes && ` · ${item.notes}`}</p></div>
+        <Menu label={`Transfer on ${dateLabel(item.date, undefined, preferences)}`} actions={[
           { label: "Edit transfer", run: () => editContribution(item) }, { label: "Remove transfer", run: () => removeContribution(item), destructive: true },
         ]} /></li>)}
     </ul> : <p className="text-sm text-muted-foreground">No transfers yet.</p>}

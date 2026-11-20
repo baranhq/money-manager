@@ -48,6 +48,7 @@ test("backup rejects too many records, duplicate identifiers and an incompatible
 
 test("backup rejects repeated keys and an excess of JSON containers before schema validation", () => {
   const valid = serialiseBackup(initialData())
-  assert.throws(() => parseBackup(valid.replace('"version":1', '"version":99,"versi\\u006fn":1')), /repeated/i)
+  const version = JSON.parse(valid).version
+  assert.throws(() => parseBackup(valid.replace(`"version":${version}`, '"version":99,"versi\\u006fn":1')), /repeated/i)
   assert.throws(() => parseBackup("[" + Array(10_020).fill("{}").join(",") + "]"), /too many/i)
 })

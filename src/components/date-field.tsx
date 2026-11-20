@@ -5,11 +5,12 @@ import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { dateLabel, isDate, today } from "@/lib/finance"
+import { dateLabel, isDate, today, weekStart, type Preferences } from "@/lib/finance"
 
 type DateFieldProps = {
   label: string
   name: string
+  preferences: Preferences
   required?: boolean
   value?: string
   defaultValue?: string
@@ -51,12 +52,7 @@ function withinBounds(value: string, min?: string, max?: string) {
   return value
 }
 
-const weekdays = Array.from({ length: 7 }, (_, index) => {
-  const date = new Date(Date.UTC(2024, 0, 1 + index))
-  return new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "UTC" }).format(date)
-})
-
-export function DateField({ label, name, required = false, value: controlledValue, defaultValue = "", min, max, onChange }: DateFieldProps) {
+export function DateField({ label, name, preferences, required = false, value: controlledValue, defaultValue = "", min, max, onChange }: DateFieldProps) {
   const id = useId()
   const triggerId = `${id}-trigger`
   const errorId = `${id}-error`
@@ -84,10 +80,13 @@ export function DateField({ label, name, required = false, value: controlledValu
   }, [focusedDate, open, viewMonth])
 
   const selectedDate = isDate(value) ? value : ""
-  const monthLabel = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }).format(viewMonth)
+  const monthLabel = new Intl.DateTimeFormat(preferences.locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(viewMonth)
   const first = firstOfMonth(viewMonth)
-  const mondayOffset = (first.getUTCDay() + 6) % 7
-  const gridStart = shiftDay(first, -mondayOffset)
+  const weekOffset = (first.getUTCDay() - weekStart(preferences.locale) + 7) % 7
+  const gridStart = shiftDay(first, -weekOffset)
+  const weekdayFormatter = new Intl.DateTimeFormat(preferences.locale, { weekday: "short", timeZone: "UTC" })
+  const weekdayNames = Array.from({ length: 7 }, (_, index) => weekdayFormatter.format(new Date(Date.UTC(2024, 0, 7 + index))))
+  const weekdays = [...weekdayNames.slice(weekStart(preferences.locale)), ...weekdayNames.slice(0, weekStart(preferences.locale))]
   const days = Array.from({ length: 42 }, (_, index) => shiftDay(gridStart, index))
   const previousMonth = shiftMonth(viewMonth, -1)
   const nextMonth = shiftMonth(viewMonth, 1)
@@ -138,12 +137,13 @@ export function DateField({ label, name, required = false, value: controlledValu
 
   function handleDayKeyDown(event: KeyboardEvent<HTMLButtonElement>, date: Date) {
     let next: Date | undefined
+    const dayOfWeek = (date.getUTCDay() - weekStart(preferences.locale) + 7) % 7
     if (event.key === "ArrowLeft") next = shiftDay(date, -1)
     else if (event.key === "ArrowRight") next = shiftDay(date, 1)
     else if (event.key === "ArrowUp") next = shiftDay(date, -7)
     else if (event.key === "ArrowDown") next = shiftDay(date, 7)
-    else if (event.key === "Home") next = shiftDay(date, -((date.getUTCDay() + 6) % 7))
-    else if (event.key === "End") next = shiftDay(date, 6 - ((date.getUTCDay() + 6) % 7))
+    else if (event.key === "Home") next = shiftDay(date, -dayOfWeek)
+    else if (event.key === "End") next = shiftDay(date, 6 - dayOfWeek)
     else if (event.key === "PageUp") next = shiftDateMonth(date, event.shiftKey ? -12 : -1)
     else if (event.key === "PageDown") next = shiftDateMonth(date, event.shiftKey ? 12 : 1)
     if (!next) return
@@ -185,7 +185,7 @@ export function DateField({ label, name, required = false, value: controlledValu
           className="flex h-9 w-full min-w-0 items-center justify-between gap-3 rounded-md border border-input bg-transparent px-3 py-1 text-left text-sm shadow-xs outline-none transition-[color,box-shadow] hover:bg-accent/40 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-[3px] aria-invalid:ring-destructive/20 max-md:h-11"
         >
           <span className={selectedDate ? "truncate" : "truncate text-muted-foreground"}>
-            {selectedDate ? dateLabel(selectedDate) : "Choose a date"}
+            {selectedDate ? dateLabel(selectedDate, undefined, preferences) : "Choose a date"}
           </span>
           <CalendarDays aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         </button>
@@ -227,7 +227,7 @@ export function DateField({ label, name, required = false, value: controlledValu
                   type="button"
                   ref={element => { if (element) dayRefs.current.set(day, element); else dayRefs.current.delete(day) }}
                   tabIndex={day === focusedDate ? 0 : -1}
-                  aria-label={dateLabel(day, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+                  aria-label={dateLabel(day, { weekday: "long", day: "numeric", month: "long", year: "numeric" }, preferences)}
                   aria-pressed={isSelected}
                   aria-current={isToday ? "date" : undefined}
                   disabled={disabled}

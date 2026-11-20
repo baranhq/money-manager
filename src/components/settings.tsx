@@ -1,14 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
-import { CategoryIcon, Choose, Empty, ErrorText, Menu, Modal, type Commit } from "@/components/shared"
-import { currencies, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
+import { CategoryIcon, Choose, Empty, ErrorText, Field, Menu, Modal, type Commit } from "@/components/shared"
+import { canonicalLocale, currencies, currencyDigits, dateLabel, money, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
 import type { DataTool } from "@/components/data-tools"
 import { Profiles } from "@/components/profiles"
 import { SecuritySettings, type SecurityStatus } from "@/components/security-settings"
@@ -39,6 +39,21 @@ const heading = {
 
 export type SettingsPage = keyof typeof heading | "settings"
 
+const localePresets = [
+  "en-GB", "en-US", "en-IE", "en-CA", "en-AU", "bg-BG", "tr-TR", "de-DE", "de-AT", "de-CH",
+  "fr-FR", "fr-CA", "fr-CH", "es-ES", "es-MX", "pt-PT", "pt-BR", "it-IT", "nl-NL", "pl-PL",
+  "ro-RO", "el-GR", "ru-RU", "uk-UA", "ar-SA", "ar-EG", "hi-IN", "bn-BD", "ja-JP", "ko-KR",
+  "zh-CN", "zh-TW", "id-ID", "th-TH", "vi-VN", "he-IL", "fa-IR", "ur-PK", "sr-Latn-RS",
+  "hr-HR", "no-NO", "da-DK", "sv-SE", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "sl-SI", "et-EE",
+  "lv-LV", "lt-LT", "is-IS", "ga-IE", "cy-GB", "mt-MT", "sq-AL", "mk-MK", "bs-BA", "hy-AM",
+  "ka-GE", "az-AZ", "uz-UZ", "kk-KZ", "sw-KE", "ta-IN", "te-IN", "zh-HK",
+] as const
+const localeLabels = new Intl.DisplayNames(["en-GB"], { type: "language" })
+const localeOptions: readonly (readonly [string, string])[] = [
+  ...localePresets.map(locale => [locale, `${localeLabels.of(locale) ?? locale} · ${locale}`] as const),
+  ["custom", "Custom locale tag…"],
+]
+
 export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
@@ -50,16 +65,27 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
   const [note, setNote] = useState<"about" | "storage">()
   const [error, setError] = useState("")
   const [saving, setSaving] = useState(false)
+  const [localeDraft, setLocaleDraft] = useState(data.preferences.locale)
+  const [customLocaleOpen, setCustomLocaleOpen] = useState(!localePresets.includes(data.preferences.locale as typeof localePresets[number]))
   const preference = data.preferences
-  const hasMoney = Boolean(data.entries.length || data.budgets.length || data.goals.length)
-  const names = new Intl.DisplayNames(["en-GB"], { type: "currency" })
+  const hasMoney = Boolean(data.entries.length || data.budgets.length || data.goals.length || data.contributions.length)
+  const names = new Intl.DisplayNames([preference.locale], { type: "currency" })
+  const currencyOptions = [...new Set([preference.currency, ...currencies])].sort().map(currency => [
+    currency,
+    `${currency} · ${names.of(currency) ?? currency}${currency === "BGN" ? " (historic)" : ""}`,
+  ] as const)
+
+  useEffect(() => {
+    setLocaleDraft(preference.locale)
+    setCustomLocaleOpen(!localePresets.includes(preference.locale as typeof localePresets[number]))
+  }, [preference.locale])
 
   async function save(patch: Partial<Data["preferences"]>) {
     setSaving(true)
     setError("")
     try {
       await commit(current => {
-        if (patch.currency && patch.currency !== current.preferences.currency && (current.entries.length || current.budgets.length || current.goals.length)) {
+        if (patch.currency && patch.currency !== current.preferences.currency && (current.entries.length || current.budgets.length || current.goals.length || current.contributions.length)) {
           throw new Error("Back up and clear the current ledger before changing its currency.")
         }
         return { ...current, preferences: { ...current.preferences, ...patch } }
@@ -67,6 +93,14 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : "The preference could not be saved.")
     } finally { setSaving(false) }
+  }
+
+  function applyLocale() {
+    const locale = canonicalLocale(localeDraft)
+    if (!locale) { setError("Enter a valid locale tag, such as tr-TR or fr-CA."); return }
+    setLocaleDraft(locale)
+    setCustomLocaleOpen(!localePresets.includes(locale as typeof localePresets[number]))
+    if (!saving && locale !== preference.locale) void save({ locale })
   }
 
   return <div className="max-w-3xl space-y-6">
@@ -95,6 +129,51 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
           {preference.reducedMotion !== null && <Button variant="ghost" className="self-start" size="sm" disabled={saving} onClick={() => void save({ reducedMotion: null })}>Use system motion setting</Button>}
         </Card>
       </section>
+      <section className="space-y-3"><h2 className="text-lg font-semibold">Currency & formats</h2>
+        <Card className="gap-4 p-4 shadow-none sm:p-5">
+          <p className="text-sm text-muted-foreground">Choose how amounts and dates appear. The interface language stays English.</p>
+          {hasMoney ? <div className="grid gap-2">
+            <p className="text-sm font-medium">Ledger currency</p>
+            <p className="text-sm font-medium">{preference.currency} · {names.of(preference.currency) ?? preference.currency}</p>
+            <p className="text-xs text-muted-foreground">Currency is fixed once amounts are recorded. Back up and clear the ledger to start again in another currency; this setting does not convert amounts.</p>
+          </div> : <Choose label="Ledger currency" value={preference.currency} options={currencyOptions}
+            onChange={currency => { if (!saving) void save({ currency: currency as Currency, currencyDigits: currencyDigits(currency) }) }} />}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid min-w-0 gap-2">
+              <Choose label="Formatting locale" value={customLocaleOpen ? "custom" : preference.locale} options={localeOptions}
+                onChange={value => {
+                  if (value === "custom") { setCustomLocaleOpen(true); setLocaleDraft(preference.locale); return }
+                  setCustomLocaleOpen(false)
+                  setLocaleDraft(value)
+                  if (!saving) void save({ locale: value })
+                }} />
+              {customLocaleOpen && <div className="grid gap-2">
+                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                  <Field label="Custom locale tag" name="custom-locale" value={localeDraft} maxLength={64} placeholder="e.g. tr-TR"
+                    onChange={event => setLocaleDraft(event.target.value)} />
+                  <Button type="button" variant="outline" disabled={saving || !localeDraft.trim()} onClick={applyLocale}>Apply locale</Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Use a locale tag such as tr-TR, fr-CA or sr-Latn-RS.</p>
+              </div>}
+            </div>
+            <Choose label="Date format" value={preference.dateFormat} options={[
+              ["regional", "Use locale format"], ["dmy", "DD/MM/YYYY"], ["mdy", "MM/DD/YYYY"], ["ymd", "YYYY-MM-DD"],
+            ]} onChange={value => { if (!saving) void save({ dateFormat: value as Data["preferences"]["dateFormat"] }) }} />
+            <Choose label="Number separators" value={preference.numberFormat} options={[
+              ["regional", "Use locale format"], ["period", "1,234.56"], ["comma", "1.234,56"], ["space", "1 234,56"],
+            ]} onChange={value => { if (!saving) void save({ numberFormat: value as Data["preferences"]["numberFormat"] }) }} />
+            <Choose label="Currency display" value={preference.currencyDisplay} options={[
+              ["symbol", "Local currency symbol"], ["code", "ISO currency code"],
+            ]} onChange={value => { if (!saving) void save({ currencyDisplay: value as Data["preferences"]["currencyDisplay"] }) }} />
+          </div>
+          <div className="rounded-lg bg-accent/55 p-3">
+            <p className="text-xs font-medium text-muted-foreground">Live preview</p>
+            <p className="mt-1 break-words font-semibold tabular-nums">{money(1_234 * 10 ** preference.currencyDigits + (preference.currencyDigits ? 5 * 10 ** (preference.currencyDigits - 1) : 0), preference)}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{dateLabel("2026-11-20", undefined, preference)}</p>
+          </div>
+          <p className="text-xs text-muted-foreground">The currency sets its standard decimal places and symbol placement. Locale and separator choices control grouping, decimal marks and date order.</p>
+        </Card>
+      </section>
       <section className="space-y-3"><h2 className="text-lg font-semibold">Manage</h2>
         <Rows rows={[
           { title: "Profiles", description: "Switch ledgers or personalise a profile.", icon: UsersRound, href: "#accounts" },
@@ -104,14 +183,6 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
           { title: "Privacy & storage", description: "See what is stored on this device.", icon: ShieldCheck, href: "#storage" },
           { title: "About & legal", description: "App information, privacy and licences.", icon: Info, href: "#about" },
         ]} />
-      </section>
-      <section className="space-y-3"><h2 className="text-lg font-semibold">Currency</h2>
-        <Card className="gap-3 p-4 shadow-none">
-          {hasMoney ? <p className="text-sm"><strong>{preference.currency}</strong> · {names.of(preference.currency)}</p> :
-            <Choose label="Ledger currency" value={preference.currency} options={currencies.map(currency => [currency, `${currency} · ${names.of(currency)}`])}
-              onChange={currency => { if (!saving) void save({ currency: currency as Currency }) }} />}
-          <p className="text-sm text-muted-foreground">{hasMoney ? "To change currency, download a backup and clear the current ledger first." : "Use one currency for all amounts in this ledger."}</p>
-        </Card>
       </section>
       <ErrorText message={error} />
     </>}

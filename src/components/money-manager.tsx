@@ -64,10 +64,10 @@ function MonthControl({ month, setMonth, data }: { month: string; setMonth: (mon
   ])].sort().reverse().slice(0, 36)
   return <Popover open={open} onOpenChange={setOpen}>
     <PopoverTrigger asChild><Button variant="outline" className="min-h-10 justify-between gap-3 bg-card max-md:min-h-11">
-      <CalendarDays /> <span>{monthName(month, true)}</span><ChevronDown aria-hidden="true" />
+      <CalendarDays /> <span>{monthName(month, true, data.preferences)}</span><ChevronDown aria-hidden="true" />
     </Button></PopoverTrigger>
     <PopoverContent align="end" className="grid w-64 gap-4">
-      <Choose label="Reporting month" value={months.includes(month) ? month : ""} options={months.map(value => [value, monthName(value)])}
+      <Choose label="Reporting month" value={months.includes(month) ? month : ""} options={months.map(value => [value, monthName(value, false, data.preferences)])}
         onChange={value => { setMonth(value); setOpen(false) }} />
       <Field label="Choose another month" name="month" type="month" min="1001-01" max="9998-12" value={month}
         onChange={event => {
@@ -380,7 +380,7 @@ export function MoneyManager() {
       <div className="mx-auto max-w-[1400px]">
         <header className={cn("relative mb-3 flex flex-wrap items-start justify-between gap-2 md:mb-4 md:gap-3", !hasHeader && "justify-end md:hidden")}>
           {hasHeader && <div className="max-md:pr-36"><h1 className="text-[1.85rem] leading-tight font-semibold tracking-[-0.035em] sm:text-[2.25rem]">{title}</h1>
-            {route === "overview" && <p className="mt-1 hidden text-sm text-muted-foreground sm:block" suppressHydrationWarning>{dateLabel(today(), { weekday: "long", day: "numeric", month: "long" })}</p>}
+            {route === "overview" && <p className="mt-1 hidden text-sm text-muted-foreground sm:block" suppressHydrationWarning>{dateLabel(today(), { weekday: "long", day: "numeric", month: "long" }, data?.preferences)}</p>}
           </div>}
           <div className={cn("ml-auto md:hidden", hasHeader && "absolute top-0 right-0")}><AccountMenu mobile profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} /></div>
           {report && data && <div className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-auto md:pt-2">

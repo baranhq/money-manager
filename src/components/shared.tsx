@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
-import { dateLabel, money, percent, type Category, type Currency, type Data, type Entry } from "@/lib/finance"
+import { dateLabel, money, percent, type Category, type Data, type Entry, type Preferences } from "@/lib/finance"
 
 export type Commit = (change: (data: Data) => Data, message: string) => Promise<void>
 export type Action = { label: string; run: () => void; destructive?: boolean }
@@ -161,9 +161,9 @@ export function Meter({ amount, target, label }: { amount: number; target: numbe
   </div>
 }
 
-export function Signed({ entry, currency }: { entry: Entry; currency: Currency }) {
+export function Signed({ entry, preferences }: { entry: Entry; preferences: Preferences }) {
   return <span className={cn("whitespace-nowrap font-semibold tabular-nums", entry.kind === "income" && "text-primary")}>
-    {entry.kind === "income" ? "+" + money(entry.amount, currency) : money(-entry.amount, currency)}
+    {entry.kind === "income" ? "+" + money(entry.amount, preferences) : money(-entry.amount, preferences)}
   </span>
 }
 
@@ -179,11 +179,11 @@ export function Metric({ label, value, detail, direction }: { label: string; val
   </div>
 }
 
-export function EntryCaption({ entry, category, showDate = false }: { entry: Entry; category?: Category; showDate?: boolean }) {
+export function EntryCaption({ entry, category, preferences, showDate = false }: { entry: Entry; category?: Category; preferences: Preferences; showDate?: boolean }) {
   return <span className="flex min-w-0 items-center gap-2.5 text-left">
     <CategoryIcon category={category} />
     <span className="min-w-0"><span className="block truncate font-medium">{entry.name}</span>
-      <span className="block truncate text-xs text-muted-foreground">{category?.name}{showDate && ` · ${dateLabel(entry.date, { day: "numeric", month: "short" })}`}</span>
+      <span className="block truncate text-xs text-muted-foreground">{category?.name}{showDate && ` · ${dateLabel(entry.date, { day: "numeric", month: "short" }, preferences)}`}</span>
     </span>
   </span>
 }

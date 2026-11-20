@@ -121,7 +121,7 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
     await commit(current => {
       if (JSON.stringify(current) !== JSON.stringify(review.before)) throw new Error("Local records changed. Choose the file again to refresh the preview.")
       return mode === "restore" && replace
-        ? { ...preview, preferences: { ...current.preferences, currency: preview.preferences.currency } }
+        ? { ...preview, preferences: { ...current.preferences, currency: preview.preferences.currency, currencyDigits: preview.preferences.currencyDigits } }
         : preview
     }, mode === "restore" ? "Backup applied" : `${review.rows?.length ?? 0} transactions imported`)
   }
@@ -180,20 +180,20 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
     </>}
     {review && <>
       {mode === "restore" && !recover && <Choose label="How should the backup be applied?" options={[["merge", "Merge with local records"], ["replace", "Replace local records"]]} value={strategy} onChange={value => { setStrategy(value); setConfirmation(false); setTyped("") }} />}
-      {mode === "restore" && <p className="text-sm text-muted-foreground">Compatible backup · Version 1 · {review.incoming.preferences.currency}</p>}
+      {mode === "restore" && <p className="text-sm text-muted-foreground">Compatible backup · {review.incoming.preferences.currency}</p>}
       {preview && <section className="grid gap-2"><h3 className="text-sm font-semibold">{recover ? "Backup contents" : "Current → after changes"}</h3>
         <Counts before={recover ? preview : review.before} after={recover ? undefined : preview} /></section>}
       <ErrorText message={previewError} />
       {review.rows && <>
         <p className="text-sm">{review.rows.length} new · {review.duplicates} duplicate{review.duplicates === 1 ? "" : "s"} skipped</p>
         <p className="text-sm text-muted-foreground">
-          Income {money(review.rows.reduce((sum, row) => sum + (row.kind === "income" ? row.amount : 0), 0), data.preferences.currency)} ·
-          Expenses {money(review.rows.reduce((sum, row) => sum + (row.kind === "expense" ? row.amount : 0), 0), data.preferences.currency)}
+          Income {money(review.rows.reduce((sum, row) => sum + (row.kind === "income" ? row.amount : 0), 0), data.preferences)} ·
+          Expenses {money(review.rows.reduce((sum, row) => sum + (row.kind === "expense" ? row.amount : 0), 0), data.preferences)}
         </p>
         {!review.rows.length && <p className="text-sm text-muted-foreground">No new transactions to import.</p>}
         {review.rows.length > 0 && <ul className="max-h-40 divide-y overflow-auto rounded-md border">
           {review.rows.slice(0, 12).map(row => <li key={row.id} className="px-3 py-2 text-sm">
-            <p className="break-words font-medium">{row.name} · {money(row.amount, data.preferences.currency)}</p>
+            <p className="break-words font-medium">{row.name} · {money(row.amount, data.preferences)}</p>
             <p className="text-xs text-muted-foreground">{row.date} · {row.kind} · {data.categories.find(category => category.id === row.category)?.name} · {row.account}</p>
           </li>)}
         </ul>}
@@ -229,7 +229,7 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
     }}>
       <Choose label="Date range" options={[["month", "One month"], ["custom", "Custom range"]]} value={scope} onChange={setScope} />
       {scope === "custom" ? <div className="grid grid-cols-2 gap-3">
-        <DateField name="start" label="From" required /><DateField name="end" label="To" required />
+        <DateField name="start" label="From" preferences={data.preferences} required /><DateField name="end" label="To" preferences={data.preferences} required />
       </div> : <Field name="month" label="Month" type="month" value={month} onChange={event => setMonth(event.target.value)} required />}
       <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
         <input type="checkbox" checked={protectCsv} onChange={event => setProtectCsv(event.target.checked)} className="mt-0.5 size-4 accent-primary" />
