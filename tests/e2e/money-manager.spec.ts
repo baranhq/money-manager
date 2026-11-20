@@ -1,0 +1,213 @@
+import { expect, test, type Page } from "@playwright/test"
+
+const desktop = { width: 1440, height: 1024 }
+const tablet = { width: 1024, height: 1024 }
+const mobile = { width: 390, height: 844 }
+
+async function pick(page: Page, label: string, value: string) {
+  await page.getByRole("combobox", { name: label, exact: true }).click()
+  await page.getByRole("option", { name: value, exact: true }).click()
+}
+
+async function openEntry(page: Page, kind: "Expense" | "Income") {
+  await page.getByRole("button", { name: "Add transaction", exact: true }).first().click()
+  await page.getByRole("dialog").getByRole("button", { name: kind, exact: true }).click()
+}
+
+async function addEntry(page: Page, kind: "Expense" | "Income", name: string, amount: string) {
+  await openEntry(page, kind)
+  await page.getByLabel("Amount (EUR)").fill(amount)
+  await page.getByLabel(kind === "Expense" ? "Merchant or description" : "Income description").fill(name)
+  await pick(page, "Category", kind === "Expense" ? "Groceries" : "Salary")
+  await page.getByRole("button", { name: `Save ${kind.toLowerCase()}` }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+}
+
+test("amounts, transaction search, edit and removal persist across reload without transmitting ledger data", async ({ page }) => {
+  await page.setViewportSize(desktop)
+  const writes: string[] = []
+  const external: string[] = []
+  page.on("request", request => {
+    if (!request.url().startsWith("http://127.0.0.1:3210/")) external.push(request.url())
+    if (request.method() !== "GET" || request.url().includes("BrowserPrivateMerchant")) writes.push(request.url())
+  })
+  const response = await page.goto("/")
+  expect(response?.headers()["content-security-policy"]).toMatch(/script-src 'self' 'nonce-[^']+' 'strict-dynamic'/)
+  expect(response?.headers()["content-security-policy"]).not.toContain("unsafe-eval")
+  expect(response?.headers()["content-security-policy"]).toContain("connect-src 'none'")
+  await addEntry(page, "Income", "Local income", "400.20")
+  await addEntry(page, "Expense", "BrowserPrivateMerchant", "0.10")
+  await expect(page.getByText("€400.10", { exact: true })).toBeVisible()
+  await page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Activity" }).click()
+  await page.getByRole("searchbox", { name: "Search activity" }).fill("missing")
+  await expect(page.getByText("No matching transactions")).toBeVisible()
+  await page.getByRole("searchbox", { name: "Search activity" }).fill("browserprivate")
+  await expect(page.getByRole("status").filter({ hasText: "1 matching transaction" })).toBeVisible()
+  await page.getByRole("button", { name: "Actions for BrowserPrivateMerchant" }).click()
+  await page.getByRole("menuitem", { name: "Edit transaction" }).click()
+  await page.getByLabel("Amount (EUR)").fill("0.30")
+  await page.getByRole("button", { name: "Save changes" }).click()
+  await expect(page.getByRole("status").filter({ hasText: "Transaction updated" })).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole("cell", { name: "-€0.30", exact: true })).toBeVisible()
+  await page.getByRole("button", { name: "Actions for BrowserPrivateMerchant" }).click()
+  await page.getByRole("menuitem", { name: "Delete transaction" }).click()
+  await expect(page.getByRole("button", { name: "Cancel", exact: true })).toBeFocused()
+  await page.getByRole("button", { name: "Delete", exact: true }).click()
+  await expect(page.getByRole("table")).not.toHaveText(/BrowserPrivateMerchant/)
+  expect(writes).toEqual([])
+  expect(external).toEqual([])
+})
+
+test("monthly budget and goal progress use saved transactions and contributions", async ({ page }) => {
+  await page.setViewportSize(tablet)
+  await page.goto("/")
+  await addEntry(page, "Expense", "Food shop", "15.50")
+  await page.locator('nav[aria-label="Main navigation"]').getByRole("link", { name: "Budgets" }).click()
+  await page.getByRole("button", { name: "New budget", exact: true }).first().click()
+  await pick(page, "Category", "Groceries")
+  await page.getByLabel("Monthly limit (EUR)").fill("100")
+  await page.getByRole("button", { name: "Create budget" }).click()
+  await expect(page.getByText("€84.50", { exact: true })).toBeVisible()
+  await page.locator('nav[aria-label="Main navigation"]').getByRole("link", { name: "Savings" }).click()
+  await page.getByRole("button", { name: "New goal", exact: true }).first().click()
+  await page.getByLabel("Goal name").fill("Holiday")
+  await page.getByLabel("Target amount (EUR)").fill("200")
+  await page.getByRole("button", { name: "Create goal" }).click()
+  await page.getByRole("button", { name: "Add money", exact: true }).first().click()
+  await page.getByLabel("Amount (EUR)").fill("40")
+  await page.getByRole("button", { name: "Add contribution", exact: true }).click()
+  await expect(page.getByText("20% of €200.00 target")).toBeVisible()
+  await page.getByRole("button", { name: "Holiday", exact: true }).click()
+  await expect(page.getByRole("heading", { name: "Contribution history" })).toBeVisible()
+})
+
+test("backup review, duplicate merge, incompatible-file rejection and typed restore are atomic", async ({ page }) => {
+  await page.setViewportSize(desktop)
+  await page.goto("/")
+  await addEntry(page, "Expense", "Backup entry", "12.34")
+  await page.goto("/#data")
+  await page.getByRole("button", { name: "Download backup" }).click()
+  const downloaded = page.waitForEvent("download")
+  await page.getByRole("button", { name: "Download JSON backup" }).click()
+  const file = await (await downloaded).path()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+
+  const restore = async () => {
+    await page.getByRole("button", { name: "Restore from backup" }).click()
+    return page.getByRole("dialog")
+  }
+  let dialog = await restore()
+  await dialog.getByLabel("Import file").setInputFiles({ name: "incompatible.json", mimeType: "application/json", buffer: Buffer.from('{"app":"money-manager","version":9,"data":{}}') })
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await expect(dialog.getByRole("alert")).toContainText("unsupported")
+  await dialog.getByLabel("Import file").setInputFiles(file)
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await expect(dialog.getByText("Compatible backup", { exact: false })).toBeVisible()
+  await dialog.getByRole("button", { name: "Merge backup" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await page.getByRole("button", { name: "Clear local data" }).click()
+  dialog = page.getByRole("alertdialog")
+  await expect(dialog.getByRole("button", { name: "Clear local data" })).toBeDisabled()
+  await dialog.getByLabel("Type CLEAR to confirm").fill("CLEAR")
+  await dialog.getByRole("button", { name: "Clear local data" }).click()
+  dialog = await restore()
+  await dialog.getByLabel("Import file").setInputFiles(file)
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await pick(page, "How should the backup be applied?", "Replace local records")
+  await dialog.getByRole("button", { name: "Continue to replacement" }).click()
+  await expect(dialog.getByRole("button", { name: "Replace local records" })).toBeDisabled()
+  await dialog.getByLabel("Type RESTORE to replace the local records").fill("RESTORE")
+  await dialog.getByRole("button", { name: "Replace local records" }).click()
+  await expect(dialog).toHaveCount(0)
+  await page.goto("/#activity")
+  await expect(page.getByRole("table").getByRole("button", { name: /Backup entry/ }).first()).toBeVisible()
+})
+
+test("mobile navigation, keyboard, dark preference and licence reader", async ({ page }) => {
+  await page.setViewportSize(mobile)
+  await page.goto("/")
+  await page.keyboard.press("Tab")
+  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(page.locator("main")).toBeFocused()
+  const add = page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("button", { name: "Add", exact: true })
+  await add.focus()
+  await page.keyboard.press("Enter")
+  await expect(page.getByRole("dialog", { name: "Add entry" })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(add).toBeFocused()
+  await page.getByRole("button", { name: "Personal account" }).click()
+  await page.getByRole("menuitem", { name: "Settings" }).click()
+  await page.getByRole("button", { name: "Dark" }).click()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+  await page.getByRole("link", { name: /About & legal/ }).click()
+  await page.getByRole("link", { name: /Third-party licences and notices/ }).click()
+  await expect(page).toHaveURL(/\/licenses$/)
+  await expect(page.getByRole("heading", { name: "Licenses", exact: true })).toBeVisible()
+  await expect(page.locator("html")).toHaveClass(/dark/)
+  const geist = page.locator("summary").filter({ hasText: "Geist Sans" })
+  await geist.focus()
+  await page.keyboard.press("Enter")
+  await expect(page.getByText(/Copyright \(c\) 2023 Vercel/)).toBeVisible()
+  await page.locator("summary").filter({ hasText: "All packages" }).click()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(mobile.width)
+  const notices = await page.request.get("/third-party-notices.txt")
+  expect(notices.ok()).toBeTruthy()
+  expect(await notices.text()).toContain("Copyright (c) 2023 shadcn")
+})
+
+test("report layouts stay within the viewport at desktop, tablet and mobile widths", async ({ page }) => {
+  for (const viewport of [desktop, tablet, mobile, { width: 320, height: 700 }]) {
+    await page.setViewportSize(viewport)
+    for (const name of ["overview", "activity", "budgets", "savings", "settings"]) {
+      await page.goto(`/#${name}`)
+      await expect(page.getByRole("heading", { name: new RegExp(`^${name}$`, "i"), level: 1 })).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewport.width)
+    }
+  }
+})
+
+test("category reassignment keeps records and CSV review commits only new transactions", async ({ page }) => {
+  await page.setViewportSize(desktop)
+  await page.goto("/")
+  await addEntry(page, "Expense", "Market purchase", "25.99")
+  await page.goto("/#categories")
+  await page.getByRole("button", { name: "Add category" }).click()
+  await page.getByLabel("Name", { exact: true }).fill("Market")
+  await page.getByRole("dialog").getByRole("button", { name: "Add category" }).click()
+  await expect(page.getByText("Market", { exact: true })).toBeVisible()
+  await page.getByRole("button", { name: "Actions for Groceries" }).click()
+  await page.getByRole("menuitem", { name: "Delete category" }).click()
+  await expect(page.getByRole("alertdialog")).toContainText("1 transaction")
+  await pick(page, "Move transactions to", "Market")
+  await page.getByRole("button", { name: "Reassign and delete" }).click()
+  await page.goto("/#activity")
+  await expect(page.getByRole("table").getByText("Market", { exact: true })).toBeVisible()
+
+  await page.goto("/#data")
+  await page.getByRole("button", { name: "Export CSV" }).click()
+  const downloaded = page.waitForEvent("download")
+  await page.getByRole("button", { name: "Download CSV" }).click()
+  const file = await (await downloaded).path()
+  await page.getByRole("button", { name: "Import CSV" }).click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByLabel("Import file").setInputFiles(file)
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await expect(dialog).toContainText("1 duplicate skipped")
+  await expect(dialog.getByRole("button", { name: "Import transactions" })).toBeDisabled()
+
+  const date = await page.evaluate(() => {
+    const now = new Date()
+    return [now.getFullYear(), now.getMonth() + 1, now.getDate()].map(String).map(value => value.padStart(2, "0")).join("-")
+  })
+  const text = "id,date,type,description,amount,currency,category,account,notes\n" +
+    `new-market,${date},expense,Second market purchase,3.10,EUR,Market,Cash,`
+  await dialog.getByLabel("Import file").setInputFiles({ name: "new.csv", mimeType: "text/csv", buffer: Buffer.from(text) })
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await expect(dialog.getByText("Second market purchase", { exact: false })).toBeVisible()
+  await dialog.getByRole("button", { name: "Import transactions" }).click()
+  await expect(dialog).toHaveCount(0)
+  await page.goto("/#activity")
+  await expect(page.getByRole("table").getByRole("button", { name: "Second market purchase Market", exact: true })).toBeVisible()
+})

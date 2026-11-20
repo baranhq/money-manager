@@ -1,0 +1,77 @@
+[
+  {
+    "file": "src/components/ui/alert-dialog.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/alert-dialog.json",
+    "registrySha256": "03c0d4de131a9b049e9080724666045c8785074af7e07040a0a0f922a810e7c2"
+  },
+  {
+    "file": "src/components/ui/button.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/button.json",
+    "registrySha256": "4b8d7d848742727973c1b088af8d15f0b628272a1316f2d2fa344e73ddff9e9c"
+  },
+  {
+    "file": "src/components/ui/card.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/card.json",
+    "registrySha256": "c7ebaa49ba2a0613838558f3892c5007523c2dc26d6b36a244145d454a796106"
+  },
+  {
+    "file": "src/components/ui/dialog.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/dialog.json",
+    "registrySha256": "0115e3a57aa55a978c5fed0d77f7e98edd694215aae3e569def3fff722ba9f26"
+  },
+  {
+    "file": "src/components/ui/dropdown-menu.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/dropdown-menu.json",
+    "registrySha256": "235b1231cf71d94225eccd6c19117e7fa7b09cf256d23a199d63aee53265fd52"
+  },
+  {
+    "file": "src/components/ui/input.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/input.json",
+    "registrySha256": "b1fffa12ba72ce30a291749012b47235eda110648b8106725ced22b5b31c8f1b"
+  },
+  {
+    "file": "src/components/ui/label.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/label.json",
+    "registrySha256": "b03d6bc91da205758df87c5403d74bae4d742f1f4ac5ae0b94ad7a29ab6350ea"
+  },
+  {
+    "file": "src/components/ui/popover.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/popover.json",
+    "registrySha256": "78793171b536e0c335ad51b1313619e533566b514d3503ef60c94dc9d3ccfbef"
+  },
+  {
+    "file": "src/components/ui/select.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/select.json",
+    "registrySha256": "ca3189ea8101a04f144b6d0f0e7330841639bfa5f4d57e7cca0894d39b30817b"
+  },
+  {
+    "file": "src/components/ui/sheet.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/sheet.json",
+    "registrySha256": "bdf118300491675f05a9181af491217ba690929338aefd108437c2b07d25432f"
+  },
+  {
+    "file": "src/components/ui/skeleton.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/skeleton.json",
+    "registrySha256": "1ed4d99f9d632d9697a054eefcd19932abd68cef7808407986f6e14da401edf7"
+  },
+  {
+    "file": "src/components/ui/switch.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/switch.json",
+    "registrySha256": "cc526c3a4827be315be746355a988e22dacc99d663ed31924fd30c2507cdc005"
+  },
+  {
+    "file": "src/components/ui/table.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/table.json",
+    "registrySha256": "35a45f90ee92883533c4c1029212d38bd263694e90ea54fbfaf66a099f7d3cc4"
+  },
+  {
+    "file": "src/components/ui/tabs.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/tabs.json",
+    "registrySha256": "49320e6dcf56570753bb14ed3f5d66acf07d12e183c0e9024466995b25be5b1d"
+  },
+  {
+    "file": "src/components/ui/tooltip.tsx",
+    "source": "https://ui.shadcn.com/r/styles/new-york-v4/tooltip.json",
+    "registrySha256": "1b7b452b34beab05b22bd653963abd1c88ebd8e9ebcc89dcaebf4ac4938c929e"
+  }
+]
