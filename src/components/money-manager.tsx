@@ -191,10 +191,6 @@ export function MoneyManager() {
             editCategory={(kind: Kind, row?: Category) => setOverlay({ type: "category", kind, row })}
             removeCategory={row => remove({ type: "category", row })} openData={mode => setOverlay({ type: "dataTool", mode })} />}
         </>}
-        <footer className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t py-4 text-xs text-muted-foreground">
-          <a href="/privacy" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Privacy</a>
-          <a href="/licenses" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Licenses</a>
-        </footer>
       </div>
     </main>
     <MobileNavigation route={route} add={add} ready={ready} />
