@@ -143,6 +143,9 @@ if ((check || sync) && synchronised()) {
       "react-remove-scroll-bar": "react-remove-scroll-bar",
       "@napi-rs/wasm-runtime": "napi-rs-wasm-runtime",
       "@tybys/wasm-util": "tybys-wasm-util",
+      "@emnapi/core": "emnapi",
+      "@emnapi/runtime": "emnapi",
+      "@emnapi/wasi-threads": "emnapi",
     }
     if (name in overrides && Object.hasOwn(overrides, name)) return [["Upstream licence", readText(`notices/upstream/${overrides[name]}.txt`)]]
     throw new Error(`No reviewed notice for ${name}@${meta.version}.`)

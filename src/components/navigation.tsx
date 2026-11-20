@@ -19,7 +19,7 @@ export const navigation = [
 ] as const
 type ReportRoute = typeof navigation[number]["id"]
 export type Route = ReportRoute | SettingsPage
-export const settingsRoutes = ["settings", "accounts", "categories", "data", "storage", "about"] as const
+export const settingsRoutes = ["settings", "accounts", "categories", "data", "security", "storage", "about"] as const
 
 export function AccountMenu({ mobile = false, hrefPrefix = "", profiles = [], activeProfile, onSwitch }: {
   mobile?: boolean; hrefPrefix?: string; profiles?: Profile[]; activeProfile?: Profile; onSwitch?: (id: string) => void

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound } from "lucide-react"
+import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -11,6 +11,7 @@ import { CategoryIcon, Choose, Empty, ErrorText, Menu, Modal, type Commit } from
 import { currencies, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
 import type { DataTool } from "@/components/data-tools"
 import { Profiles } from "@/components/profiles"
+import { SecuritySettings, type SecurityStatus } from "@/components/security-settings"
 
 type Row = { title: string; description: string; icon: React.ElementType; danger?: boolean } & ({ href: string; run?: never } | { run: () => void; href?: never })
 
@@ -31,17 +32,19 @@ const heading = {
   accounts: ["Profiles", "Keep separate ledgers on this browser."],
   categories: ["Categories", "Choose the names and icons used in reports."],
   data: ["Data & backup", "Manage the records on this device and the files you keep."],
+  security: ["Security", "Choose how this browser protects access to the app and its stored records."],
   storage: ["Privacy & storage", "See where records are kept and how to manage them."],
   about: ["About & legal", "App information and notices in one place."],
 }
 
 export type SettingsPage = keyof typeof heading | "settings"
 
-export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile }: {
+export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
   addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
+  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")
   const [note, setNote] = useState<"about" | "storage">()
@@ -97,6 +100,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
           { title: "Profiles", description: "Switch ledgers or personalise a profile.", icon: UsersRound, href: "#accounts" },
           { title: "Categories", description: "Manage expense and income categories.", icon: Tags, href: "#categories" },
           { title: "Data & backup", description: "Back up, import, export or clear data.", icon: Database, href: "#data" },
+          { title: "Security", description: "Set a site password and optionally encrypt this browser’s data.", icon: LockKeyhole, href: "#security" },
           { title: "Privacy & storage", description: "See what is stored on this device.", icon: ShieldCheck, href: "#storage" },
           { title: "About & legal", description: "App information, privacy and licences.", icon: Info, href: "#about" },
         ]} />
@@ -145,10 +149,11 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
         { title: "Clear local data", description: "Remove records from this profile only.", icon: Trash2, danger: true, run: () => openData("clear") },
       ]} /></section>
     </>}
+    {route === "security" && <SecuritySettings status={securityStatus} onChanged={onSecurityChanged} onLock={lockSite} />}
     {route === "storage" && <>
       <Card className="gap-2 bg-accent/60 p-5 shadow-none">
         <h2 className="font-semibold">Saved on this device</h2>
-        <p className="text-sm">Profiles, names and avatar choices are saved with your financial records in IndexedDB in this browser. Profiles are not password-protected. Clearing site data may erase them. Download a ledger backup for each profile before switching browsers or devices; names and avatars are not included in backup files.</p>
+        <p className="text-sm">Profiles, names and avatar choices are saved with your financial records in this browser. The site password is a local app lock. Optional storage encryption keeps all profiles encrypted in browser storage and decrypts them after unlock; without it, records remain readable there. Clearing site data may erase them. Backups do not include profile names or avatars.</p>
       </Card>
       <Rows rows={[
         { title: "Browser storage details", description: "See what is kept in this browser.", icon: Database, run: () => setNote("storage") },
@@ -162,9 +167,9 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       { title: "Licenses", description: "Third-party licences and notices.", icon: Scale, href: "/licenses" },
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}
-      description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in IndexedDB."} close={() => setNote(undefined)}>
+      description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in this browser."} close={() => setNote(undefined)}>
       <p className="text-sm">{note === "about" ? "Track income, expenses, budgets and savings in a local ledger on this device." :
-        "Profiles are local labels, not password-protected accounts. Anyone with access to this browser can switch between them. Keep downloaded ledger backups in a private location."}</p>
+        "The site password is a local screen lock. If optional storage encryption is off, anyone with browser access can read the records in storage. When it is on, the browser keeps encrypted records and needs the password to open them. Keep downloaded backups in a private location."}</p>
       <Button variant="outline" onClick={() => setNote(undefined)}>Close</Button>
     </Modal>}
   </div>
