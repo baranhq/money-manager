@@ -279,6 +279,20 @@ test("mobile navigation, keyboard, dark preference and licence reader", async ({
   expect(await notices.text()).toContain("Copyright (c) 2023 shadcn")
 })
 
+test("add-entry dialog fills the viewport at the small tablet breakpoint", async ({ page }) => {
+  await page.setViewportSize({ width: 676, height: 500 })
+  await page.goto("/")
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible()
+  await page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("button", { name: "Add", exact: true }).click()
+
+  const dialog = page.getByRole("dialog", { name: "Add entry" })
+  await expect(dialog).toBeVisible()
+  const bounds = await dialog.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds?.x).toBe(0)
+  expect(bounds?.width).toBe(676)
+})
+
 test("report layouts stay within the viewport at desktop, tablet and mobile widths", async ({ page }) => {
   for (const viewport of [desktop, tablet, mobile, { width: 320, height: 700 }]) {
     await page.setViewportSize(viewport)
