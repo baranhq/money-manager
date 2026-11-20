@@ -1,12 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Activity, Archive, ChartNoAxesColumnIncreasing, ChevronDown, Database, LayoutGrid, Menu as MenuIcon, Settings as SettingsIcon, ShieldCheck, UserRound } from "lucide-react"
+import { Activity, Archive, ChartNoAxesColumnIncreasing, ChevronDown, Database, LayoutGrid, Menu as MenuIcon, Settings as SettingsIcon, ShieldCheck, UsersRound } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import type { SettingsPage } from "@/components/settings"
+import { ProfileAvatar } from "@/components/profile-avatar"
+import { defaultProfile, type Profile } from "@/lib/finance"
 import { cn } from "@/lib/utils"
 
 export const navigation = [
@@ -17,18 +19,34 @@ export const navigation = [
 ] as const
 type ReportRoute = typeof navigation[number]["id"]
 export type Route = ReportRoute | SettingsPage
-export const settingsRoutes = ["settings", "categories", "data", "storage", "about"] as const
+export const settingsRoutes = ["settings", "accounts", "categories", "data", "storage", "about"] as const
 
-export function AccountMenu({ mobile = false, hrefPrefix = "" }: { mobile?: boolean; hrefPrefix?: string }) {
+export function AccountMenu({ mobile = false, hrefPrefix = "", profiles = [], activeProfile, onSwitch }: {
+  mobile?: boolean; hrefPrefix?: string; profiles?: Profile[]; activeProfile?: Profile; onSwitch?: (id: string) => void
+}) {
+  const shownProfile = activeProfile ?? defaultProfile
   return <DropdownMenu>
     <DropdownMenuTrigger asChild>{mobile ?
-      <Button variant="outline" size="icon-lg" className="size-11 bg-card" aria-label="Personal account"><UserRound /></Button> :
-      <Button variant="secondary" className="w-full justify-start px-2 lg:min-h-11" aria-label="Personal account">
-        <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-primary"><UserRound size={16} /></span>
-        <span className="hidden flex-1 text-left xl:block">Personal account</span><ChevronDown className="hidden xl:block" />
+      <Button variant="outline" className="h-11 max-w-40 gap-2 bg-card px-2" aria-label={`Profile menu for ${shownProfile.name}`}>
+        <ProfileAvatar profile={shownProfile} size="sm" />
+        <span className="max-w-24 truncate text-xs font-medium">{shownProfile.name}</span>
+      </Button> :
+      <Button variant="secondary" className="w-full justify-start px-2 lg:min-h-11" aria-label={`Profile menu for ${shownProfile.name}`}>
+        <ProfileAvatar profile={shownProfile} size="sm" />
+        <span className="hidden min-w-0 flex-1 truncate text-left xl:block">{shownProfile.name}</span><ChevronDown className="hidden xl:block" />
       </Button>}
     </DropdownMenuTrigger>
-    <DropdownMenuContent align={mobile ? "end" : "start"} side={mobile ? "bottom" : "top"} className="min-w-48">
+    <DropdownMenuContent align={mobile ? "end" : "start"} side={mobile ? "bottom" : "top"} className="min-w-56">
+      {profiles.length > 0 && <>
+        <DropdownMenuLabel className="text-xs text-muted-foreground">Switch profile</DropdownMenuLabel>
+        <DropdownMenuRadioGroup value={activeProfile?.id ?? ""} onValueChange={id => onSwitch?.(id)}>
+          {profiles.map(profile => <DropdownMenuRadioItem key={profile.id} value={profile.id} className="min-h-10">
+            <ProfileAvatar profile={profile} size="sm" /><span className="min-w-0 truncate">{profile.name}</span>
+          </DropdownMenuRadioItem>)}
+        </DropdownMenuRadioGroup>
+        <DropdownMenuSeparator />
+      </>}
+      <DropdownMenuItem asChild><a href={`${hrefPrefix}#accounts`}><UsersRound /> Manage profiles</a></DropdownMenuItem>
       <DropdownMenuItem asChild><a href={`${hrefPrefix}#settings`}><SettingsIcon /> Settings</a></DropdownMenuItem>
       <DropdownMenuItem asChild><a href={`${hrefPrefix}#storage`}><ShieldCheck /> Privacy & storage</a></DropdownMenuItem>
       <DropdownMenuItem asChild><a href={`${hrefPrefix}#data`}><Database /> Data & backup</a></DropdownMenuItem>
@@ -36,7 +54,9 @@ export function AccountMenu({ mobile = false, hrefPrefix = "" }: { mobile?: bool
   </DropdownMenu>
 }
 
-export function Sidebar({ route, hrefPrefix = "" }: { route: Route; hrefPrefix?: string }) {
+export function Sidebar({ route, hrefPrefix = "", profiles, activeProfile, onSwitch }: {
+  route: Route; hrefPrefix?: string; profiles?: Profile[]; activeProfile?: Profile; onSwitch?: (id: string) => void
+}) {
   const [expanded, setExpanded] = useState(false)
   const inSettings = settingsRoutes.some(item => item === route)
   const items = [...navigation, { id: "settings", label: "Settings", icon: SettingsIcon }]
@@ -73,6 +93,6 @@ export function Sidebar({ route, hrefPrefix = "" }: { route: Route; hrefPrefix?:
         </div>
       })}
     </nav>
-    <div className="mt-auto border-t pt-4"><AccountMenu hrefPrefix={hrefPrefix} /></div>
+    <div className="mt-auto border-t pt-4"><AccountMenu hrefPrefix={hrefPrefix} profiles={profiles} activeProfile={activeProfile} onSwitch={onSwitch} /></div>
   </aside>
 }
