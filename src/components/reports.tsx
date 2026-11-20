@@ -42,14 +42,16 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
   const ceiling = Math.max(1, ...rows.flatMap(row => savings ? [row.movement.added, row.movement.withdrawn] : [row.income, row.spent]))
   const axis = [ceiling, Math.round(ceiling / 2), 0]
   const label = (period: string) => dateLabel(period + "-01", { month: "short" }, data.preferences)
-  return <Card className="gap-0 p-3 shadow-none sm:p-5">
-    <SectionHeading title={savings ? "Monthly savings transfers" : "Cash flow"} note={savings ? "Money added to and taken out of pots" : undefined} action={
+  const hasTransfers = rows.some(({ movement }) => movement.added > 0 || movement.withdrawn > 0)
+  const Surface = savings ? "section" : Card
+  return <Surface className={savings ? "border-t pt-5 sm:pt-6" : "gap-0 p-3 shadow-none sm:p-5"}>
+    <SectionHeading title={savings ? "Monthly savings transfers" : "Cash flow"} note={savings && hasTransfers ? `${money(inspected.movement.net, data.preferences)} net in ${monthName(inspected.period, false, data.preferences)}` : undefined} action={
       <div className="flex items-center gap-1.5">
-        <span className="text-right text-xs font-medium text-primary sm:text-sm">
-          {savings ? `${money(rows[4].movement.net, data.preferences)} net` : `${money(rows[4].balance, data.preferences)} net`}
-        </span>
+        {!savings && <span className="text-right text-xs font-medium text-primary sm:text-sm">
+          {money(rows[4].balance, data.preferences)} net
+        </span>}
         <Popover>
-          <PopoverTrigger asChild><Button size="icon-sm" variant="secondary" aria-label={savings ? "Savings chart details" : "Cash flow details"}><Info /></Button></PopoverTrigger>
+          <PopoverTrigger asChild><Button size="icon-sm" variant="secondary" className={savings ? "max-md:size-11" : undefined} aria-label={savings ? "Savings chart details" : "Cash flow details"}><Info /></Button></PopoverTrigger>
           <PopoverContent align="end" className="w-64">
             <p className="mb-2 font-medium">{monthName(inspected.period, false, data.preferences)}</p>
             <dl className="grid grid-cols-[1fr_auto] gap-2 text-sm tabular-nums">
@@ -62,32 +64,39 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
         </Popover>
       </div>
     } />
-    <div className="mb-3 flex gap-5 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-1" />{savings ? "Added" : "Income"}</span>
-      <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-2" />{savings ? "Taken out" : "Spent"}</span>
-    </div>
-    <div className="relative grid grid-cols-[auto_1fr] gap-2 pb-5">
-      <div className="flex h-20 flex-col justify-between text-[0.68rem] text-muted-foreground tabular-nums sm:h-44">
-        {axis.map((amount, index) => <span key={index}>{compactMoney(amount, data.preferences)}</span>)}
-      </div>
-      <div className="relative grid h-20 grid-cols-5 gap-1 sm:h-44 sm:gap-4">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col justify-between">
-          <span className="border-t" /><span className="border-t" /><span className="border-t" />
+    {savings && !hasTransfers
+      ? <p className="max-w-[60ch] text-sm text-muted-foreground">No transfers in the five months ending {monthName(month, false, data.preferences)}. Money moved in or out of a pot will appear here.</p>
+      : <>
+        <div className="mb-3 flex gap-5 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-1" />{savings ? "Added" : "Income"}</span>
+          <span className="flex items-center gap-1.5"><span className={cn("size-2 rounded-xs", savings ? "bg-muted-foreground" : "bg-chart-2")} />{savings ? "Taken out" : "Spent"}</span>
         </div>
-        {rows.map(row => <button key={row.period} type="button" aria-pressed={inspected.period === row.period}
-          aria-label={`${label(row.period)} ${row.period.slice(0, 4)}. ${savings ? `Added ${money(row.movement.added, data.preferences)}, taken out ${money(row.movement.withdrawn, data.preferences)}` : `Income ${money(row.income, data.preferences)}, spent ${money(row.spent, data.preferences)}`}`}
-          onClick={() => setSelected(row.period)}
-          className={cn("relative flex h-full items-end justify-center gap-1 rounded-sm px-1 hover:bg-muted/80 sm:gap-1.5", inspected.period === row.period && "bg-accent/65")}>
-          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * (savings ? row.movement.added : row.income) / ceiling}%` }} />
-          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-2" style={{ height: `${100 * (savings ? row.movement.withdrawn : row.spent) / ceiling}%` }} />
-          <span className="absolute -bottom-5 text-xs text-muted-foreground">{label(row.period)}</span>
-        </button>)}
-      </div>
-    </div>
-    <p aria-live="polite" className={selected ? "mt-2 text-xs text-muted-foreground" : "sr-only"}>
-      {selected && `${label(inspected.period)} · ${savings ? `Added ${money(inspected.movement.added, data.preferences)} · Taken out ${money(inspected.movement.withdrawn, data.preferences)}` : `Income ${money(inspected.income, data.preferences)} · Spent ${money(inspected.spent, data.preferences)}`}`}
-    </p>
-  </Card>
+        <div className="relative grid grid-cols-[auto_1fr] gap-2 pb-5">
+          <div className="flex h-20 flex-col justify-between text-[0.68rem] text-muted-foreground tabular-nums sm:h-44">
+            {axis.map((amount, index) => <span key={index}>{compactMoney(amount, data.preferences)}</span>)}
+          </div>
+          <div className="relative grid h-20 grid-cols-5 gap-1 sm:h-44 sm:gap-4">
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex flex-col justify-between">
+              <span className="border-t" /><span className="border-t" /><span className="border-t" />
+            </div>
+            {rows.map(row => <button key={row.period} type="button" aria-pressed={inspected.period === row.period}
+              aria-label={`${label(row.period)} ${row.period.slice(0, 4)}. ${savings ? `Added ${money(row.movement.added, data.preferences)}, taken out ${money(row.movement.withdrawn, data.preferences)}` : `Income ${money(row.income, data.preferences)}, spent ${money(row.spent, data.preferences)}`}`}
+              onClick={() => setSelected(row.period)}
+              className={cn("relative flex h-full touch-manipulation items-end justify-center gap-1 rounded-sm px-1 hover:bg-muted/80 sm:gap-1.5",
+                inspected.period === row.period && "bg-accent/65",
+                savings && "full-motion:transition-colors full-motion:duration-150")}>
+              <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * (savings ? row.movement.added : row.income) / ceiling}%` }} />
+              <span className={cn("w-2/5 max-w-6 rounded-t-xs", savings ? "bg-muted-foreground" : "bg-chart-2")} style={{ height: `${100 * (savings ? row.movement.withdrawn : row.spent) / ceiling}%` }} />
+              <span className="absolute -bottom-5 text-xs text-muted-foreground">{label(row.period)}</span>
+            </button>)}
+          </div>
+        </div>
+        <p aria-live="polite" className={savings || selected ? "mt-3 text-sm text-muted-foreground tabular-nums" : "sr-only"}>
+          {savings ? <>{label(inspected.period)} — {money(inspected.movement.added, data.preferences)} added, {money(inspected.movement.withdrawn, data.preferences)} taken out</>
+            : selected && `${label(inspected.period)} · Income ${money(inspected.income, data.preferences)} · Spent ${money(inspected.spent, data.preferences)}`}
+        </p>
+    </>}
+  </Surface>
 }
 
 function BudgetRows({ data, month, items, open, edit, remove }: Report & {
@@ -99,13 +108,14 @@ function BudgetRows({ data, month, items, open, edit, remove }: Report & {
       const used = totals.get(row.category) ?? 0
       const category = data.categories.find(item => item.id === row.category)
       return <div className="flex items-center gap-1" key={row.id}>
-        <button type="button" onClick={() => open(row)} className="grid min-h-14 flex-1 grid-cols-[minmax(0,1fr)_minmax(3rem,1fr)_auto] items-center gap-2 py-2 text-left text-sm hover:bg-accent/55 sm:gap-3">
-          <span className="flex min-w-0 items-center gap-2"><CategoryIcon category={category} />
-            <span className="min-w-0"><span className="block truncate font-medium">{category?.name}</span>
+        <button type="button" onClick={() => open(row)} className={cn("grid min-h-14 min-w-0 flex-1 items-center gap-2 py-2 text-left text-sm hover:bg-accent/55",
+          edit ? "grid-cols-[minmax(0,1fr)_minmax(0,auto)] gap-y-1 md:grid-cols-[minmax(0,1fr)_minmax(3rem,0.65fr)_minmax(0,auto)] md:gap-4" : "grid-cols-[minmax(0,1fr)_minmax(3rem,1fr)_auto] sm:gap-3")}>
+          <span className="flex min-w-0 items-center gap-2"><CategoryIcon category={edit && category ? { ...category, colour: "grey" } : category} />
+            <span className="min-w-0"><span className={cn("block font-medium", edit ? "break-words" : "truncate")}>{category?.name}</span>
               <span className={cn("block text-xs text-muted-foreground", used > row.amount && "text-destructive")}>
                 {money(Math.abs(row.amount - used), data.preferences)} {used > row.amount ? "over" : "left"}</span></span></span>
-          <span className="text-primary"><Meter amount={used} target={row.amount} label={`${category?.name} budget used`} /></span>
-          <span className="text-right font-medium tabular-nums">{money(used, data.preferences)} / {money(row.amount, data.preferences)}<span className="block text-xs font-normal text-muted-foreground">{percent(used, row.amount)}% used</span></span>
+          <span className={cn("text-primary", edit && "max-md:order-last max-md:col-span-2", edit && used > row.amount && "text-destructive")}><Meter amount={used} target={row.amount} label={`${category?.name} budget used`} /></span>
+          <span className="min-w-0 text-right font-medium break-words tabular-nums">{money(used, data.preferences)} / {money(row.amount, data.preferences)}<span className="block text-xs font-normal text-muted-foreground">{percent(used, row.amount)}% used</span></span>
         </button>
         {edit && remove && <Menu label={`Actions for ${category?.name} budget`} actions={[
           { label: "View budget", run: () => open(row) }, { label: "Edit budget", run: () => edit(row) },
@@ -198,35 +208,70 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
   const elapsed = month < now.slice(0, 7) ? 100 : month > now.slice(0, 7) ? 0 :
     percent(Number(now.slice(-2)), new Date(Date.parse(shiftMonth(month, 1) + "-01") - 86400000).getUTCDate())
   const items = all ? data.budgets : data.budgets.slice(0, 4)
-  return <div className="grid gap-5 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <Card className="gap-2 bg-balance p-5 text-balance-foreground md:col-span-1">
-      <h2 className="text-sm font-medium">{used > planned ? "Over budget this month" : "Remaining this month"}</h2>
-      <p className="break-words text-4xl font-semibold tracking-tight tabular-nums">{money(Math.abs(planned - used), data.preferences)}</p>
-      <p className="text-sm">{money(used, data.preferences)} spent · {money(planned, data.preferences)} planned</p>
-    </Card>
-    <Card className="justify-center gap-3 p-5 shadow-none">
-      <h2 className="font-semibold">Spending pace</h2>
-      <p className="text-sm text-muted-foreground">{percent(used, planned)}% of plan used · {elapsed}% of month elapsed</p>
-      <div className="text-primary"><Meter amount={used} target={planned} label="Budget plan used" /></div>
-    </Card>
-    <section>
-      <SectionHeading title="Category budgets" note="Spent against monthly limits" action={data.budgets.length > 4 && <Button size="sm" variant="ghost" onClick={() => setAll(!all)}>{all ? "Show fewer" : "View all"}</Button>} />
-      {items.length ? <><BudgetRows data={data} month={month} items={items} open={open} edit={edit} remove={remove} />
-        <Button variant="outline" className="mt-4" onClick={() => edit()}><Plus /> New budget</Button></> :
-        <Empty title="No category budgets" action={<Button variant="outline" onClick={() => edit()}><Plus /> New budget</Button>}>Choose an expense category to set your first limit.</Empty>}
-    </section>
-    <div className="grid content-start gap-4">
-      <Card className="gap-3 p-5 shadow-none"><SectionHeading title="Spending by category" note={`${money(spent, data.preferences)} across ${breakdown.length} categories`} />
-        {breakdown.length ? <ul className="space-y-3">{breakdown.map(([id, amount]) => <li key={id} className="space-y-1">
-          <p className="flex justify-between gap-2 text-sm"><span>{data.categories.find(row => row.id === id)?.name}</span><span className="shrink-0 tabular-nums">{percent(amount, spent)}% · {money(amount, data.preferences)}</span></p>
-          <div className="text-primary"><Meter amount={amount} target={spent} label="Share of monthly spending" /></div>
-        </li>)}</ul> : <p className="text-sm text-muted-foreground">No expenses this month.</p>}
-      </Card>
-      <Card className="gap-2 bg-accent/65 p-5 shadow-none">
-        <SectionHeading title="Savings pots" action={<ViewLink href="#savings">View savings</ViewLink>} />
-        <p className="text-sm text-muted-foreground">{data.goals.length} {data.goals.length === 1 ? "pot" : "pots"}</p>
-      </Card>
+  const over = used > planned
+  return <div className="space-y-6 sm:space-y-8">
+    <dl className="grid grid-cols-2 gap-y-4 border-y py-4 sm:grid-cols-3 sm:py-5">
+      {[
+        { label: "Planned", amount: planned },
+        { label: "Spent against plan", amount: used },
+        { label: over ? "Over budget" : "Remaining", amount: Math.abs(planned - used) },
+      ].map(({ label, amount }, index) => <div key={label} className={cn("min-w-0 sm:px-6 sm:first:pl-0 sm:not-first:border-l",
+        index === 1 && "max-sm:pl-3", index === 2 && "max-sm:col-span-2 max-sm:border-t max-sm:pt-3")}>
+        <dt className="text-sm text-muted-foreground">{label}</dt>
+        <dd className={cn("mt-1 text-2xl font-semibold tracking-tight break-words tabular-nums sm:text-3xl",
+          index === 2 && (over ? "text-destructive" : "text-primary"))}>{money(amount, data.preferences)}</dd>
+      </div>)}
+    </dl>
+    <div className="grid gap-7 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)] lg:gap-8">
+      <section className="min-w-0">
+        <SectionHeading title="Category budgets" action={data.budgets.length > 4 &&
+          <Button size="sm" variant="ghost" className="max-md:min-h-11" aria-expanded={all} onClick={() => setAll(!all)}>{all ? "Show fewer" : "View all"}</Button>} />
+        {items.length ? <>
+          <BudgetRows data={data} month={month} items={items} open={open} edit={edit} remove={remove} />
+          <Button variant="outline" className="mt-3 min-h-11 md:hidden" onClick={() => edit()}><Plus /> New budget</Button>
+        </> : <ReportEmpty title="No limits set yet" action={<Button className={reportAction} onClick={() => edit()}><Plus /> New budget</Button>}>
+          Pick an expense category and set a recurring monthly limit to track how much you have left.
+        </ReportEmpty>}
+      </section>
+      <aside className="min-w-0 space-y-6 lg:border-l lg:pl-6">
+        <section className="border-t pt-4 lg:border-0 lg:pt-0">
+          <SectionHeading title="Spending pace" />
+          <dl className="space-y-3 text-sm">
+            <div>
+              <div className="mb-1.5 flex justify-between gap-2"><dt>Plan used</dt><dd className="font-medium tabular-nums">{planned ? `${percent(used, planned)}%` : "No plan"}</dd></div>
+              {planned > 0 && <div className={over ? "text-destructive" : "text-primary"}><Meter amount={used} target={planned} label="Budget plan used" /></div>}
+            </div>
+            <div>
+              <div className="mb-1.5 flex justify-between gap-2"><dt>Month elapsed</dt><dd className="font-medium tabular-nums">{elapsed}%</dd></div>
+              <div className="text-muted-foreground"><Meter amount={elapsed} target={100} label="Month elapsed" /></div>
+            </div>
+          </dl>
+        </section>
+        <section className="border-t pt-4">
+          <SectionHeading title="Spending by category" note={breakdown.length ? `${money(spent, data.preferences)} total spending` : undefined} />
+          {breakdown.length ? <ul className="space-y-3">{breakdown.map(([id, amount]) => <li key={id} className="space-y-1">
+            <p className="flex flex-wrap justify-between gap-x-2 text-sm"><span className="break-words">{data.categories.find(row => row.id === id)?.name}</span><span className="tabular-nums">{money(amount, data.preferences)} <span className="ml-1 text-xs text-muted-foreground">({percent(amount, spent)}%)</span></span></p>
+            <div className="text-primary"><Meter amount={amount} target={spent} label="Share of monthly spending" /></div>
+          </li>)}</ul> : <p className="text-sm text-muted-foreground">No expenses this month.</p>}
+        </section>
+        <div className="flex flex-wrap items-center justify-between gap-x-2 border-t pt-2">
+          <p className="text-sm text-muted-foreground">{data.goals.length} savings {data.goals.length === 1 ? "pot" : "pots"}</p>
+          <ViewLink href="#savings">View savings</ViewLink>
+        </div>
+      </aside>
     </div>
+  </div>
+}
+
+const reportAction = "min-h-11 touch-manipulation full-motion:transition-[transform,background-color] full-motion:duration-150 full-motion:ease-[cubic-bezier(0.23,1,0.32,1)] full-motion:active:scale-[0.98]"
+
+function ReportEmpty({ title, children, action }: { title: string; children: ReactNode; action: ReactNode }) {
+  return <div className="flex flex-wrap items-center justify-between gap-4 border-t pt-4 pb-1 sm:pt-6 sm:pb-2">
+    <div>
+      <h3 className="text-base font-semibold">{title}</h3>
+      <p className="mt-1 max-w-[52ch] text-sm text-muted-foreground">{children}</p>
+    </div>
+    {action}
   </div>
 }
 
@@ -238,41 +283,54 @@ export function Savings({ data, month, open, edit, contribute, remove }: Report 
   const targeted = data.goals.filter(goal => goal.amount !== null)
   const target = targeted.reduce((sum, goal) => sum + (goal.amount ?? 0), 0)
   const targetedBalance = targeted.reduce((sum, goal) => sum + (balances.get(goal.id) ?? 0), 0)
-  return <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <Card className="gap-2 bg-balance p-5 text-balance-foreground">
-      <h2 className="text-sm font-medium">Total in savings pots</h2>
-      <p className="break-words text-4xl font-semibold tracking-tight tabular-nums">{money(total, data.preferences)}</p>
-      <p className="text-sm">Across {data.goals.length} {data.goals.length === 1 ? "pot" : "pots"} as of {monthName(month, false, data.preferences)}</p>
-    </Card>
-    <Card className="justify-center gap-3 p-5 shadow-none">
-      <h2 className="font-semibold">Target progress</h2>
-      {target > 0 ? <>
-        <p className="text-sm text-muted-foreground">{money(targetedBalance, data.preferences)} of {money(target, data.preferences)} across {targeted.length} targeted {targeted.length === 1 ? "pot" : "pots"}</p>
-        <div className="text-primary"><Meter amount={targetedBalance} target={target} label="Savings pot targets funded" /></div>
-      </> : <p className="text-sm text-muted-foreground">No targets set. You can add one when you edit a pot.</p>}
-    </Card>
-    <section className="order-2 md:order-none">
-      <SectionHeading title="Savings pots" note="Adding money reduces Available to spend; taking it out adds it back."
-        action={<Button variant="outline" size="sm" onClick={() => edit()}><Plus /> New pot</Button>} />
-      {data.goals.length ? <div className="grid gap-3">{data.goals.map(goal => {
-        const balance = balances.get(goal.id) ?? 0
-        return <Card key={goal.id} className="gap-2 p-4 shadow-none">
-          <div className="flex items-center justify-between gap-2">
-            <button type="button" className="min-h-9 min-w-0 text-left font-semibold hover:underline" onClick={() => open(goal)}>{goal.name}</button>
+  return <div className="space-y-6 sm:space-y-8">
+    <section aria-label="Savings summary" className="grid gap-4 rounded-xl bg-accent/65 p-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-6 sm:p-6">
+      <div className="min-w-0">
+        <h2 className="text-sm font-medium">Total in savings pots</h2>
+        <p className="mt-1 text-3xl font-semibold tracking-tight break-words text-primary tabular-nums sm:text-4xl">{money(total, data.preferences)}</p>
+        <p className="mt-1 text-sm text-muted-foreground">Across {data.goals.length} {data.goals.length === 1 ? "pot" : "pots"} as of {monthName(month, false, data.preferences)}</p>
+      </div>
+      <div className="min-w-0 border-t pt-3 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
+        <h2 className="text-sm font-semibold">Target progress</h2>
+        {target > 0 ? <>
+          <p className="mt-1 text-sm break-words text-muted-foreground tabular-nums">{money(targetedBalance, data.preferences)} of {money(target, data.preferences)} across {targeted.length} targeted {targeted.length === 1 ? "pot" : "pots"}</p>
+          <div className="mt-2 text-primary"><Meter amount={targetedBalance} target={target} label="Savings pot targets funded" /></div>
+        </> : <p className="mt-1 text-sm text-muted-foreground">{data.goals.length ? "No targets set. Edit a pot to add one." : "Set an optional target when you add a pot."}</p>}
+      </div>
+    </section>
+    <section>
+      <SectionHeading title="Savings pots" note={data.goals.length ? "Adding money reduces Available to spend. Taking it out adds it back." : undefined}
+        action={data.goals.length > 0 && <Button variant="outline" className={reportAction} onClick={() => edit()}><Plus /> New pot</Button>} />
+      {data.goals.length ? <>
+        <ul className="divide-y border-y">{data.goals.map(goal => {
+          const balance = balances.get(goal.id) ?? 0
+          return <li key={goal.id} className="flex items-start gap-2 py-2">
+            <div className="min-w-0 flex-1 sm:grid sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center sm:gap-6">
+              <div className="min-w-0">
+                <button type="button" className="min-h-11 max-w-full rounded-sm text-left font-semibold break-words hover:underline" onClick={() => open(goal)}>{goal.name}</button>
+                {goal.date && <p className="pb-2 text-xs text-muted-foreground">Target {dateLabel(goal.date, undefined, data.preferences)}</p>}
+              </div>
+              <div className="min-w-0 space-y-1.5 pb-2 sm:py-2">
+                <p className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 text-sm break-words tabular-nums">
+                  <span className="font-semibold">{money(balance, data.preferences)}</span>
+                  <span className="text-muted-foreground">{goal.amount !== null ? `${percent(balance, goal.amount)}% of ${money(goal.amount, data.preferences)} target` : "No target set"}</span>
+                </p>
+                {goal.amount !== null && <div className="text-primary"><Meter amount={balance} target={goal.amount} label={`Target progress for ${goal.name}`} /></div>}
+              </div>
+            </div>
             <Menu label={`Actions for ${goal.name}`} actions={[
               { label: "View pot", run: () => open(goal) }, { label: "Add money", run: () => contribute(goal, "deposit") },
               ...(balance > 0 ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
               { label: "Edit pot", run: () => edit(goal) }, { label: "Delete pot", run: () => remove(goal), destructive: true },
             ]} />
-          </div>
-          <p className="text-sm text-muted-foreground">{money(balance, data.preferences)} current balance{goal.amount !== null ? ` · ${percent(balance, goal.amount)}% of ${money(goal.amount, data.preferences)} target` : ""}</p>
-          {goal.amount !== null && <div className="text-primary"><Meter amount={balance} target={goal.amount} label={`Target progress for ${goal.name}`} /></div>}
-          <p className="text-xs text-muted-foreground">{goal.date ? `Target ${dateLabel(goal.date, undefined, data.preferences)}` : goal.amount !== null ? "No target date" : "No target set"}</p>
-        </Card>
-      })}</div> : <Empty title="No savings pots yet">Create a pot to separate money you want to keep aside.</Empty>}
-      {data.goals.length > 0 && <Button variant="outline" className="mt-4" onClick={() => contribute()}><Plus /> Add money</Button>}
+          </li>
+        })}</ul>
+        <Button variant="outline" className={cn(reportAction, "mt-3 md:hidden")} onClick={() => contribute()}><Plus /> Add money</Button>
+      </> : <ReportEmpty title="No savings pots yet" action={<Button className={reportAction} onClick={() => edit()}><Plus /> New savings pot</Button>}>
+        Set money aside for a goal or an upcoming expense. You can move it back into your available balance at any time.
+      </ReportEmpty>}
     </section>
-    <div className="order-1 md:order-none"><Chart data={data} month={month} savings /></div>
+    <Chart key={month} data={data} month={month} savings />
   </div>
 }
 
