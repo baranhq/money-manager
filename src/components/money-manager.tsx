@@ -104,10 +104,6 @@ function UnlockScreen({ storageEncrypted, busy, error, unlock }: {
         ? "This browser keeps the profiles encrypted in storage and decrypts them after you unlock. The password is not sent to a server."
         : "This password is a local app lock. Browser storage is not encrypted, and this does not create an online account."}</p>
       <p className="text-sm text-muted-foreground">If you open the app over plain HTTP on a network IP, someone who can change that network traffic could replace the page or capture your password. Use HTTPS before relying on password protection.</p>
-      <nav aria-label="Legal notices" className="flex gap-4 text-sm text-muted-foreground">
-        <a href="/privacy" className="underline underline-offset-4">Privacy</a>
-        <a href="/licenses" className="underline underline-offset-4">Licenses</a>
-      </nav>
     </div>
   </main>
 }
@@ -416,10 +412,6 @@ export function MoneyManager() {
             removeCategory={row => remove({ type: "category", row })} openData={mode => setOverlay({ type: "dataTool", mode })}
             securityStatus={securityStatus ?? { configured: false, storageEncrypted: false }} onSecurityChanged={securityChanged} lockSite={() => lockApp()} />}
         </>}
-        {!report && <footer className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t py-4 text-xs text-muted-foreground">
-          <a href="/privacy" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Privacy</a>
-          <a href="/licenses" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Licenses</a>
-        </footer>}
       </div>
     </main>
     <MobileNavigation route={route} add={add} ready={ready} />

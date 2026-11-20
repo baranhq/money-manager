@@ -31,7 +31,7 @@ export function AccountMenu({ mobile = false, hrefPrefix = "", profiles = [], ac
         <ProfileAvatar profile={shownProfile} size="sm" />
         <span className="max-w-24 truncate text-xs font-medium">{shownProfile.name}</span>
       </Button> :
-      <Button variant="secondary" className="w-full justify-start px-2 lg:min-h-11" aria-label={`Profile menu for ${shownProfile.name}`}>
+      <Button variant="secondary" className="h-11 w-full justify-center px-0 xl:justify-start xl:px-3" aria-label={`Profile menu for ${shownProfile.name}`}>
         <ProfileAvatar profile={shownProfile} size="sm" />
         <span className="hidden min-w-0 flex-1 truncate text-left xl:block">{shownProfile.name}</span><ChevronDown className="hidden xl:block" />
       </Button>}
