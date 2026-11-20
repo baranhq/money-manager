@@ -1,6 +1,7 @@
 import type { NextConfig } from "next"
 
 const config: NextConfig = {
+  allowedDevOrigins: ["10.0.0.209"], // LAN host used for mobile development.
   poweredByHeader: false,
   devIndicators: false,
   images: { unoptimized: true },
