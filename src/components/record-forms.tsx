@@ -88,17 +88,38 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
 
 export function BudgetForm({ data, row, close, commit }: Shared & { row?: Budget }) {
   const [category, setCategory] = useState(row?.category ?? "")
+  const selectedCategory = data.categories.find(item => item.id === category)
+  const namingOther = !row && selectedCategory?.id === "other" && selectedCategory.name.trim() === "Other"
   return <RecordForm title={row ? "Edit budget" : "New budget"} description="Set a recurring monthly limit for one expense category." close={close} label={row ? "Save changes" : "Create budget"}
     save={async read => {
       if (!category) throw new Error("Choose an expense category.")
+      const customName = namingOther ? read("otherCategoryName").trim() : ""
+      if (namingOther && !customName) throw new Error("Enter a name for this category.")
+      const customCategory: Category | undefined = namingOther ? {
+        id: crypto.randomUUID(), name: customName, kind: "expense", colour: "grey", icon: "wallet",
+      } : undefined
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency) throw new Error("The ledger currency changed. Reopen this form.")
         if (row && !current.budgets.some(item => item.id === row.id)) throw new Error("This budget was removed in another tab.")
-        return { ...current, budgets: upsert(current.budgets, { id: row?.id ?? crypto.randomUUID(), category, amount: amountFromText(read("amount")) }) }
+        if (customCategory) {
+          const other = current.categories.find(item => item.id === "other" && item.kind === "expense" && item.name.trim() === "Other")
+          if (!other) throw new Error("The Other category changed in another tab. Reopen this form.")
+          const normalizedName = customCategory.name.normalize("NFKC").toLowerCase()
+          if (current.categories.some(item => item.kind === "expense" && item.name.trim().normalize("NFKC").toLowerCase() === normalizedName)) {
+            throw new Error("An expense category with this name already exists.")
+          }
+        }
+        const budgetCategory = customCategory?.id ?? category
+        return {
+          ...current,
+          categories: customCategory ? [...current.categories, customCategory] : current.categories,
+          budgets: upsert(current.budgets, { id: row?.id ?? crypto.randomUUID(), category: budgetCategory, amount: amountFromText(read("amount")) }),
+        }
       }, row ? "Budget updated" : "Budget created")
     }}>
     <Choose label="Category" value={category} onChange={setCategory} placeholder="Choose category"
       options={data.categories.filter(item => item.kind === "expense").map(item => [item.id, item.name])} />
+    {namingOther && <Field name="otherCategoryName" label="Category name" placeholder="e.g. Travel" required maxLength={70} />}
     <Amount currency={data.preferences.currency} amount={row?.amount} label="Monthly limit" />
   </RecordForm>
 }
