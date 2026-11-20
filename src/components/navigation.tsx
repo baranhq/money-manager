@@ -65,7 +65,7 @@ export function Sidebar({ route, hrefPrefix = "", profiles, activeProfile, onSwi
     <div className="mb-4 xl:hidden">
       <Sheet open={expanded} onOpenChange={setExpanded}>
         <SheetTrigger asChild><Button variant="ghost" size="icon-lg" aria-label="Open navigation" className="size-11"><MenuIcon /></Button></SheetTrigger>
-        <SheetContent side="left" className="w-64 bg-sidebar">
+        <SheetContent side="left" overlayClassName="bg-black/30 backdrop-blur-sm" className="w-64 bg-sidebar">
           <SheetHeader><SheetTitle>Baran’s Money Manager</SheetTitle><SheetDescription>Choose a section.</SheetDescription></SheetHeader>
           <nav aria-label="Expanded navigation" className="grid gap-1 px-4">
             {items.map(({ id, label, icon: Icon }) => <Button key={id} variant={(id === route || (id === "settings" && inSettings)) ? "secondary" : "ghost"} className="justify-start" asChild>
