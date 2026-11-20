@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DateField } from "@/components/date-field"
 import { CategoryIcon, Choose, ErrorText, Field, FormActions, Modal, formValues, useOperation, type Commit } from "@/components/shared"
 import { amountFromText, colours, exactAmount, icons, today, upsert, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind } from "@/lib/finance"
 
@@ -77,7 +78,7 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
           <Field name="account" label="Account" required maxLength={70} list="known-accounts" defaultValue={row?.account ?? "Cash"} />
           <datalist id="known-accounts">{accounts.map(account => <option key={account} value={account} />)}</datalist>
         </div>
-        <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
+        <DateField name="date" label="Date" required defaultValue={row?.date ?? today()} />
         <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
         {!choices.length && <p className="text-sm text-muted-foreground">Create a category first under Settings → Categories.</p>}
       </TabsContent>
@@ -138,7 +139,7 @@ export function GoalForm({ data, row, close, commit }: Shared & { row?: Goal }) 
     }}>
     <Field name="name" label="Pot name" maxLength={90} required defaultValue={row?.name} />
     <Amount label="Target amount" currency={data.preferences.currency} amount={row?.amount} required={false} />
-    <Field name="date" label="Target date (optional)" type="date" defaultValue={row?.date} />
+    <DateField name="date" label="Target date (optional)" defaultValue={row?.date} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
   </RecordForm>
 }
@@ -161,7 +162,7 @@ export function ContributionForm({ data, row, goal, initialDirection = "deposit"
     <Choose label="Transfer type" value={direction} onChange={value => setDirection(value as ContributionDirection)} options={[["deposit", "Add money"], ["withdrawal", "Take money out"]]} />
     <Choose label="Savings pot" value={goalId} onChange={setGoal} options={data.goals.map(item => [item.id, item.name])} />
     <Amount currency={data.preferences.currency} amount={row?.amount} />
-    <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
+    <DateField name="date" label="Date" required defaultValue={row?.date ?? today()} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
   </RecordForm>
 }

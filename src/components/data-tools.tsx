@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { Download, FileText } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { DateField } from "@/components/date-field"
 import { combineBackup, parseBackup, serialiseBackup } from "@/lib/backup"
 import { exportCsv, importCsv } from "@/lib/csv"
 import { initialData, money, shiftMonth, today, type Data } from "@/lib/finance"
@@ -228,7 +229,7 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
     }}>
       <Choose label="Date range" options={[["month", "One month"], ["custom", "Custom range"]]} value={scope} onChange={setScope} />
       {scope === "custom" ? <div className="grid grid-cols-2 gap-3">
-        <Field name="start" label="From" type="date" required /><Field name="end" label="To" type="date" required />
+        <DateField name="start" label="From" required /><DateField name="end" label="To" required />
       </div> : <Field name="month" label="Month" type="month" value={month} onChange={event => setMonth(event.target.value)} required />}
       <label className="flex items-start gap-3 rounded-lg border p-3 text-sm">
         <input type="checkbox" checked={protectCsv} onChange={event => setProtectCsv(event.target.checked)} className="mt-0.5 size-4 accent-primary" />
