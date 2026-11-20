@@ -162,7 +162,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       { title: "Licenses", description: "Third-party licences and notices.", icon: Scale, href: "/licenses" },
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}
-      description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, goals and preferences are stored in IndexedDB."} close={() => setNote(undefined)}>
+      description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in IndexedDB."} close={() => setNote(undefined)}>
       <p className="text-sm">{note === "about" ? "Track income, expenses, budgets and savings in a local ledger on this device." :
         "Profiles are local labels, not password-protected accounts. Anyone with access to this browser can switch between them. Keep downloaded ledger backups in a private location."}</p>
       <Button variant="outline" onClick={() => setNote(undefined)}>Close</Button>

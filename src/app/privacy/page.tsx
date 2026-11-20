@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <div className="space-y-4">
       <Card className="gap-2 bg-accent/60 p-5 shadow-none">
         <h2 className="font-semibold">Profiles and records stay in your browser</h2>
-        <p className="text-sm leading-relaxed">Money Manager uses IndexedDB to remember profile names, selected avatar colours and vector icons, transactions, categories, budgets, savings goals, contributions and preferences. Each profile has a separate local ledger. Calculations and file checks take place in your browser; the app has no sign-in, analytics, advertising or cloud sync. Profiles do not have passwords, so anyone with access to this browser can switch between them.</p>
+        <p className="text-sm leading-relaxed">Money Manager uses IndexedDB to remember profile names, selected avatar colours and vector icons, transactions, categories, budgets, savings pots, dated deposits and withdrawals, and preferences. A deposit reduces Available to spend; a withdrawal adds that amount back. Each profile has a separate local ledger. Calculations and file checks take place in your browser; the app has no sign-in, analytics, advertising or cloud sync. Profiles do not have passwords, so anyone with access to this browser can switch between them.</p>
       </Card>
       <Card className="gap-2 p-5 shadow-none">
         <h2 className="font-semibold">Control your records and copies</h2>

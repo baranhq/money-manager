@@ -14,7 +14,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Choose, Field, Modal } from "@/components/shared"
-import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type Data, type Entry, type Goal, type Kind, type NewProfile, type Profile } from "@/lib/finance"
+import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind, type NewProfile, type Profile } from "@/lib/finance"
 import { createProfile as createStoredProfile, InvalidSnapshot, readWorkspace, recoverData, switchProfile as switchStoredProfile, updateData, updateProfile as updateStoredProfile, type Workspace } from "@/lib/storage"
 import { cn } from "@/lib/utils"
 
@@ -26,7 +26,7 @@ type Overlay =
   | { type: "budgetDetail"; row: Budget }
   | { type: "goalForm"; row?: Goal }
   | { type: "goalDetail"; row: Goal }
-  | { type: "contribution"; row?: Contribution; goal?: Goal }
+  | { type: "contribution"; row?: Contribution; goal?: Goal; direction?: ContributionDirection }
   | { type: "category"; kind: Kind; row?: Category }
   | { type: "remove"; target: Removal }
   | { type: "dataTool"; mode: DataTool }
@@ -196,7 +196,7 @@ export function MoneyManager() {
   const budgetEdit = (row?: Budget) => setOverlay({ type: "budgetForm", row })
   const goalDetail = (row: Goal) => setOverlay({ type: "goalDetail", row })
   const goalEdit = (row?: Goal) => setOverlay({ type: "goalForm", row })
-  const contribute = (goal?: Goal) => data?.goals.length ? setOverlay({ type: "contribution", goal }) : goalEdit()
+  const contribute = (goal?: Goal, direction: ContributionDirection = "deposit") => data?.goals.length ? setOverlay({ type: "contribution", goal, direction }) : goalEdit()
   const remove = (target: Removal) => setOverlay({ type: "remove", target })
   const reportProps = data && { data, month }
   const operationProps = data && { data, close, commit }
@@ -217,7 +217,7 @@ export function MoneyManager() {
           {report && data && <div className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-auto md:pt-2">
             <MonthControl month={month} setMonth={setMonth} data={data} />
             {ready && <Button className="hidden min-h-10 md:inline-flex" onClick={route === "budgets" ? () => budgetEdit() : route === "savings" ? () => contribute() : add}>
-              <Plus /> {route === "budgets" ? "New budget" : route === "savings" ? (data.goals.length ? "Add money" : "New goal") : "Add transaction"}
+              <Plus /> {route === "budgets" ? "New budget" : route === "savings" ? (data.goals.length ? "Add money" : "New savings pot") : "Add transaction"}
             </Button>}
           </div>}
         </header>
@@ -242,10 +242,10 @@ export function MoneyManager() {
             editCategory={(kind: Kind, row?: Category) => setOverlay({ type: "category", kind, row })}
             removeCategory={row => remove({ type: "category", row })} openData={mode => setOverlay({ type: "dataTool", mode })} />}
         </>}
-        <footer className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t py-4 text-xs text-muted-foreground">
+        {!report && <footer className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t py-4 text-xs text-muted-foreground">
           <a href="/privacy" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Privacy</a>
           <a href="/licenses" className="inline-flex items-center underline-offset-4 hover:underline max-md:min-h-11">Licenses</a>
-        </footer>
+        </footer>}
       </div>
     </main>
     <MobileNavigation route={route} add={add} ready={ready} />
@@ -263,9 +263,9 @@ export function MoneyManager() {
     {data && overlay?.type === "budgetDetail" && <BudgetDetail row={overlay.row} data={data} month={month} close={close} edit={() => budgetEdit(overlay.row)} remove={() => remove({ type: "budget", row: overlay.row })} />}
     {operationProps && overlay?.type === "goalForm" && <GoalForm {...operationProps} row={overlay.row} />}
     {data && overlay?.type === "goalDetail" && <GoalDetail row={overlay.row} data={data} close={close} edit={() => goalEdit(overlay.row)}
-      remove={() => remove({ type: "goal", row: overlay.row })} contribute={() => contribute(overlay.row)}
+      remove={() => remove({ type: "goal", row: overlay.row })} contribute={direction => contribute(overlay.row, direction)}
       editContribution={(row: Contribution) => setOverlay({ type: "contribution", row })} removeContribution={row => remove({ type: "contribution", row })} />}
-    {operationProps && overlay?.type === "contribution" && <ContributionForm {...operationProps} row={overlay.row} goal={overlay.goal} />}
+    {operationProps && overlay?.type === "contribution" && <ContributionForm {...operationProps} row={overlay.row} goal={overlay.goal} initialDirection={overlay.direction} />}
     {operationProps && overlay?.type === "category" && <CategoryForm {...operationProps} initialKind={overlay.kind} row={overlay.row} />}
     {operationProps && overlay?.type === "remove" && <RemoveRecord {...operationProps} target={overlay.target} />}
     {overlay?.type === "dataTool" && (data || loadError?.corrupted) && <DataTools mode={overlay.mode} data={data ?? initialData()} commit={commit} close={close} notify={notify}

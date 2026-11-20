@@ -1,4 +1,4 @@
-import { colours, currencies, icons, isDate, MAX_AMOUNT } from "./finance.ts"
+import { colours, contributionDelta, currencies, icons, isDate, MAX_AMOUNT } from "./finance.ts"
 import type { Budget, Category, Contribution, Data, Entry, Goal, Preferences } from "./finance.ts"
 
 export const MAX_BYTES = 8 * 1024 * 1024
@@ -47,6 +47,20 @@ function amount(value: unknown) {
   return value
 }
 
+function targetAmount(value: unknown) {
+  return value === null ? null : amount(value)
+}
+
+function contributionObject(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid contribution.")
+  const fields = Object.keys(value)
+  const legacy = ["id", "goal", "amount", "date", "notes"]
+  const current = [...legacy.slice(0, 3), "direction", ...legacy.slice(3)]
+  const matches = (expected: string[]) => fields.length === expected.length && expected.every(field => fields.includes(field))
+  if (!matches(legacy) && !matches(current)) throw new Error("Unexpected or missing fields in contributions.")
+  return value as Record<string, unknown>
+}
+
 function date(value: unknown, optional = false) {
   const result = string(value, 10, optional)
   if (!(optional && result === "") && !isDate(result)) throw new Error("A record contains an invalid date.")
@@ -77,8 +91,20 @@ export function validateData(input: unknown): Data {
   const categories = read("categories", (v): Category => ({ id: id(v.id), name: string(v.name, 70), kind: kind(v.kind), colour: choice(v.colour, colours), icon: choice(v.icon, icons) }))
   const entries = read("entries", (v): Entry => ({ id: id(v.id), kind: kind(v.kind), name: string(v.name, 120), amount: amount(v.amount), date: date(v.date), category: id(v.category), account: string(v.account, 70), notes: string(v.notes, 500, true) }))
   const budgets = read("budgets", (v): Budget => ({ id: id(v.id), category: id(v.category), amount: amount(v.amount) }))
-  const goals = read("goals", (v): Goal => ({ id: id(v.id), name: string(v.name, 90), amount: amount(v.amount), date: date(v.date, true), notes: string(v.notes, 500, true) }))
-  const contributions = read("contributions", (v): Contribution => ({ id: id(v.id), goal: id(v.goal), amount: amount(v.amount), date: date(v.date), notes: string(v.notes, 500, true) }))
+  const goals = read("goals", (v): Goal => ({ id: id(v.id), name: string(v.name, 90), amount: targetAmount(v.amount), date: date(v.date, true), notes: string(v.notes, 500, true) }))
+  const contributions = data.contributions
+  if (!Array.isArray(contributions) || (count += contributions.length) > MAX_RECORDS) throw new Error(`A backup can contain up to ${MAX_RECORDS.toLocaleString("en")} records.`)
+  const contributionIds = new Set<string>()
+  const transfers = contributions.map(value => {
+    const v = contributionObject(value)
+    const row: Contribution = {
+      id: id(v.id), goal: id(v.goal), amount: amount(v.amount), direction: "direction" in v ? choice(v.direction, ["deposit", "withdrawal"] as const) : "deposit",
+      date: date(v.date), notes: string(v.notes, 500, true),
+    }
+    if (contributionIds.has(row.id)) throw new Error("Duplicate record ID in contributions.")
+    contributionIds.add(row.id)
+    return row
+  })
   const categoryMap = new Map(categories.map(item => [item.id, item.kind]))
   const goalIds = new Set(goals.map(goal => goal.id))
   const names = new Set(categories.map(category => `${category.kind}:${category.name.trim().normalize("NFKC").toLowerCase()}`))
@@ -86,8 +112,22 @@ export function validateData(input: unknown): Data {
   if (entries.some(entry => categoryMap.get(entry.category) !== entry.kind)) throw new Error("A transaction has a missing or incompatible category.")
   if (budgets.some(budget => categoryMap.get(budget.category) !== "expense")) throw new Error("A budget requires an expense category.")
   if (new Set(budgets.map(budget => budget.category)).size !== budgets.length) throw new Error("A budget already exists for that category.")
-  if (contributions.some(row => !goalIds.has(row.goal))) throw new Error("A contribution refers to a missing savings goal.")
-  return { entries, categories, budgets, goals, contributions, preferences: parsePreferences(data.preferences) }
+  if (transfers.some(row => !goalIds.has(row.goal))) throw new Error("A transfer refers to a missing savings pot.")
+  const transfersByPot = new Map<string, Contribution[]>()
+  for (const transfer of transfers) {
+    const rows = transfersByPot.get(transfer.goal) ?? []
+    rows.push(transfer)
+    transfersByPot.set(transfer.goal, rows)
+  }
+  for (const rows of transfersByPot.values()) {
+    rows.sort((a, b) => a.date.localeCompare(b.date) || (a.direction === b.direction ? 0 : a.direction === "deposit" ? -1 : 1))
+    let balance = 0
+    for (const transfer of rows) {
+      balance += contributionDelta(transfer)
+      if (balance < 0) throw new Error("A withdrawal cannot exceed the savings pot balance on its date.")
+    }
+  }
+  return { entries, categories, budgets, goals, contributions: transfers, preferences: parsePreferences(data.preferences) }
 }
 
 export function serialiseBackup(data: Data) {

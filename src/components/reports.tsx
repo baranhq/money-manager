@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CategoryIcon, Empty, EntryCaption, Menu, Meter, Metric, Signed } from "@/components/shared"
 import { cn } from "@/lib/utils"
-import { dateLabel, goalSaved, money, monthName, monthTotals, percent, shiftMonth, spending, today, type Budget, type Data, type Entry, type Goal } from "@/lib/finance"
+import { dateLabel, goalSaved, money, monthName, monthTotals, percent, savingsMovement, shiftMonth, spending, today, type Budget, type Data, type Entry, type Goal } from "@/lib/finance"
 
 type Report = { data: Data; month: string }
 export type EditBudget = (budget?: Budget) => void
@@ -36,37 +36,39 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
   const [selected, setSelected] = useState<string>()
   const rows = Array.from({ length: 5 }, (_, i) => {
     const period = shiftMonth(month, i - 4)
-    return { period, ...monthTotals(data, period) }
+    return { period, ...monthTotals(data, period), movement: savingsMovement(data, period) }
   })
   const inspected = rows.find(row => row.period === selected) ?? rows[4]
   const currency = data.preferences.currency
-  const ceiling = Math.max(1, ...rows.flatMap(row => savings ? [row.saved] : [row.income, row.spent]))
+  const ceiling = Math.max(1, ...rows.flatMap(row => savings ? [row.movement.added, row.movement.withdrawn] : [row.income, row.spent]))
   const axis = [ceiling, Math.round(ceiling / 2), 0]
   const formatAxis = new Intl.NumberFormat("en-IE", {
     style: "currency", currency, notation: "compact", maximumFractionDigits: 1,
   })
   const label = (period: string) => dateLabel(period + "-01", { month: "short" })
   return <Card className="gap-0 p-3 shadow-none sm:p-5">
-    <SectionHeading title={savings ? "Monthly contributions" : "Cash flow"} note={savings ? "Money added to all goals" : undefined} action={
+    <SectionHeading title={savings ? "Monthly savings transfers" : "Cash flow"} note={savings ? "Money added to and taken out of pots" : undefined} action={
       <div className="flex items-center gap-1.5">
         <span className="text-right text-xs font-medium text-primary sm:text-sm">
-          {savings ? money(rows[4].saved, currency) : `${money(rows[4].balance, currency)} net`}
+          {savings ? `${money(rows[4].movement.net, currency)} net` : `${money(rows[4].balance, currency)} net`}
         </span>
         <Popover>
-          <PopoverTrigger asChild><Button size="icon-sm" variant="secondary" aria-label={savings ? "Contribution chart details" : "Cash flow details"}><Info /></Button></PopoverTrigger>
+          <PopoverTrigger asChild><Button size="icon-sm" variant="secondary" aria-label={savings ? "Savings chart details" : "Cash flow details"}><Info /></Button></PopoverTrigger>
           <PopoverContent align="end" className="w-64">
             <p className="mb-2 font-medium">{monthName(inspected.period)}</p>
             <dl className="grid grid-cols-[1fr_auto] gap-2 text-sm tabular-nums">
-              {savings ? <><dt>Contributions</dt><dd>{money(inspected.saved, currency)}</dd></> :
-                <><dt>Income</dt><dd>{money(inspected.income, currency)}</dd><dt>Spent</dt><dd>{money(inspected.spent, currency)}</dd><dt>Net</dt><dd>{money(inspected.balance, currency)}</dd></>}
+              {savings ? <><dt>Added</dt><dd>{money(inspected.movement.added, currency)}</dd><dt>Taken out</dt><dd>{money(inspected.movement.withdrawn, currency)}</dd><dt>Net moved to pots</dt><dd>{money(inspected.movement.net, currency)}</dd></> :
+                <><dt>Income</dt><dd>{money(inspected.income, currency)}</dd><dt>Spent</dt><dd>{money(inspected.spent, currency)}</dd>
+                  <dt>Added to pots</dt><dd>{money(inspected.movement.added, currency)}</dd><dt>Taken out</dt><dd>{money(inspected.movement.withdrawn, currency)}</dd>
+                  <dt>Available to spend</dt><dd>{money(inspected.balance, currency)}</dd></>}
             </dl>
           </PopoverContent>
         </Popover>
       </div>
     } />
     <div className="mb-3 flex gap-5 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-1" />{savings ? "Contributions" : "Income"}</span>
-      {!savings && <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-2" />Spent</span>}
+      <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-1" />{savings ? "Added" : "Income"}</span>
+      <span className="flex items-center gap-1.5"><span className="size-2 rounded-xs bg-chart-2" />{savings ? "Taken out" : "Spent"}</span>
     </div>
     <div className="relative grid grid-cols-[auto_1fr] gap-2 pb-5">
       <div className="flex h-20 flex-col justify-between text-[0.68rem] text-muted-foreground tabular-nums sm:h-44">
@@ -77,17 +79,17 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
           <span className="border-t" /><span className="border-t" /><span className="border-t" />
         </div>
         {rows.map(row => <button key={row.period} type="button" aria-pressed={inspected.period === row.period}
-          aria-label={`${label(row.period)} ${row.period.slice(0, 4)}. ${savings ? `Contributions ${money(row.saved, currency)}` : `Income ${money(row.income, currency)}, spent ${money(row.spent, currency)}`}`}
+          aria-label={`${label(row.period)} ${row.period.slice(0, 4)}. ${savings ? `Added ${money(row.movement.added, currency)}, taken out ${money(row.movement.withdrawn, currency)}` : `Income ${money(row.income, currency)}, spent ${money(row.spent, currency)}`}`}
           onClick={() => setSelected(row.period)}
           className={cn("relative flex h-full items-end justify-center gap-1 rounded-sm px-1 hover:bg-muted/80 sm:gap-1.5", inspected.period === row.period && "bg-accent/65")}>
-          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * (savings ? row.saved : row.income) / ceiling}%` }} />
-          {!savings && <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-2" style={{ height: `${100 * row.spent / ceiling}%` }} />}
+          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * (savings ? row.movement.added : row.income) / ceiling}%` }} />
+          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-2" style={{ height: `${100 * (savings ? row.movement.withdrawn : row.spent) / ceiling}%` }} />
           <span className="absolute -bottom-5 text-xs text-muted-foreground">{label(row.period)}</span>
         </button>)}
       </div>
     </div>
     <p aria-live="polite" className={selected ? "mt-2 text-xs text-muted-foreground" : "sr-only"}>
-      {selected && `${label(inspected.period)} · ${savings ? money(inspected.saved, currency) : `Income ${money(inspected.income, currency)} · Spent ${money(inspected.spent, currency)}`}`}
+      {selected && `${label(inspected.period)} · ${savings ? `Added ${money(inspected.movement.added, currency)} · Taken out ${money(inspected.movement.withdrawn, currency)}` : `Income ${money(inspected.income, currency)} · Spent ${money(inspected.spent, currency)}`}`}
     </p>
   </Card>
 }
@@ -124,18 +126,18 @@ function GoalHighlight({ data, month, goal, open, create }: Report & { goal?: Go
   const currency = data.preferences.currency
   return <Card className="justify-between gap-4 border-0 bg-accent/70 p-4 shadow-none sm:p-5">
     <div className="flex items-center justify-between gap-2">
-      <h2 className="flex items-center gap-2 text-sm font-semibold text-primary"><Target size={17} /> Savings goal</h2>
-      {goal && <Button variant="ghost" size="sm" className="-mr-1 text-primary" onClick={() => open(goal)}>View goal<ChevronRight /></Button>}
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-primary"><Target size={17} /> Savings pot</h2>
+      {goal && <Button variant="ghost" size="sm" className="-mr-1 text-primary" onClick={() => open(goal)}>View pot<ChevronRight /></Button>}
     </div>
     {goal ? <>
       <h3 className="break-words text-xl font-semibold tracking-tight sm:text-2xl">{goal.name}</h3>
       <div><p className="text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">{money(saved, currency)}</p>
-        <p className="mt-1 text-sm text-muted-foreground">of {money(goal.amount, currency)} saved</p></div>
-      <div className="space-y-2 text-primary"><Meter amount={saved} target={goal.amount} label="Goal progress" />
-        <p className="flex justify-between text-sm font-medium"><span>{money(Math.max(0, goal.amount - saved), currency)} to go</span><span>{percent(saved, goal.amount)}%</span></p></div>
+        <p className="mt-1 text-sm text-muted-foreground">current balance</p></div>
+      {goal.amount !== null && <div className="space-y-2 text-primary"><Meter amount={saved} target={goal.amount} label="Savings pot target progress" />
+        <p className="flex justify-between text-sm font-medium"><span>{money(Math.max(0, goal.amount - saved), currency)} to target</span><span>{percent(saved, goal.amount)}%</span></p></div>}
       {goal.date && <p className="text-xs text-muted-foreground">Target {dateLabel(goal.date)}</p>}
-    </> : <div className="space-y-3"><p className="text-sm text-muted-foreground">Set a target and track your contributions.</p>
-      <Button variant="outline" size="sm" onClick={create}><Plus /> New goal</Button></div>}
+    </> : <div className="space-y-3"><p className="text-sm text-muted-foreground">Create a pot to set money aside and track its balance.</p>
+      <Button variant="outline" size="sm" onClick={create}><Plus /> New savings pot</Button></div>}
   </Card>
 }
 
@@ -155,7 +157,7 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
         <div>
           <h2 className="text-sm font-medium">Available to spend</h2>
           <p className="mt-1 break-words text-[clamp(2rem,10vw,2.45rem)] leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[clamp(2.4rem,3.55vw,3.2rem)]">{money(current.balance, currency)}</p>
-          <p className="mt-1 text-xs opacity-85">Income less spending · {monthName(month, true)}</p>
+          <p className="mt-1 text-xs opacity-85">Savings deposits reduce this; withdrawals add back</p>
         </div>
         <div className="space-y-1 text-xs">
           <p><strong>{current.income > 0 ? `${used}%` : "—"}</strong> <span className="ml-1 opacity-90">of monthly income spent</span></p>
@@ -167,7 +169,7 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
         <div className="grid grid-cols-3 divide-x">
           <Metric label="Income" value={money(current.income, currency)} direction="up" detail={Change({ current: current.income, previous: previous.income, currency })} />
           <Metric label="Spent" value={money(current.spent, currency)} direction="down" detail={Change({ current: current.spent, previous: previous.spent, currency })} />
-          <Metric label="Saved" value={money(current.saved, currency)} detail="Contributions this month" />
+          <Metric label="Net saved" value={money(current.saved, currency)} detail="Added less taken out of pots this month" />
         </div>
       </div>
     </div>
@@ -229,54 +231,54 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
         </li>)}</ul> : <p className="text-sm text-muted-foreground">No expenses this month.</p>}
       </Card>
       <Card className="gap-2 bg-accent/65 p-5 shadow-none">
-        <SectionHeading title="Savings goals" action={<ViewLink href="#savings">View savings</ViewLink>} />
-        <p className="text-sm text-muted-foreground">{data.goals.length} {data.goals.length === 1 ? "goal" : "goals"}</p>
+        <SectionHeading title="Savings pots" action={<ViewLink href="#savings">View savings</ViewLink>} />
+        <p className="text-sm text-muted-foreground">{data.goals.length} {data.goals.length === 1 ? "pot" : "pots"}</p>
       </Card>
     </div>
   </div>
 }
 
 export function Savings({ data, month, open, edit, contribute, remove }: Report & {
-  open: (goal: Goal) => void; edit: EditGoal; contribute: (goal?: Goal) => void; remove: (goal: Goal) => void
+  open: (goal: Goal) => void; edit: EditGoal; contribute: (goal?: Goal, direction?: "deposit" | "withdrawal") => void; remove: (goal: Goal) => void
 }) {
-  const savedByGoal = new Map<string, number>()
-  let total = 0
-  for (const contribution of data.contributions) {
-    if (contribution.date.slice(0, 7) <= month) {
-      savedByGoal.set(contribution.goal, (savedByGoal.get(contribution.goal) ?? 0) + contribution.amount)
-      total += contribution.amount
-    }
-  }
-  const target = data.goals.reduce((sum, row) => sum + row.amount, 0)
+  const balances = new Map(data.goals.map(goal => [goal.id, goalSaved(data, goal.id, month)]))
+  const total = [...balances.values()].reduce((sum, balance) => sum + balance, 0)
+  const targeted = data.goals.filter(goal => goal.amount !== null)
+  const target = targeted.reduce((sum, goal) => sum + (goal.amount ?? 0), 0)
+  const targetedBalance = targeted.reduce((sum, goal) => sum + (balances.get(goal.id) ?? 0), 0)
   const currency = data.preferences.currency
-  return <div className="grid gap-5 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+  return <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
     <Card className="gap-2 bg-balance p-5 text-balance-foreground">
-      <h2 className="text-sm font-medium">Total saved</h2>
+      <h2 className="text-sm font-medium">Total in savings pots</h2>
       <p className="break-words text-4xl font-semibold tracking-tight tabular-nums">{money(total, currency)}</p>
-      <p className="text-sm">Across {data.goals.length} {data.goals.length === 1 ? "goal" : "goals"}</p>
+      <p className="text-sm">Across {data.goals.length} {data.goals.length === 1 ? "pot" : "pots"} as of {monthName(month)}</p>
     </Card>
     <Card className="justify-center gap-3 p-5 shadow-none">
-      <h2 className="font-semibold">Goal progress</h2>
-      <p className="text-sm text-muted-foreground">{percent(total, target)}% of {money(target, currency)} target</p>
-      <div className="text-primary"><Meter amount={total} target={target} label="Savings target funded" /></div>
+      <h2 className="font-semibold">Target progress</h2>
+      {target > 0 ? <>
+        <p className="text-sm text-muted-foreground">{money(targetedBalance, currency)} of {money(target, currency)} across {targeted.length} targeted {targeted.length === 1 ? "pot" : "pots"}</p>
+        <div className="text-primary"><Meter amount={targetedBalance} target={target} label="Savings pot targets funded" /></div>
+      </> : <p className="text-sm text-muted-foreground">No targets set. You can add one when you edit a pot.</p>}
     </Card>
     <section className="order-2 md:order-none">
-      <SectionHeading title="Savings goals" action={<Button variant="outline" size="sm" onClick={() => edit()}><Plus /> New goal</Button>} />
+      <SectionHeading title="Savings pots" note="Adding money reduces Available to spend; taking it out adds it back."
+        action={<Button variant="outline" size="sm" onClick={() => edit()}><Plus /> New pot</Button>} />
       {data.goals.length ? <div className="grid gap-3">{data.goals.map(goal => {
-        const saved = savedByGoal.get(goal.id) ?? 0
+        const balance = balances.get(goal.id) ?? 0
         return <Card key={goal.id} className="gap-2 p-4 shadow-none">
           <div className="flex items-center justify-between gap-2">
             <button type="button" className="min-h-9 min-w-0 text-left font-semibold hover:underline" onClick={() => open(goal)}>{goal.name}</button>
             <Menu label={`Actions for ${goal.name}`} actions={[
-              { label: "View goal", run: () => open(goal) }, { label: "Add contribution", run: () => contribute(goal) },
-              { label: "Edit goal", run: () => edit(goal) }, { label: "Delete goal", run: () => remove(goal), destructive: true },
+              { label: "View pot", run: () => open(goal) }, { label: "Add money", run: () => contribute(goal, "deposit") },
+              ...(balance > 0 ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
+              { label: "Edit pot", run: () => edit(goal) }, { label: "Delete pot", run: () => remove(goal), destructive: true },
             ]} />
           </div>
-          <p className="text-sm text-muted-foreground">{money(saved, currency)} of {money(goal.amount, currency)} · {percent(saved, goal.amount)}%</p>
-          <div className="text-primary"><Meter amount={saved} target={goal.amount} label={`Progress for ${goal.name}`} /></div>
-          <p className="text-xs text-muted-foreground">{goal.date ? `Target ${dateLabel(goal.date)}` : "Ongoing"}</p>
+          <p className="text-sm text-muted-foreground">{money(balance, currency)} current balance{goal.amount !== null ? ` · ${percent(balance, goal.amount)}% of ${money(goal.amount, currency)} target` : ""}</p>
+          {goal.amount !== null && <div className="text-primary"><Meter amount={balance} target={goal.amount} label={`Target progress for ${goal.name}`} /></div>}
+          <p className="text-xs text-muted-foreground">{goal.date ? `Target ${dateLabel(goal.date)}` : goal.amount !== null ? "No target date" : "No target set"}</p>
         </Card>
-      })}</div> : <Empty title="No goals yet">Create a goal, then record the money you put aside.</Empty>}
+      })}</div> : <Empty title="No savings pots yet">Create a pot to separate money you want to keep aside.</Empty>}
       {data.goals.length > 0 && <Button variant="outline" className="mt-4" onClick={() => contribute()}><Plus /> Add money</Button>}
     </section>
     <div className="order-1 md:order-none"><Chart data={data} month={month} savings /></div>

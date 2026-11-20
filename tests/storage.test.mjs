@@ -10,7 +10,7 @@ test("IndexedDB persists changes, serialises concurrent writes, and rolls back i
   await Promise.all([add("one"), add("two")])
   const before = await readData()
   assert.deepEqual(before.goals.map(goal => goal.id).sort(), ["one", "two"])
-  await assert.rejects(updateData(data => ({ ...data, goals: [{ ...data.goals[0], amount: 0 }] })))
+  await assert.rejects(updateData(data => ({ ...data, goals: [{ ...data.goals[0], amount: -1 }] })))
   assert.deepEqual(await readData(), before)
 })
 

@@ -23,7 +23,7 @@ function download(text: string, mediaType: string, name: string) {
 }
 
 const counts = ["entries", "budgets", "goals", "contributions", "categories"] as const
-const labels = { entries: "Transactions", budgets: "Budgets", goals: "Savings goals", contributions: "Contributions", categories: "Categories" }
+const labels = { entries: "Transactions", budgets: "Budgets", goals: "Savings pots", contributions: "Money transfers", categories: "Categories" }
 
 function Counts({ before, after }: { before: Data; after?: Data }) {
   return <dl className="divide-y rounded-lg border px-3">
@@ -113,7 +113,7 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
     restore: `Choose a Money Manager JSON file to merge into or replace the financial records for ${profileName}. The profile name and avatar are not changed.`,
     import: `Choose a UTF-8 CSV using the column headings from a Money Manager export. Transactions will be checked before adding them to ${profileName}.`,
     export: `Download a CSV of ${profileName}'s transactions. ${disclaimer}`,
-    clear: `This removes transactions, budgets, savings goals, contributions and custom categories from ${profileName}'s profile only. Its name and avatar stay. Appearance settings and downloaded files stay where they are.`,
+    clear: `This removes transactions, budgets, savings pots, money transfers and custom categories from ${profileName}'s profile only. Its name and avatar stay. Appearance settings and downloaded files stay where they are.`,
   }[mode]
 
   return <Modal title={title} description={description} close={close} busy={operation.busy} initialFocus={mode === "clear" ? "cancel-operation" : undefined} destructive={mode === "clear"}>

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Choose, ErrorText, FormActions, Menu, Meter, Modal, useOperation, type Commit } from "@/components/shared"
-import { dateLabel, goalSaved, money, spending, type Budget, type Category, type Contribution, type Data, type Entry, type Goal } from "@/lib/finance"
+import { contributionDelta, dateLabel, goalSaved, money, spending, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal } from "@/lib/finance"
 
 function Details({ rows }: { rows: [string, string][] }) {
   return <dl className="divide-y rounded-lg border px-3">
@@ -41,27 +41,30 @@ export function BudgetDetail({ row, data, month, close, edit, remove }: {
 }
 
 export function GoalDetail({ row, data, close, edit, remove, contribute, editContribution, removeContribution }: {
-  row: Goal; data: Data; close: () => void; edit: () => void; remove: () => void; contribute: () => void
+  row: Goal; data: Data; close: () => void; edit: () => void; remove: () => void; contribute: (direction: ContributionDirection) => void
   editContribution: (row: Contribution) => void; removeContribution: (row: Contribution) => void
 }) {
   const total = goalSaved(data, row.id)
   const currency = data.preferences.currency
   const contributions = data.contributions.filter(item => item.goal === row.id).sort((a, b) => b.date.localeCompare(a.date))
-  return <Modal title={row.name} description={row.date ? `Target ${dateLabel(row.date)}` : "Ongoing savings goal"} close={close}>
-    <Details rows={[["Total saved", money(total, currency)], ["Target amount", money(row.amount, currency)], ...(row.notes ? [["Notes", row.notes] as [string, string]] : [])]} />
-    <div className="text-primary"><Meter label="Goal progress" amount={total} target={row.amount} /></div>
-    <div className="flex items-center justify-between gap-2"><h3 className="font-semibold">Contribution history</h3>
-      <Menu label="Goal actions" actions={[{ label: "Edit goal", run: edit }, { label: "Delete goal", run: remove, destructive: true }]} />
+  return <Modal title={row.name} description={row.date ? `Savings pot · target ${dateLabel(row.date)}` : "Savings pot · no target date"} close={close}>
+    <Details rows={[["Current balance", money(total, currency)], ...(row.amount !== null ? [["Target amount", money(row.amount, currency)] as [string, string]] : []), ...(row.notes ? [["Notes", row.notes] as [string, string]] : [])]} />
+    {row.amount !== null && <div className="text-primary"><Meter label="Savings pot target progress" amount={total} target={row.amount} /></div>}
+    <div className="flex items-center justify-between gap-2"><h3 className="font-semibold">Transfer history</h3>
+      <Menu label="Savings pot actions" actions={[{ label: "Edit pot", run: edit }, { label: "Delete pot", run: remove, destructive: true }]} />
     </div>
     {contributions.length ? <ul className="max-h-56 divide-y overflow-auto rounded-lg border">
       {contributions.map(item => <li className="flex items-center justify-between gap-2 px-3 py-1.5 text-sm" key={item.id}>
-        <div className="min-w-0"><p className="font-medium tabular-nums">{money(item.amount, currency)}</p>
+        <div className="min-w-0"><p className="font-medium tabular-nums">{contributionDelta(item) > 0 ? "+" : "−"}{money(item.amount, currency)} · {item.direction === "deposit" ? "Added" : "Taken out"}</p>
           <p className="break-words text-xs text-muted-foreground">{dateLabel(item.date)}{item.notes && ` · ${item.notes}`}</p></div>
-        <Menu label={`Contribution on ${dateLabel(item.date)}`} actions={[
-          { label: "Edit contribution", run: () => editContribution(item) }, { label: "Remove contribution", run: () => removeContribution(item), destructive: true },
+        <Menu label={`Transfer on ${dateLabel(item.date)}`} actions={[
+          { label: "Edit transfer", run: () => editContribution(item) }, { label: "Remove transfer", run: () => removeContribution(item), destructive: true },
         ]} /></li>)}
-    </ul> : <p className="text-sm text-muted-foreground">No contributions yet.</p>}
-    <Button className="justify-self-end" onClick={contribute}><Plus /> Add contribution</Button>
+    </ul> : <p className="text-sm text-muted-foreground">No transfers yet.</p>}
+    <div className="flex justify-end gap-2">
+      <Button variant="outline" disabled={total === 0} onClick={() => contribute("withdrawal")}>Take out</Button>
+      <Button onClick={() => contribute("deposit")}><Plus /> Add money</Button>
+    </div>
   </Modal>
 }
 
@@ -76,12 +79,12 @@ export function RemoveRecord({ target, data, close, commit }: { target: Removal;
   const usage = category ? data.entries.filter(item => item.category === category.id).length : 0
   const choices = category ? data.categories.filter(item => item.id !== category.id && item.kind === category.kind) : []
   const id = target.row.id
-  const label = { entry: "transaction", budget: "budget", goal: "savings goal", contribution: "contribution", category: "category" }[target.type]
+  const label = { entry: "transaction", budget: "budget", goal: "savings pot", contribution: "transfer", category: "category" }[target.type]
   const affected = target.type === "goal" ? data.contributions.filter(item => item.goal === id).length : 0
   const categoryUse = budget ? "Remove the budget for this category before deleting it." :
     usage ? `This category is used by ${usage} transaction${usage === 1 ? "" : "s"}. Choose where to move them first.` : ""
   const description = categoryUse || (target.type === "goal" && affected
-    ? `This also removes ${affected} contribution${affected === 1 ? "" : "s"} from the goal.`
+    ? `This also removes ${affected} transfer${affected === 1 ? "" : "s"} from the pot.`
     : `The ${label} will be removed from this device.`)
   const name = "name" in target.row ? target.row.name : undefined
   return <Modal title={`Delete ${label}?`} description={description} close={close} busy={operation.busy} initialFocus="cancel-operation" destructive>
@@ -92,7 +95,7 @@ export function RemoveRecord({ target, data, close, commit }: { target: Removal;
         if (target.type === "budget") return { ...current, budgets: current.budgets.filter(item => item.id !== id) }
         if (target.type === "contribution") return { ...current, contributions: current.contributions.filter(item => item.id !== id) }
         if (target.type === "goal") {
-          if (current.contributions.filter(item => item.goal === id).length !== affected) throw new Error("This goal’s contributions changed. Reopen the confirmation to review them.")
+          if (current.contributions.filter(item => item.goal === id).length !== affected) throw new Error("This pot’s transfers changed. Reopen the confirmation to review them.")
           return { ...current, goals: current.goals.filter(item => item.id !== id), contributions: current.contributions.filter(item => item.goal !== id) }
         }
         if (current.budgets.some(item => item.category === id)) throw new Error("Remove this category’s budget first.")

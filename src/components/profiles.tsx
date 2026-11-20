@@ -126,7 +126,7 @@ export function Profiles({ profiles, activeProfileId, addProfile, editProfile, s
       })}
     </ul>
     <aside className="rounded-lg bg-accent/55 p-4 text-sm leading-relaxed text-muted-foreground">
-      Profiles keep separate transactions, categories, budgets, savings goals and preferences in this browser. They do not have passwords: anyone with access to this browser can switch between them.
+      Profiles keep separate transactions, categories, budgets, savings pots, transfers and preferences in this browser. They do not have passwords: anyone with access to this browser can switch between them.
     </aside>
     {error && <p role="alert" className="rounded-md border border-destructive/35 bg-destructive/5 p-3 text-sm text-destructive">{error}</p>}
     {editing && <ProfileEditor key={editing === "new" ? "new" : editing.id} profile={editing === "new" ? undefined : editing}
