@@ -1,0 +1,1352 @@
+{
+  "inputHash": "ab30e2a593c17415a7b152c1a5cc275bdc1bef2c3338c1998992e1bcc49836ac",
+  "bundleHash": "f6f67d65833a8e63e6c88a6a7c019c109145b1530a530ea72439834918b7f20f",
+  "featured": [
+    {
+      "name": "shadcn/ui",
+      "version": "Official New York registry",
+      "source": "https://github.com/shadcn-ui/ui",
+      "licence": "MIT",
+      "text": "MIT License\n\nCopyright (c) 2023 shadcn\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+    },
+    {
+      "name": "Geist Sans",
+      "version": "1.9.2",
+      "source": "https://github.com/vercel/geist-font",
+      "licence": "OFL-1.1",
+      "text": "Copyright (c) 2023 Vercel, in collaboration with basement.studio\n\nThis Font Software is licensed under the SIL Open Font License, Version 1.1.\nThis license is copied below, and is also available with a FAQ at:\nhttp://scripts.sil.org/OFL\n\n-----------------------------------------------------------\nSIL OPEN FONT LICENSE Version 1.1 - 26 February 2007\n-----------------------------------------------------------\n\nPREAMBLE\nThe goals of the Open Font License (OFL) are to stimulate worldwide\ndevelopment of collaborative font projects, to support the font creation\nefforts of academic and linguistic communities, and to provide a free and\nopen framework in which fonts may be shared and improved in partnership\nwith others.\n\nThe OFL allows the licensed fonts to be used, studied, modified and\nredistributed freely as long as they are not sold by themselves. The\nfonts, including any derivative works, can be bundled, embedded,\nredistributed and/or sold with any software provided that any reserved\nnames are not used by derivative works. The fonts and derivatives,\nhowever, cannot be released under any other type of license. The\nrequirement for fonts to remain under this license does not apply\nto any document created using the fonts or their derivatives.\n\nDEFINITIONS\n\"Font Software\" refers to the set of files released by the Copyright\nHolder(s) under this license and clearly marked as such. This may\ninclude source files, build scripts and documentation.\n\n\"Reserved Font Name\" refers to any names specified as such after the\ncopyright statement(s).\n\n\"Original Version\" refers to the collection of Font Software components as\ndistributed by the Copyright Holder(s).\n\n\"Modified Version\" refers to any derivative made by adding to, deleting,\nor substituting -- in part or in whole -- any of the components of the\nOriginal Version, by changing formats or by porting the Font Software to a\nnew environment.\n\n\"Author\" refers to any designer, engineer, programmer, technical\nwriter or other person who contributed to the Font Software.\n\nPERMISSION AND CONDITIONS\nPermission is hereby granted, free of charge, to any person obtaining\na copy of the Font Software, to use, study, copy, merge, embed, modify,\nredistribute, and sell modified and unmodified copies of the Font\nSoftware, subject to the following conditions:\n\n1) Neither the Font Software nor any of its individual components,\nin Original or Modified Versions, may be sold by itself.\n\n2) Original or Modified Versions of the Font Software may be bundled,\nredistributed and/or sold with any software, provided that each copy\ncontains the above copyright notice and this license. These can be\nincluded either as stand-alone text files, human-readable headers or\nin the appropriate machine-readable metadata fields within text or\nbinary files as long as those fields can be easily viewed by the user.\n\n3) No Modified Version of the Font Software may use the Reserved Font\nName(s) unless explicit written permission is granted by the corresponding\nCopyright Holder. This restriction only applies to the primary font name as\npresented to the users.\n\n4) The name(s) of the Copyright Holder(s) or the Author(s) of the Font\nSoftware shall not be used to promote, endorse or advertise any\nModified Version, except to acknowledge the contribution(s) of the\nCopyright Holder(s) and the Author(s) or with their explicit written\npermission.\n\n5) The Font Software, modified or unmodified, in part or in whole,\nmust be distributed entirely under this license, and must not be\ndistributed under any other license. The requirement for fonts to\nremain under this license does not apply to any document created\nusing the Font Software.\n\nTERMINATION\nThis license becomes null and void if any of the above conditions are\nnot met.\n\nDISCLAIMER\nTHE FONT SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\nEXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF\nMERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT\nOF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL THE\nCOPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,\nINCLUDING ANY GENERAL, SPECIAL, INDIRECT, INCIDENTAL, OR CONSEQUENTIAL\nDAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF THE USE OR INABILITY TO USE THE FONT SOFTWARE OR FROM\nOTHER DEALINGS IN THE FONT SOFTWARE."
+    },
+    {
+      "name": "Lucide and Feather icons",
+      "version": "1.76.0",
+      "source": "https://github.com/lucide-icons/lucide",
+      "licence": "ISC and MIT",
+      "text": "ISC License\n\nCopyright (c) 2026 Lucide Icons and Contributors\n\nPermission to use, copy, modify, and/or distribute this software for any\npurpose with or without fee is hereby granted, provided that the above\ncopyright notice and this permission notice appear in all copies.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\" AND THE AUTHOR DISCLAIMS ALL WARRANTIES\nWITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR\nANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES\nWHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN\nACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF\nOR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.\n\n---\n\nThe following Lucide icons are derived from the Feather project:\n\nairplay, alert-circle, alert-octagon, alert-triangle, aperture, arrow-down-circle, arrow-down-left, arrow-down-right, arrow-down, arrow-left-circle, arrow-left, arrow-right-circle, arrow-right, arrow-up-circle, arrow-up-left, arrow-up-right, arrow-up, at-sign, calendar, cast, check, chevron-down, chevron-left, chevron-right, chevron-up, chevrons-down, chevrons-left, chevrons-right, chevrons-up, circle, clipboard, clock, code, columns, command, compass, corner-down-left, corner-down-right, corner-left-down, corner-left-up, corner-right-down, corner-right-up, corner-up-left, corner-up-right, crosshair, database, divide-circle, divide-square, dollar-sign, download, external-link, feather, frown, hash, headphones, help-circle, info, italic, key, layout, life-buoy, link-2, link, loader, lock, log-in, log-out, maximize, meh, minimize, minimize-2, minus-circle, minus-square, minus, monitor, moon, more-horizontal, more-vertical, move, music, navigation-2, navigation, octagon, pause-circle, percent, plus-circle, plus-square, plus, power, radio, rss, search, server, share, shopping-bag, sidebar, smartphone, smile, square, table-2, tablet, target, terminal, trash-2, trash, triangle, tv, type, upload, x-circle, x-octagon, x-square, x, zoom-in, zoom-out\n\nThe MIT License (MIT) (for the icons listed above)\n\nCopyright (c) 2013-present Cole Bemis\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE."
+    }
+  ],
+  "packages": [
+    {
+      "name": "@alloc/quick-lru",
+      "version": "5.3.0",
+      "source": "https://www.npmjs.com/package/@alloc/quick-lru/v/5.3.0",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@emnapi/core",
+      "version": "1.11.3",
+      "source": "https://www.npmjs.com/package/@emnapi/core/v/1.11.3",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@emnapi/runtime",
+      "version": "1.11.3",
+      "source": "https://www.npmjs.com/package/@emnapi/runtime/v/1.11.3",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@emnapi/runtime",
+      "version": "1.11.3",
+      "source": "https://www.npmjs.com/package/@emnapi/runtime/v/1.11.3",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@emnapi/wasi-threads",
+      "version": "1.2.3",
+      "source": "https://www.npmjs.com/package/@emnapi/wasi-threads/v/1.2.3",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@floating-ui/core",
+      "version": "1.8.0",
+      "source": "https://www.npmjs.com/package/@floating-ui/core/v/1.8.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@floating-ui/dom",
+      "version": "1.8.0",
+      "source": "https://www.npmjs.com/package/@floating-ui/dom/v/1.8.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@floating-ui/react-dom",
+      "version": "2.1.9",
+      "source": "https://www.npmjs.com/package/@floating-ui/react-dom/v/2.1.9",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@floating-ui/utils",
+      "version": "0.2.12",
+      "source": "https://www.npmjs.com/package/@floating-ui/utils/v/0.2.12",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@img/colour",
+      "version": "1.1.0",
+      "source": "https://www.npmjs.com/package/@img/colour/v/1.1.0",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-darwin-arm64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-darwin-arm64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-darwin-x64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-darwin-x64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-freebsd-wasm32",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-freebsd-wasm32/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-darwin-arm64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-darwin-arm64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-darwin-x64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-darwin-x64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-arm",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-arm/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-arm64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-arm64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-ppc64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-ppc64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-riscv64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-riscv64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-s390x",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-s390x/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linux-x64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linux-x64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-arm64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linuxmusl-arm64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-libvips-linuxmusl-x64",
+      "version": "1.3.4",
+      "source": "https://www.npmjs.com/package/@img/sharp-libvips-linuxmusl-x64/v/1.3.4",
+      "licence": "LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-arm",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-arm/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-arm64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-arm64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-ppc64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-ppc64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-riscv64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-riscv64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-s390x",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-s390x/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linux-x64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linux-x64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linuxmusl-arm64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linuxmusl-arm64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-linuxmusl-x64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-linuxmusl-x64/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-wasm32",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-wasm32/v/0.35.5",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later AND MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-webcontainers-wasm32",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-webcontainers-wasm32/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-win32-arm64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-win32-arm64/v/0.35.5",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-win32-ia32",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-win32-ia32/v/0.35.5",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@img/sharp-win32-x64",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/@img/sharp-win32-x64/v/0.35.5",
+      "licence": "Apache-2.0 AND LGPL-3.0-or-later",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@jridgewell/gen-mapping",
+      "version": "0.3.13",
+      "source": "https://www.npmjs.com/package/@jridgewell/gen-mapping/v/0.3.13",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@jridgewell/remapping",
+      "version": "2.3.5",
+      "source": "https://www.npmjs.com/package/@jridgewell/remapping/v/2.3.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@jridgewell/resolve-uri",
+      "version": "3.1.3",
+      "source": "https://www.npmjs.com/package/@jridgewell/resolve-uri/v/3.1.3",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@jridgewell/sourcemap-codec",
+      "version": "1.6.0",
+      "source": "https://www.npmjs.com/package/@jridgewell/sourcemap-codec/v/1.6.0",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@jridgewell/trace-mapping",
+      "version": "0.3.31",
+      "source": "https://www.npmjs.com/package/@jridgewell/trace-mapping/v/0.3.31",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@napi-rs/wasm-runtime",
+      "version": "1.2.2",
+      "source": "https://www.npmjs.com/package/@napi-rs/wasm-runtime/v/1.2.2",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/env",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/env/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@next/swc-darwin-arm64",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-darwin-arm64/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-darwin-x64",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-darwin-x64/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-linux-arm64-gnu",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-linux-arm64-gnu/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-linux-arm64-musl",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-linux-arm64-musl/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-linux-x64-gnu",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-linux-x64-gnu/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-linux-x64-musl",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-linux-x64-musl/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-win32-arm64-msvc",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-win32-arm64-msvc/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@next/swc-win32-x64-msvc",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/@next/swc-win32-x64-msvc/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@playwright/test",
+      "version": "1.65.1",
+      "source": "https://www.npmjs.com/package/@playwright/test/v/1.65.1",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/number",
+      "version": "1.1.3",
+      "source": "https://www.npmjs.com/package/@radix-ui/number/v/1.1.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/primitive",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/primitive/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-accessible-icon",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-accessible-icon/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-accordion",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-accordion/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-alert-dialog",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-alert-dialog/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-arrow",
+      "version": "1.1.17",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-arrow/v/1.1.17",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-aspect-ratio",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-aspect-ratio/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-avatar",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-avatar/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-checkbox",
+      "version": "1.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-checkbox/v/1.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-collapsible",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-collapsible/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-collection",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-collection/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-compose-refs",
+      "version": "1.1.5",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-compose-refs/v/1.1.5",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-context",
+      "version": "1.3.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-context/v/1.3.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-context-menu",
+      "version": "2.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-context-menu/v/2.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-dialog",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-dialog/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-direction",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-direction/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-dismissable-layer",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-dismissable-layer/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-dropdown-menu",
+      "version": "2.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-dropdown-menu/v/2.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-focus-guards",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-focus-guards/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-focus-scope",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-focus-scope/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-form",
+      "version": "0.3.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-form/v/0.3.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-hover-card",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-hover-card/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-id",
+      "version": "1.1.4",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-id/v/1.1.4",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-label",
+      "version": "2.1.17",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-label/v/2.1.17",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-menu",
+      "version": "2.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-menu/v/2.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-menubar",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-menubar/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-navigation-menu",
+      "version": "1.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-navigation-menu/v/1.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-one-time-password-field",
+      "version": "0.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-one-time-password-field/v/0.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-password-toggle-field",
+      "version": "0.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-password-toggle-field/v/0.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-popover",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-popover/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-popper",
+      "version": "1.4.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-popper/v/1.4.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-portal",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-portal/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-presence",
+      "version": "1.1.11",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-presence/v/1.1.11",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-primitive",
+      "version": "2.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-primitive/v/2.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-progress",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-progress/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-radio-group",
+      "version": "1.5.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-radio-group/v/1.5.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-roving-focus",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-roving-focus/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-scroll-area",
+      "version": "1.4.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-scroll-area/v/1.4.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-select",
+      "version": "2.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-select/v/2.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-separator",
+      "version": "1.2.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-separator/v/1.2.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-slider",
+      "version": "1.6.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-slider/v/1.6.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-slot",
+      "version": "1.5.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-slot/v/1.5.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-switch",
+      "version": "1.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-switch/v/1.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-tabs",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-tabs/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-toast",
+      "version": "1.3.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-toast/v/1.3.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-toggle",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-toggle/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-toggle-group",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-toggle-group/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-toolbar",
+      "version": "1.2.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-toolbar/v/1.2.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-tooltip",
+      "version": "1.4.1",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-tooltip/v/1.4.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-callback-ref",
+      "version": "1.1.5",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-callback-ref/v/1.1.5",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-controllable-state",
+      "version": "1.3.0",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-controllable-state/v/1.3.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-effect-event",
+      "version": "0.0.5",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-effect-event/v/0.0.5",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-escape-keydown",
+      "version": "1.1.6",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-escape-keydown/v/1.1.6",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-is-hydrated",
+      "version": "0.1.3",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-is-hydrated/v/0.1.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-layout-effect",
+      "version": "1.1.4",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-layout-effect/v/1.1.4",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-previous",
+      "version": "1.1.4",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-previous/v/1.1.4",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-rect",
+      "version": "1.1.4",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-rect/v/1.1.4",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-use-size",
+      "version": "1.1.5",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-use-size/v/1.1.5",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/react-visually-hidden",
+      "version": "1.2.13",
+      "source": "https://www.npmjs.com/package/@radix-ui/react-visually-hidden/v/1.2.13",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@radix-ui/rect",
+      "version": "1.1.3",
+      "source": "https://www.npmjs.com/package/@radix-ui/rect/v/1.1.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@swc/helpers",
+      "version": "0.5.23",
+      "source": "https://www.npmjs.com/package/@swc/helpers/v/0.5.23",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@tailwindcss/node",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/node/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@tailwindcss/oxide",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@tailwindcss/oxide-android-arm64",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-android-arm64/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-darwin-arm64",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-darwin-arm64/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-darwin-x64",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-darwin-x64/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-freebsd-x64",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-freebsd-x64/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-linux-arm-gnueabihf",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-linux-arm-gnueabihf/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-linux-arm64-gnu",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-linux-arm64-gnu/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-linux-arm64-musl",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-linux-arm64-musl/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-linux-x64-gnu",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-linux-x64-gnu/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-linux-x64-musl",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-linux-x64-musl/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-wasm32-wasi",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-wasm32-wasi/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-win32-arm64-msvc",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-win32-arm64-msvc/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/oxide-win32-x64-msvc",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/oxide-win32-x64-msvc/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@tailwindcss/postcss",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/@tailwindcss/postcss/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@tybys/wasm-util",
+      "version": "0.10.3",
+      "source": "https://www.npmjs.com/package/@tybys/wasm-util/v/0.10.3",
+      "licence": "MIT",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "@types/node",
+      "version": "24.19.2",
+      "source": "https://www.npmjs.com/package/@types/node/v/24.19.2",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "@types/react",
+      "version": "19.3.0",
+      "source": "https://www.npmjs.com/package/@types/react/v/19.3.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "@types/react-dom",
+      "version": "19.3.0",
+      "source": "https://www.npmjs.com/package/@types/react-dom/v/19.3.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "aria-hidden",
+      "version": "1.2.6",
+      "source": "https://www.npmjs.com/package/aria-hidden/v/1.2.6",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "baseline-browser-mapping",
+      "version": "2.11.39",
+      "source": "https://www.npmjs.com/package/baseline-browser-mapping/v/2.11.39",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "caniuse-lite",
+      "version": "1.0.30001826",
+      "source": "https://www.npmjs.com/package/caniuse-lite/v/1.0.30001826",
+      "licence": "CC-BY-4.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "class-variance-authority",
+      "version": "0.7.1",
+      "source": "https://www.npmjs.com/package/class-variance-authority/v/0.7.1",
+      "licence": "Apache-2.0",
+      "scope": "Application"
+    },
+    {
+      "name": "client-only",
+      "version": "0.0.1",
+      "source": "https://www.npmjs.com/package/client-only/v/0.0.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "clsx",
+      "version": "2.1.1",
+      "source": "https://www.npmjs.com/package/clsx/v/2.1.1",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "csstype",
+      "version": "3.2.4",
+      "source": "https://www.npmjs.com/package/csstype/v/3.2.4",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "detect-libc",
+      "version": "2.1.2",
+      "source": "https://www.npmjs.com/package/detect-libc/v/2.1.2",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "detect-node-es",
+      "version": "1.1.0",
+      "source": "https://www.npmjs.com/package/detect-node-es/v/1.1.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "enhanced-resolve",
+      "version": "5.27.0",
+      "source": "https://www.npmjs.com/package/enhanced-resolve/v/5.27.0",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "fake-indexeddb",
+      "version": "6.2.7",
+      "source": "https://www.npmjs.com/package/fake-indexeddb/v/6.2.7",
+      "licence": "Apache-2.0",
+      "scope": "Build or test"
+    },
+    {
+      "name": "geist",
+      "version": "1.9.2",
+      "source": "https://www.npmjs.com/package/geist/v/1.9.2",
+      "licence": "OFL-1.1",
+      "scope": "Application"
+    },
+    {
+      "name": "get-nonce",
+      "version": "1.0.1",
+      "source": "https://www.npmjs.com/package/get-nonce/v/1.0.1",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "graceful-fs",
+      "version": "4.2.12",
+      "source": "https://www.npmjs.com/package/graceful-fs/v/4.2.12",
+      "licence": "BlueOak-1.0.0",
+      "scope": "Build or test"
+    },
+    {
+      "name": "jiti",
+      "version": "2.7.0",
+      "source": "https://www.npmjs.com/package/jiti/v/2.7.0",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "lightningcss",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Build or test"
+    },
+    {
+      "name": "lightningcss-android-arm64",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-android-arm64/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-darwin-arm64",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-darwin-arm64/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-darwin-x64",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-darwin-x64/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-freebsd-x64",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-freebsd-x64/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-linux-arm-gnueabihf",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-linux-arm-gnueabihf/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-linux-arm64-gnu",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-linux-arm64-gnu/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-linux-arm64-musl",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-linux-arm64-musl/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-linux-x64-gnu",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-linux-x64-gnu/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-linux-x64-musl",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-linux-x64-musl/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-win32-arm64-msvc",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-win32-arm64-msvc/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lightningcss-win32-x64-msvc",
+      "version": "1.33.0",
+      "source": "https://www.npmjs.com/package/lightningcss-win32-x64-msvc/v/1.33.0",
+      "licence": "MPL-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "lucide-react",
+      "version": "1.76.0",
+      "source": "https://www.npmjs.com/package/lucide-react/v/1.76.0",
+      "licence": "ISC",
+      "scope": "Application"
+    },
+    {
+      "name": "magic-string",
+      "version": "1.4.5",
+      "source": "https://www.npmjs.com/package/magic-string/v/1.4.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "nanoid",
+      "version": "3.3.20",
+      "source": "https://www.npmjs.com/package/nanoid/v/3.3.20",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "next",
+      "version": "16.4.6",
+      "source": "https://www.npmjs.com/package/next/v/16.4.6",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "picocolors",
+      "version": "1.1.1",
+      "source": "https://www.npmjs.com/package/picocolors/v/1.1.1",
+      "licence": "ISC",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "playwright",
+      "version": "1.65.1",
+      "source": "https://www.npmjs.com/package/playwright/v/1.65.1",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "playwright-core",
+      "version": "1.65.1",
+      "source": "https://www.npmjs.com/package/playwright-core/v/1.65.1",
+      "licence": "Apache-2.0",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "postcss",
+      "version": "8.5.23",
+      "source": "https://www.npmjs.com/package/postcss/v/8.5.23",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "postcss",
+      "version": "8.5.33",
+      "source": "https://www.npmjs.com/package/postcss/v/8.5.33",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "radix-ui",
+      "version": "1.8.1",
+      "source": "https://www.npmjs.com/package/radix-ui/v/1.8.1",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "react",
+      "version": "19.3.1",
+      "source": "https://www.npmjs.com/package/react/v/19.3.1",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "react-dom",
+      "version": "19.3.1",
+      "source": "https://www.npmjs.com/package/react-dom/v/19.3.1",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "react-remove-scroll",
+      "version": "2.7.2",
+      "source": "https://www.npmjs.com/package/react-remove-scroll/v/2.7.2",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "react-remove-scroll-bar",
+      "version": "2.3.8",
+      "source": "https://www.npmjs.com/package/react-remove-scroll-bar/v/2.3.8",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "react-style-singleton",
+      "version": "2.2.3",
+      "source": "https://www.npmjs.com/package/react-style-singleton/v/2.2.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "scheduler",
+      "version": "0.28.0",
+      "source": "https://www.npmjs.com/package/scheduler/v/0.28.0",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "semver",
+      "version": "7.8.6",
+      "source": "https://www.npmjs.com/package/semver/v/7.8.6",
+      "licence": "ISC",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "sharp",
+      "version": "0.35.5",
+      "source": "https://www.npmjs.com/package/sharp/v/0.35.5",
+      "licence": "Apache-2.0",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "source-map-js",
+      "version": "1.2.4",
+      "source": "https://www.npmjs.com/package/source-map-js/v/1.2.4",
+      "licence": "BSD-3-Clause",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "styled-jsx",
+      "version": "5.1.6",
+      "source": "https://www.npmjs.com/package/styled-jsx/v/5.1.6",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "tailwind-merge",
+      "version": "3.7.0",
+      "source": "https://www.npmjs.com/package/tailwind-merge/v/3.7.0",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "tailwindcss",
+      "version": "4.3.5",
+      "source": "https://www.npmjs.com/package/tailwindcss/v/4.3.5",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "tapable",
+      "version": "2.3.4",
+      "source": "https://www.npmjs.com/package/tapable/v/2.3.4",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "tslib",
+      "version": "2.8.1",
+      "source": "https://www.npmjs.com/package/tslib/v/2.8.1",
+      "licence": "0BSD",
+      "scope": "Platform optional"
+    },
+    {
+      "name": "tslib",
+      "version": "2.9.1",
+      "source": "https://www.npmjs.com/package/tslib/v/2.9.1",
+      "licence": "0BSD",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "tw-animate-css",
+      "version": "1.4.0",
+      "source": "https://www.npmjs.com/package/tw-animate-css/v/1.4.0",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "typescript",
+      "version": "6.0.3",
+      "source": "https://www.npmjs.com/package/typescript/v/6.0.3",
+      "licence": "Apache-2.0",
+      "scope": "Build or test"
+    },
+    {
+      "name": "undici-types",
+      "version": "7.24.6",
+      "source": "https://www.npmjs.com/package/undici-types/v/7.24.6",
+      "licence": "MIT",
+      "scope": "Build or test"
+    },
+    {
+      "name": "use-callback-ref",
+      "version": "1.3.3",
+      "source": "https://www.npmjs.com/package/use-callback-ref/v/1.3.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    },
+    {
+      "name": "use-sidecar",
+      "version": "1.1.3",
+      "source": "https://www.npmjs.com/package/use-sidecar/v/1.1.3",
+      "licence": "MIT",
+      "scope": "Application dependency"
+    }
+  ]
+}

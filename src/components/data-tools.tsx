@@ -1,0 +1,188 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { Download, FileText } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { MAX_BYTES, combineBackup, parseBackup, serialiseBackup } from "@/lib/backup"
+import { exportCsv, importCsv } from "@/lib/csv"
+import { initialData, money, shiftMonth, today, type Data } from "@/lib/finance"
+import { Choose, ErrorText, Field, FormActions, Modal, formValues, useOperation, type Commit } from "@/components/shared"
+
+export type DataTool = "backup" | "restore" | "import" | "export" | "clear"
+
+function download(text: string, mediaType: string, name: string) {
+  const address = URL.createObjectURL(new Blob([text], { type: mediaType }))
+  const link = document.createElement("a")
+  link.href = address
+  link.download = name
+  document.body.append(link)
+  link.click()
+  link.remove()
+  window.setTimeout(() => URL.revokeObjectURL(address), 1000)
+}
+
+const counts = ["entries", "budgets", "goals", "contributions", "categories"] as const
+const labels = { entries: "Transactions", budgets: "Budgets", goals: "Savings goals", contributions: "Contributions", categories: "Categories" }
+
+function Counts({ before, after }: { before: Data; after?: Data }) {
+  return <dl className="divide-y rounded-lg border px-3">
+    {counts.map(key => <div key={key} className="grid grid-cols-[1fr_auto] gap-2 py-2 text-sm">
+      <dt>{labels[key]}</dt><dd className="tabular-nums">{before[key].length}{after && <> <span aria-hidden="true">→</span><span className="sr-only"> becomes </span> {after[key].length}</>}</dd>
+    </div>)}
+  </dl>
+}
+
+export function DataTools({ mode, data, commit, close, notify, recover }: {
+  mode: DataTool; data: Data; commit: Commit; close: () => void; notify: (text: string) => void; recover?: (data?: Data) => Promise<void>
+}) {
+  const operation = useOperation(close)
+  const [file, setFile] = useState<File>()
+  const [review, setReview] = useState<{ before: Data; incoming: Data; duplicates?: number; rows?: ReturnType<typeof importCsv>["entries"] }>()
+  const [strategy, setStrategy] = useState(recover ? "replace" : "merge")
+  const [typed, setTyped] = useState("")
+  const [scope, setScope] = useState("month")
+  const [month, setMonth] = useState(today().slice(0, 7))
+  const [confirmation, setConfirmation] = useState(mode === "clear")
+  const fileInput = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (confirmation) document.getElementById("cancel-operation")?.focus()
+  }, [confirmation])
+  const chooseFile = mode === "restore" || mode === "import"
+  const title = {
+    backup: "Download backup", restore: "Restore from backup", import: "Import CSV", export: "Export CSV", clear: "Clear local data?",
+  }[mode]
+  const disclaimer = "Downloaded files can contain financial records. Keep them private."
+  const replace = strategy === "replace"
+  let preview: Data | undefined
+  let previewError = ""
+  if (review) {
+    if (mode === "restore" && !replace) {
+      try { preview = combineBackup(review.before, review.incoming) } catch (error) { previewError = (error as Error).message }
+    } else preview = review.incoming
+  }
+
+  async function analyse() {
+    const selected = file
+    if (!selected) throw new Error("Choose a file to review.")
+    if (selected.size > MAX_BYTES) throw new Error("Choose a file no larger than 8 MB.")
+    const bytes = await selected.arrayBuffer()
+    let text: string
+    try { text = new TextDecoder("utf-8", { fatal: true }).decode(bytes) } catch {
+      throw new Error("The file is not valid UTF-8 text.")
+    }
+    if (mode === "restore") {
+      setReview({ before: data, incoming: parseBackup(text) })
+      return
+    }
+    const result = importCsv(text, data)
+    setReview({ before: data, incoming: { ...data, entries: [...data.entries, ...result.entries] }, duplicates: result.duplicates, rows: result.entries })
+  }
+
+  async function apply() {
+    if (mode === "clear") {
+      if (typed !== "CLEAR") throw new Error("Type CLEAR to continue.")
+      if (recover) { await recover(); return }
+      await commit(current => {
+        if (JSON.stringify(current) !== JSON.stringify(data)) throw new Error("The local records changed. Reopen Clear local data to review the current counts.")
+        return { ...initialData(), preferences: current.preferences }
+      }, "Local records cleared. Downloaded files remain where you saved them.")
+      return
+    }
+    if (!review || !preview) throw new Error("Review the file first.")
+    if (mode === "restore" && replace && (!confirmation || typed !== "RESTORE")) throw new Error("Type RESTORE to continue.")
+    if (recover) { await recover(preview); return }
+    await commit(current => {
+      if (JSON.stringify(current) !== JSON.stringify(review.before)) throw new Error("Local records changed. Choose the file again to refresh the preview.")
+      return mode === "restore" && replace
+        ? { ...preview, preferences: { ...current.preferences, currency: preview.preferences.currency } }
+        : preview
+    }, mode === "restore" ? "Backup applied" : `${review.rows?.length ?? 0} transactions imported`)
+  }
+
+  function saveBackup() {
+    download(serialiseBackup(data), "application/json", `money-manager-backup-${today()}.json`)
+    notify("Backup downloaded")
+  }
+
+  const description = {
+    backup: disclaimer,
+    restore: "Choose a Money Manager JSON file. You can review the contents before making changes.",
+    import: "Choose a UTF-8 CSV using the column headings from a Money Manager export. Transactions will be checked before saving.",
+    export: disclaimer,
+    clear: "This removes transactions, budgets, savings goals, contributions and custom categories from this browser. Appearance settings and downloaded files stay where they are.",
+  }[mode]
+
+  return <Modal title={title} description={description} close={close} busy={operation.busy} initialFocus={mode === "clear" ? "cancel-operation" : undefined} destructive={mode === "clear"}>
+    {mode === "backup" && <div className="space-y-4">
+      <Counts before={data} /><Button onClick={() => void operation.run(async () => saveBackup())}><Download /> Download JSON backup</Button>
+    </div>}
+    {chooseFile && <>
+      <input ref={fileInput} type="file" accept={mode === "restore" ? ".json,application/json" : ".csv,text/csv"} className="sr-only" tabIndex={-1} aria-label="Import file"
+        onChange={event => {
+          const selected = event.target.files?.[0]
+          if (selected) { setFile(selected); setReview(undefined); setConfirmation(false); setTyped("") }
+          event.target.value = ""
+        }} />
+      <div className="flex items-center gap-2"><Button variant="outline" disabled={operation.busy} onClick={() => fileInput.current?.click()}><FileText /> Choose file</Button>
+        <span className="min-w-0 truncate text-sm text-muted-foreground">{file?.name ?? "No file selected"}</span>
+      </div>
+      {!review && <Button disabled={!file || operation.busy} onClick={() => void operation.run(analyse, false)}>{operation.busy ? "Checking file…" : "Review file"}</Button>}
+    </>}
+    {review && <>
+      {mode === "restore" && !recover && <Choose label="How should the backup be applied?" options={[["merge", "Merge with local records"], ["replace", "Replace local records"]]} value={strategy} onChange={value => { setStrategy(value); setConfirmation(false); setTyped("") }} />}
+      {mode === "restore" && <p className="text-sm text-muted-foreground">Compatible backup · Version 1 · {review.incoming.preferences.currency}</p>}
+      {preview && <section className="grid gap-2"><h3 className="text-sm font-semibold">{recover ? "Backup contents" : "Current → after changes"}</h3>
+        <Counts before={recover ? preview : review.before} after={recover ? undefined : preview} /></section>}
+      <ErrorText message={previewError} />
+      {review.rows && <>
+        <p className="text-sm">{review.rows.length} new · {review.duplicates} duplicate{review.duplicates === 1 ? "" : "s"} skipped</p>
+        <p className="text-sm text-muted-foreground">
+          Income {money(review.rows.reduce((sum, row) => sum + (row.kind === "income" ? row.amount : 0), 0), data.preferences.currency)} ·
+          Expenses {money(review.rows.reduce((sum, row) => sum + (row.kind === "expense" ? row.amount : 0), 0), data.preferences.currency)}
+        </p>
+        {!review.rows.length && <p className="text-sm text-muted-foreground">No new transactions to import.</p>}
+        {review.rows.length > 0 && <ul className="max-h-40 divide-y overflow-auto rounded-md border">
+          {review.rows.slice(0, 12).map(row => <li key={row.id} className="px-3 py-2 text-sm">
+            <p className="break-words font-medium">{row.name} · {money(row.amount, data.preferences.currency)}</p>
+            <p className="text-xs text-muted-foreground">{row.date} · {row.kind} · {data.categories.find(category => category.id === row.category)?.name} · {row.account}</p>
+          </li>)}
+        </ul>}
+      </>}
+      {mode === "restore" && replace && !confirmation
+        ? <Button variant="destructive" disabled={!preview} onClick={() => setConfirmation(true)}>Continue to replacement</Button>
+        : <form className="grid gap-3" onSubmit={event => { event.preventDefault(); void operation.run(apply) }}>
+          {mode === "restore" && replace && <Field name="confirmation" label="Type RESTORE to replace the local records" value={typed} onChange={event => setTyped(event.target.value)} autoComplete="off" />}
+          <FormActions busy={operation.busy} cancel={close}
+            label={mode === "import" ? "Import transactions" : replace ? "Replace local records" : "Merge backup"}
+            destructive={mode === "restore" && replace}
+            disabled={!preview || review.rows?.length === 0 || (mode === "restore" && replace && typed !== "RESTORE")} />
+        </form>}
+    </>}
+    {mode === "export" && <form className="grid gap-4" onSubmit={event => {
+      const read = formValues(event)
+      void operation.run(async () => {
+        const start = scope === "custom" ? read("start") : month + "-01"
+        const end = scope === "custom" ? read("end") : new Date(Date.parse(shiftMonth(month, 1) + "-01") - 86400000).toISOString().slice(0, 10)
+        download(exportCsv(data, start, end), "text/csv;charset=utf-8", `money-manager-transactions-${today()}.csv`)
+        notify("Transaction CSV downloaded")
+      })
+    }}>
+      <Choose label="Date range" options={[["month", "One month"], ["custom", "Custom range"]]} value={scope} onChange={setScope} />
+      {scope === "custom" ? <div className="grid grid-cols-2 gap-3">
+        <Field name="start" label="From" type="date" required /><Field name="end" label="To" type="date" required />
+      </div> : <Field name="month" label="Month" type="month" value={month} onChange={event => setMonth(event.target.value)} required />}
+      {!data.entries.length && <p className="text-sm text-muted-foreground">Add a transaction before exporting.</p>}
+      <FormActions label="Download CSV" busy={operation.busy} cancel={close} disabled={!data.entries.length} />
+    </form>}
+    {mode === "clear" && <form className="grid gap-4" onSubmit={event => { event.preventDefault(); void operation.run(apply) }}>
+      {!recover && <><Counts before={data} /><Card className="gap-2 p-3 shadow-none">
+        <p className="text-sm text-muted-foreground">{disclaimer}</p>
+        <Button type="button" variant="outline" size="sm" className="justify-self-start self-start" onClick={() => void operation.run(async () => saveBackup(), false)} disabled={operation.busy}><Download /> Download backup first</Button>
+      </Card></>}
+      <Field name="confirmation" label="Type CLEAR to confirm" value={typed} onChange={event => setTyped(event.target.value)} autoComplete="off" />
+      <FormActions label="Clear local data" busy={operation.busy} cancel={close} disabled={typed !== "CLEAR"} destructive />
+    </form>}
+    <ErrorText message={operation.error} />
+  </Modal>
+}
