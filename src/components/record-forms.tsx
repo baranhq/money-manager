@@ -79,10 +79,6 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
         </div>
         <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
         <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
-        <details className="rounded-md border px-3 text-sm text-muted-foreground">
-          <summary className="flex min-h-11 items-center font-medium text-primary">Privacy &amp; storage</summary>
-          <p className="pb-3">Entries are stored in your current browser. Clearing site data can erase them. Download a backup from Settings → Data &amp; backup.</p>
-        </details>
         {!choices.length && <p className="text-sm text-muted-foreground">Create a category first under Settings → Categories.</p>}
       </TabsContent>
       <TabsContent value={kind === "expense" ? "income" : "expense"} forceMount hidden />
