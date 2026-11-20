@@ -14,8 +14,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Choose, Field, Modal } from "@/components/shared"
-import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type Data, type Entry, type Goal, type Kind } from "@/lib/finance"
-import { InvalidSnapshot, readData, recoverData, updateData } from "@/lib/storage"
+import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type Data, type Entry, type Goal, type Kind, type NewProfile, type Profile } from "@/lib/finance"
+import { createProfile as createStoredProfile, InvalidSnapshot, readWorkspace, recoverData, switchProfile as switchStoredProfile, updateData, updateProfile as updateStoredProfile, type Workspace } from "@/lib/storage"
 import { cn } from "@/lib/utils"
 
 type Overlay =
@@ -77,6 +77,8 @@ export function MoneyManager() {
   const [route, setRoute] = useState<Route>("overview")
   const [month, setMonth] = useState(today().slice(0, 7))
   const [data, setData] = useState<Data>()
+  const [profiles, setProfiles] = useState<Profile[]>([])
+  const [activeProfileId, setActiveProfileId] = useState("")
   const [loadError, setLoadError] = useState<{ text: string; corrupted: boolean }>()
   const [overlay, setOverlay] = useState<Overlay>()
   const [status, setStatus] = useState("")
@@ -85,6 +87,14 @@ export function MoneyManager() {
   const latestRead = useRef(0)
   const report = navigation.find(item => item.id === route)
   const title = report?.label ?? "Settings"
+  const activeProfile = profiles.find(profile => profile.id === activeProfileId)
+
+  function applyWorkspace(workspace: Workspace) {
+    setData(workspace.data)
+    setProfiles(workspace.profiles)
+    setActiveProfileId(workspace.activeProfileId)
+    setLoadError(undefined)
+  }
 
   function notify(text: string) {
     window.clearTimeout(statusTimeout.current)
@@ -95,10 +105,14 @@ export function MoneyManager() {
   async function load() {
     const sequence = ++latestRead.current
     try {
-      const next = await readData()
-      if (sequence === latestRead.current) { setData(next); setLoadError(undefined) }
+      const next = await readWorkspace()
+      if (sequence === latestRead.current) applyWorkspace(next)
     } catch (error) {
       if (sequence !== latestRead.current) return
+      if (error instanceof InvalidSnapshot && error.profiles && error.activeProfileId) {
+        setProfiles(error.profiles)
+        setActiveProfileId(error.activeProfileId)
+      }
       setLoadError({
         corrupted: error instanceof InvalidSnapshot,
         text: error instanceof InvalidSnapshot ? error.message : "This browser could not open local storage. Check whether site storage is available, then try again.",
@@ -130,12 +144,48 @@ export function MoneyManager() {
   }, [])
 
   async function commit(change: (current: Data) => Data, message: string) {
-    const next = await updateData(change)
+    const profileId = activeProfileId
+    const next = await updateData(change, profileId)
     ++latestRead.current
     setData(next)
     channel.current?.postMessage("updated")
     window.dispatchEvent(new Event("money-manager-preferences"))
     notify(message)
+  }
+
+  async function switchAccount(id: string) {
+    const sequence = ++latestRead.current
+    try {
+      const next = await switchStoredProfile(id)
+      if (sequence === latestRead.current) applyWorkspace(next)
+      channel.current?.postMessage("updated")
+      window.dispatchEvent(new Event("money-manager-preferences"))
+      const name = next.profiles.find(profile => profile.id === id)?.name ?? "profile"
+      notify(`Switched to ${name}`)
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "The profile could not be opened.")
+      throw error
+    }
+  }
+
+  function selectAccount(id: string) {
+    void switchAccount(id).catch(() => undefined)
+  }
+
+  async function addAccountProfile(profile: NewProfile) {
+    const sequence = ++latestRead.current
+    const next = await createStoredProfile(profile)
+    if (sequence === latestRead.current) applyWorkspace(next)
+    channel.current?.postMessage("updated")
+    window.dispatchEvent(new Event("money-manager-preferences"))
+    notify(`Switched to ${profile.name.trim()}`)
+  }
+
+  async function editAccountProfile(profile: Profile) {
+    const next = await updateStoredProfile(profile)
+    setProfiles(next)
+    channel.current?.postMessage("updated")
+    notify("Profile updated")
   }
 
   const close = () => setOverlay(undefined)
@@ -156,14 +206,14 @@ export function MoneyManager() {
   return <TooltipProvider delayDuration={200}>
     <a href="#main-content" onClick={event => { event.preventDefault(); document.getElementById("main-content")?.focus() }}
       className="sr-only fixed top-2 left-2 z-50 rounded-md bg-primary p-3 text-primary-foreground focus:not-sr-only">Skip to content</a>
-    <Sidebar route={route} />
+    <Sidebar route={route} profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} />
     <main id="main-content" tabIndex={-1} className="mx-auto min-h-dvh min-w-0 px-4 pt-4 pb-28 outline-none md:ml-[72px] md:px-6 md:pt-6 md:pb-8 xl:ml-[246px] xl:px-8 xl:pt-6">
       <div className="mx-auto max-w-[1400px]">
         <header className={cn("relative mb-3 flex flex-wrap items-start justify-between gap-2 md:mb-4 md:gap-3", !hasHeader && "justify-end md:hidden")}>
-          {hasHeader && <div className="max-md:pr-14"><h1 className="text-[1.85rem] leading-tight font-semibold tracking-[-0.035em] sm:text-[2.25rem]">{title}</h1>
+          {hasHeader && <div className="max-md:pr-36"><h1 className="text-[1.85rem] leading-tight font-semibold tracking-[-0.035em] sm:text-[2.25rem]">{title}</h1>
             {route === "overview" && <p className="mt-1 hidden text-sm text-muted-foreground sm:block" suppressHydrationWarning>{dateLabel(today(), { weekday: "long", day: "numeric", month: "long" })}</p>}
           </div>}
-          <div className={cn("ml-auto md:hidden", hasHeader && "absolute top-0 right-0")}><AccountMenu mobile /></div>
+          <div className={cn("ml-auto md:hidden", hasHeader && "absolute top-0 right-0")}><AccountMenu mobile profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} /></div>
           {report && data && <div className="flex w-full flex-wrap items-center gap-2 md:ml-auto md:w-auto md:pt-2">
             <MonthControl month={month} setMonth={setMonth} data={data} />
             {ready && <Button className="hidden min-h-10 md:inline-flex" onClick={route === "budgets" ? () => budgetEdit() : route === "savings" ? () => contribute() : add}>
@@ -187,7 +237,8 @@ export function MoneyManager() {
           {route === "activity" && <Activity {...reportProps} add={add} open={entryDetail} edit={entryEdit} remove={row => remove({ type: "entry", row })} />}
           {route === "budgets" && <Budgets {...reportProps} edit={budgetEdit} open={budgetDetail} remove={row => remove({ type: "budget", row })} />}
           {route === "savings" && <Savings {...reportProps} open={goalDetail} edit={goalEdit} contribute={contribute} remove={row => remove({ type: "goal", row })} />}
-          {!report && <Settings route={route as SettingsPage} data={reportProps.data} commit={commit}
+          {!report && <Settings route={route as SettingsPage} data={reportProps.data} commit={commit} profiles={profiles} activeProfileId={activeProfileId}
+            addProfile={addAccountProfile} updateProfile={editAccountProfile} switchProfile={switchAccount}
             editCategory={(kind: Kind, row?: Category) => setOverlay({ type: "category", kind, row })}
             removeCategory={row => remove({ type: "category", row })} openData={mode => setOverlay({ type: "dataTool", mode })} />}
         </>}
@@ -218,8 +269,9 @@ export function MoneyManager() {
     {operationProps && overlay?.type === "category" && <CategoryForm {...operationProps} initialKind={overlay.kind} row={overlay.row} />}
     {operationProps && overlay?.type === "remove" && <RemoveRecord {...operationProps} target={overlay.target} />}
     {overlay?.type === "dataTool" && (data || loadError?.corrupted) && <DataTools mode={overlay.mode} data={data ?? initialData()} commit={commit} close={close} notify={notify}
+      profileName={activeProfile?.name ?? "Personal"} profileId={activeProfileId || "personal"}
       recover={loadError?.corrupted ? async replacement => {
-        const next = await recoverData(replacement)
+        const next = await recoverData(replacement, activeProfileId)
         ++latestRead.current
         setData(next)
         setLoadError(undefined)

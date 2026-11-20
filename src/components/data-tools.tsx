@@ -33,8 +33,9 @@ function Counts({ before, after }: { before: Data; after?: Data }) {
   </dl>
 }
 
-export function DataTools({ mode, data, commit, close, notify, recover }: {
+export function DataTools({ mode, data, commit, close, notify, recover, profileName, profileId }: {
   mode: DataTool; data: Data; commit: Commit; close: () => void; notify: (text: string) => void; recover?: (data?: Data) => Promise<void>
+  profileName: string; profileId: string
 }) {
   const operation = useOperation(close)
   const [file, setFile] = useState<File>()
@@ -45,6 +46,8 @@ export function DataTools({ mode, data, commit, close, notify, recover }: {
   const [month, setMonth] = useState(today().slice(0, 7))
   const [confirmation, setConfirmation] = useState(mode === "clear")
   const fileInput = useRef<HTMLInputElement>(null)
+  const profileSlug = profileName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "profile"
+  const fileProfile = profileId === "personal" ? profileSlug : `${profileSlug}-${profileId.slice(-6)}`
   useEffect(() => {
     if (confirmation) document.getElementById("cancel-operation")?.focus()
   }, [confirmation])
@@ -86,7 +89,7 @@ export function DataTools({ mode, data, commit, close, notify, recover }: {
       await commit(current => {
         if (JSON.stringify(current) !== JSON.stringify(data)) throw new Error("The local records changed. Reopen Clear local data to review the current counts.")
         return { ...initialData(), preferences: current.preferences }
-      }, "Local records cleared. Downloaded files remain where you saved them.")
+      }, `Local records cleared for ${profileName}. Downloaded files remain where you saved them.`)
       return
     }
     if (!review || !preview) throw new Error("Review the file first.")
@@ -101,16 +104,16 @@ export function DataTools({ mode, data, commit, close, notify, recover }: {
   }
 
   function saveBackup() {
-    download(serialiseBackup(data), "application/json", `money-manager-backup-${today()}.json`)
+    download(serialiseBackup(data), "application/json", `money-manager-${fileProfile}-backup-${today()}.json`)
     notify("Backup downloaded")
   }
 
   const description = {
-    backup: disclaimer,
-    restore: "Choose a Money Manager JSON file. You can review the contents before making changes.",
-    import: "Choose a UTF-8 CSV using the column headings from a Money Manager export. Transactions will be checked before saving.",
-    export: disclaimer,
-    clear: "This removes transactions, budgets, savings goals, contributions and custom categories from this browser. Appearance settings and downloaded files stay where they are.",
+    backup: `Download the financial records for ${profileName}. The profile name and avatar remain in this browser. ${disclaimer}`,
+    restore: `Choose a Money Manager JSON file to merge into or replace the financial records for ${profileName}. The profile name and avatar are not changed.`,
+    import: `Choose a UTF-8 CSV using the column headings from a Money Manager export. Transactions will be checked before adding them to ${profileName}.`,
+    export: `Download a CSV of ${profileName}'s transactions. ${disclaimer}`,
+    clear: `This removes transactions, budgets, savings goals, contributions and custom categories from ${profileName}'s profile only. Its name and avatar stay. Appearance settings and downloaded files stay where they are.`,
   }[mode]
 
   return <Modal title={title} description={description} close={close} busy={operation.busy} initialFocus={mode === "clear" ? "cancel-operation" : undefined} destructive={mode === "clear"}>
@@ -164,7 +167,7 @@ export function DataTools({ mode, data, commit, close, notify, recover }: {
       void operation.run(async () => {
         const start = scope === "custom" ? read("start") : month + "-01"
         const end = scope === "custom" ? read("end") : new Date(Date.parse(shiftMonth(month, 1) + "-01") - 86400000).toISOString().slice(0, 10)
-        download(exportCsv(data, start, end), "text/csv;charset=utf-8", `money-manager-transactions-${today()}.csv`)
+        download(exportCsv(data, start, end), "text/csv;charset=utf-8", `money-manager-${fileProfile}-transactions-${today()}.csv`)
         notify("Transaction CSV downloaded")
       })
     }}>
