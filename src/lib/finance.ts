@@ -14,8 +14,9 @@ export type NewProfile = Omit<Profile, "id">
 export type Category = { id: string; name: string; kind: Kind; colour: typeof colours[number]; icon: typeof icons[number] }
 export type Entry = { id: string; kind: Kind; name: string; amount: number; date: string; category: string; account: string; notes: string }
 export type Budget = { id: string; category: string; amount: number }
-export type Goal = { id: string; name: string; amount: number; date: string; notes: string }
-export type Contribution = { id: string; goal: string; amount: number; date: string; notes: string }
+export type Goal = { id: string; name: string; amount: number | null; date: string; notes: string }
+export type ContributionDirection = "deposit" | "withdrawal"
+export type Contribution = { id: string; goal: string; amount: number; direction: ContributionDirection; date: string; notes: string }
 export type Preferences = { currency: Currency; theme: Theme; reducedMotion: boolean | null }
 export type Data = {
   entries: Entry[]
@@ -93,21 +94,33 @@ export function monthName(month: string, short = false) {
 export function monthTotals(data: Data, month: string) {
   let income = 0
   let spent = 0
-  let saved = 0
   for (const entry of data.entries) {
     if (!entry.date.startsWith(month)) continue
     if (entry.kind === "income") income += entry.amount
     else spent += entry.amount
   }
+  const saved = savingsMovement(data, month).net
+  return { income, spent, saved, balance: income - spent - saved }
+}
+
+export function contributionDelta(contribution: Pick<Contribution, "amount" | "direction">) {
+  return contribution.direction === "withdrawal" ? -contribution.amount : contribution.amount
+}
+
+export function savingsMovement(data: Data, month: string) {
+  let added = 0
+  let withdrawn = 0
   for (const contribution of data.contributions) {
-    if (contribution.date.startsWith(month)) saved += contribution.amount
+    if (!contribution.date.startsWith(month)) continue
+    if (contribution.direction === "withdrawal") withdrawn += contribution.amount
+    else added += contribution.amount
   }
-  return { income, spent, saved, balance: income - spent }
+  return { added, withdrawn, net: added - withdrawn }
 }
 
 export function goalSaved(data: Data, goal: string, month?: string) {
   return data.contributions.reduce((sum, row) =>
-    row.goal === goal && (!month || row.date.slice(0, 7) <= month) ? sum + row.amount : sum, 0)
+    row.goal === goal && (!month || row.date.slice(0, 7) <= month) ? sum + contributionDelta(row) : sum, 0)
 }
 
 export function spending(data: Data, month: string) {

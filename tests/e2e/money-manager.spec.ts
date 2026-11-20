@@ -59,7 +59,7 @@ test("amounts, transaction search, edit and removal persist across reload withou
   expect(external).toEqual([])
 })
 
-test("monthly budget and goal progress use saved transactions and contributions", async ({ page }) => {
+test("monthly budgets and savings pots use saved transactions and transfers", async ({ page }) => {
   await page.setViewportSize(tablet)
   await page.goto("/")
   await addEntry(page, "Expense", "Food shop", "15.50")
@@ -70,16 +70,16 @@ test("monthly budget and goal progress use saved transactions and contributions"
   await page.getByRole("button", { name: "Create budget" }).click()
   await expect(page.getByText("€84.50", { exact: true })).toBeVisible()
   await page.locator('nav[aria-label="Main navigation"]').getByRole("link", { name: "Savings" }).click()
-  await page.getByRole("button", { name: "New goal", exact: true }).first().click()
-  await page.getByLabel("Goal name").fill("Holiday")
-  await page.getByLabel("Target amount (EUR)").fill("200")
-  await page.getByRole("button", { name: "Create goal" }).click()
+  await page.getByRole("button", { name: "New savings pot", exact: true }).click()
+  await page.getByLabel("Pot name").fill("Holiday")
+  await page.getByLabel("Target amount (EUR) (optional)").fill("200")
+  await page.getByRole("button", { name: "Create pot" }).click()
   await page.getByRole("button", { name: "Add money", exact: true }).first().click()
   await page.getByLabel("Amount (EUR)").fill("40")
-  await page.getByRole("button", { name: "Add contribution", exact: true }).click()
-  await expect(page.getByText("20% of €200.00 target")).toBeVisible()
+  await page.getByRole("dialog").getByRole("button", { name: "Add money", exact: true }).click()
+  await expect(page.getByText("20% of €200.00 target", { exact: false })).toBeVisible()
   await page.getByRole("button", { name: "Holiday", exact: true }).click()
-  await expect(page.getByRole("heading", { name: "Contribution history" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Transfer history" })).toBeVisible()
 })
 
 test("backup review, duplicate merge, incompatible-file rejection and typed restore are atomic", async ({ page }) => {

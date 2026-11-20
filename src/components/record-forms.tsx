@@ -4,7 +4,7 @@ import { useState, type FormEvent, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CategoryIcon, Choose, ErrorText, Field, FormActions, Modal, formValues, useOperation, type Commit } from "@/components/shared"
-import { amountFromText, colours, exactAmount, icons, today, upsert, type Budget, type Category, type Contribution, type Data, type Entry, type Goal, type Kind } from "@/lib/finance"
+import { amountFromText, colours, exactAmount, icons, today, upsert, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind } from "@/lib/finance"
 
 type Shared = { data: Data; close: () => void; commit: Commit }
 const local = "Saved in this browser on this device."
@@ -44,8 +44,8 @@ function RecordForm({ title, description = local, close, children, save, label }
   </Modal>
 }
 
-function Amount({ currency, amount, label = "Amount" }: { currency: string; amount?: number; label?: string }) {
-  return <Field name="amount" label={`${label} (${currency})`} required inputMode="decimal" maxLength={12} placeholder="0.00" defaultValue={amount ? exactAmount(amount) : ""} />
+function Amount({ currency, amount, label = "Amount", required = true }: { currency: string; amount?: number | null; label?: string; required?: boolean }) {
+  return <Field name="amount" label={`${label} (${currency})${required ? "" : " (optional)"}`} required={required} inputMode="decimal" maxLength={12} placeholder="0.00" defaultValue={amount ? exactAmount(amount) : ""} />
 }
 
 export function EntryForm({ row, initialKind = "expense", ...props }: Shared & { row?: Entry; initialKind?: Kind }) {
@@ -108,33 +108,41 @@ export function BudgetForm({ data, row, close, commit }: Shared & { row?: Budget
 }
 
 export function GoalForm({ data, row, close, commit }: Shared & { row?: Goal }) {
-  return <RecordForm title={row ? "Edit goal" : "New goal"} close={close} label={row ? "Save changes" : "Create goal"}
+  return <RecordForm title={row ? "Edit savings pot" : "New savings pot"}
+    description="A target is optional. Adding money reduces Available to spend; taking it out adds it back."
+    close={close} label={row ? "Save changes" : "Create pot"}
     save={async read => {
+      const target = read("amount").trim() ? amountFromText(read("amount")) : null
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.goals.some(item => item.id === row.id)) throw new Error("This goal was removed in another tab.")
-        return { ...current, goals: upsert(current.goals, { id: row?.id ?? crypto.randomUUID(), name: read("name"), amount: amountFromText(read("amount")), date: read("date"), notes: read("notes") }) }
-      }, row ? "Goal updated" : "Goal created")
+        if (row && !current.goals.some(item => item.id === row.id)) throw new Error("This savings pot was removed in another tab.")
+        return { ...current, goals: upsert(current.goals, { id: row?.id ?? crypto.randomUUID(), name: read("name"), amount: target, date: read("date"), notes: read("notes") }) }
+      }, row ? "Savings pot updated" : "Savings pot created")
     }}>
-    <Field name="name" label="Goal name" maxLength={90} required defaultValue={row?.name} />
-    <Amount label="Target amount" currency={data.preferences.currency} amount={row?.amount} />
+    <Field name="name" label="Pot name" maxLength={90} required defaultValue={row?.name} />
+    <Amount label="Target amount" currency={data.preferences.currency} amount={row?.amount} required={false} />
     <Field name="date" label="Target date (optional)" type="date" defaultValue={row?.date} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
   </RecordForm>
 }
 
-export function ContributionForm({ data, row, goal, close, commit }: Shared & { row?: Contribution; goal?: Goal }) {
+export function ContributionForm({ data, row, goal, initialDirection = "deposit", close, commit }: Shared & { row?: Contribution; goal?: Goal; initialDirection?: ContributionDirection }) {
   const [goalId, setGoal] = useState(row?.goal ?? goal?.id ?? data.goals[0]?.id ?? "")
-  return <RecordForm title={row ? "Edit contribution" : "Add contribution"} close={close} label={row ? "Save changes" : "Add contribution"}
+  const [direction, setDirection] = useState<ContributionDirection>(row?.direction ?? initialDirection)
+  const transferLabel = direction === "deposit" ? "Add money" : "Take out"
+  return <RecordForm title={row ? "Edit transfer" : transferLabel}
+    description={row ? "A withdrawal must stay within the pot balance on its date." : "Adding money reduces Available to spend. Taking it out adds it back."}
+    close={close} label={row ? "Save changes" : transferLabel}
     save={async read => {
-      if (!goalId) throw new Error("Choose a savings goal.")
+      if (!goalId) throw new Error("Choose a savings pot.")
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.contributions.some(item => item.id === row.id)) throw new Error("This contribution was removed in another tab.")
-        return { ...current, contributions: upsert(current.contributions, { id: row?.id ?? crypto.randomUUID(), goal: goalId, amount: amountFromText(read("amount")), date: read("date"), notes: read("notes") }) }
-      }, row ? "Contribution updated" : "Contribution added")
+        if (row && !current.contributions.some(item => item.id === row.id)) throw new Error("This transfer was removed in another tab.")
+        return { ...current, contributions: upsert(current.contributions, { id: row?.id ?? crypto.randomUUID(), goal: goalId, amount: amountFromText(read("amount")), direction, date: read("date"), notes: read("notes") }) }
+      }, row ? "Transfer updated" : direction === "deposit" ? "Money added to pot" : "Money taken out of pot")
     }}>
-    <Choose label="Goal" value={goalId} onChange={setGoal} options={data.goals.map(item => [item.id, item.name])} />
+    <Choose label="Transfer type" value={direction} onChange={value => setDirection(value as ContributionDirection)} options={[["deposit", "Add money"], ["withdrawal", "Take money out"]]} />
+    <Choose label="Savings pot" value={goalId} onChange={setGoal} options={data.goals.map(item => [item.id, item.name])} />
     <Amount currency={data.preferences.currency} amount={row?.amount} />
     <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
