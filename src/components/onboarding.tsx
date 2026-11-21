@@ -123,13 +123,13 @@ export function Onboarding({ initial, finish, reload }: {
       <div className="mx-auto w-full max-w-md">
         <header>
           <DialogTitle ref={heading} tabIndex={-1}
-            className="text-[clamp(2rem,11vw,2.375rem)] leading-[1.1] font-semibold tracking-[-0.04em] outline-none">
-            Hello, <span className="text-primary">money.</span>
+            className="text-[2rem]/[1.12] font-semibold tracking-[-0.03em] text-foreground outline-none md:text-4xl/[1.12]">
+            Hi there
           </DialogTitle>
-          <DialogDescription className="mt-2.5 text-[15px] leading-relaxed">Pick your currency and add your money.</DialogDescription>
+          <DialogDescription className="mt-2 text-[0.9375rem]/[1.5]">Let’s set up Baran’s Money Manager.</DialogDescription>
         </header>
 
-        <section aria-labelledby="setup-currency" className="mt-4 md:mt-3">
+        <section aria-labelledby="setup-currency" className="mt-4">
           <div className="mb-1 flex min-h-11 items-center justify-between gap-2">
             <h2 id="setup-currency" className="text-[15px] font-semibold">Currency</h2>
             <Select value={currency} onValueChange={changeCurrency} disabled={busy}>
@@ -158,12 +158,10 @@ export function Onboarding({ initial, finish, reload }: {
         </section>
 
         <section aria-labelledby="setup-accounts" className="mt-5">
-          <div className="flex items-center justify-between gap-2">
-            <h2 id="setup-accounts" className="text-base font-semibold">{draft.accounts.length ? "Your accounts" : "Where do you keep your money?"}</h2>
-          </div>
+          <h2 id="setup-accounts" className="text-base font-semibold">{draft.accounts.length ? "Your accounts" : "Add an account"}</h2>
           <p className="mt-1.5 text-[13px] text-muted-foreground">
-            {setupEditing ? "Give this account a name and an optional opening balance."
-              : draft.accounts.length ? "Pick a type to add another account." : "Choose an account type. You can do this later."}
+            {setupEditing ? "Give it a name you’ll recognise."
+              : draft.accounts.length ? "Choose a type to add another." : "You can add accounts later."}
           </p>
           <p role="status" className="sr-only">{accountStatus}</p>
           {draft.accounts.length > 0 && <ul aria-label="Added accounts" className="mt-1">
@@ -194,11 +192,11 @@ export function Onboarding({ initial, finish, reload }: {
 
         <div className="mt-5 flex flex-col gap-2 md:flex-row-reverse md:justify-between">
           {!setupEditing && <Button type="button" className={cn("h-11 active:bg-primary/85", press)} disabled={busy}
-            onClick={() => void leave("dashboard")}>Start tracking</Button>}
+            onClick={() => void leave("dashboard")}>Open dashboard</Button>}
           <Button type="button" variant="ghost" className={cn(quiet, setupEditing && "md:mr-auto")} disabled={busy}
             onClick={() => void leave("skip")}>Skip setup</Button>
         </div>
-        <p className="mt-4 text-center text-xs text-muted-foreground">Stored in this browser. No sign-up.</p>
+        <p className="mt-4 text-center text-xs text-muted-foreground">No sign-up. Your data stays in this browser.</p>
         {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
       </div>
     </DialogContent>

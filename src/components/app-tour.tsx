@@ -10,7 +10,7 @@ export const tourStops = [
   { route: "activity", title: "Record a transaction", copy: "Use Add to record money coming in or going out." },
   { route: "activity", title: "Money in or out?", copy: "Choose Expense for money spent or Income for money received.", opensPicker: true },
   { route: "budgets", title: "Set a spending limit", copy: "Pick a category and see how much you have left this month." },
-  { route: "savings", title: "Save for something", copy: "Give it a goal and add money whenever you’re ready." },
+  { route: "savings", title: "Save for something", copy: "Pick something to save for and add to it over time." },
 ] as const
 
 export const TourEditorContext = createContext<{ scope: "account" | "record"; panel: ReactNode } | null>(null)
@@ -62,8 +62,8 @@ export function saveTourResult(result: "completed" | "skipped") {
 export function TourInvitation({ start, skip }: { start: () => void; skip: () => void }) {
   return <aside aria-label="App tour invitation"
     className={"fixed inset-x-4 bottom-[max(5.75rem,calc(env(safe-area-inset-bottom)+5rem))] z-50 rounded-xl border bg-card p-4 shadow-lg md:right-6 md:bottom-6 md:left-auto md:w-[21.5rem] " + fade}>
-    <h2 className="text-lg font-semibold tracking-tight">Want to try a few things?</h2>
-    <p className="mt-1 text-sm text-muted-foreground">Seven quick stops. Try the controls as you go.</p>
+    <h2 className="text-lg font-semibold tracking-tight">Take a quick tour?</h2>
+    <p className="mt-1 text-sm text-muted-foreground">Try the main controls, one at a time.</p>
     <div className="mt-3 flex flex-wrap justify-between gap-2">
       <Button variant="ghost" className="h-11 px-2 text-muted-foreground" onClick={skip}>Skip tour</Button>
       <Button className="h-11" onClick={start}>Take the tour</Button>
