@@ -1,13 +1,13 @@
 import assert from "node:assert/strict"
 import { test } from "node:test"
-import { amountFromText, initialData, monthTotals } from "../src/lib/finance.ts"
+import { amountFromText, defaultPreferences, initialData, monthTotals } from "../src/lib/finance.ts"
 import { parseBackup, serialiseBackup, combineBackup, MAX_BYTES } from "../src/lib/backup.ts"
 
 const entry = { id: "entry-1", kind: "expense", name: "Coffee", amount: 10, date: "2026-11-20", category: "dining", account: "Cash", notes: "" }
 
 test("decimal input and monthly totals use integer minor units", () => {
-  assert.equal(amountFromText("0.10") + amountFromText("0.20"), 30)
-  for (const bad of ["1e4", "-1", "1.001", "0", "999999999999999999"]) assert.throws(() => amountFromText(bad))
+  assert.equal(amountFromText("0.10", defaultPreferences) + amountFromText("0.20", defaultPreferences), 30)
+  for (const bad of ["1e4", "-1", "1.001", "0", "999999999999999999"]) assert.throws(() => amountFromText(bad, defaultPreferences))
   const data = initialData()
   data.entries = [entry, { ...entry, id: "entry-2", amount: 20 }, { ...entry, id: "entry-3", date: "2026-10-31" }]
   assert.deepEqual(monthTotals(data, "2026-11"), { income: 0, spent: 30, saved: 0, balance: -30 })

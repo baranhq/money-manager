@@ -5,6 +5,12 @@ const desktop = { width: 1440, height: 1024 }
 const tablet = { width: 1024, height: 1024 }
 const mobile = { width: 390, height: 844 }
 
+test.beforeEach(async ({ page }) => {
+  await page.goto("/")
+  await page.getByRole("button", { name: "Skip setup", exact: true }).click()
+  await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible()
+})
+
 async function pick(page: Page, label: string, value: string) {
   await page.getByRole("combobox", { name: label, exact: true }).click()
   await page.getByRole("option", { name: value, exact: true }).click()

@@ -1,5 +1,6 @@
 import { defaultPreferences, defaultProfile, initialData, MAX_PROFILES, profileColours, profileIcons, type Data, type NewProfile, type Preferences, type Profile } from "./finance.ts"
 import { parsePreferences, serialiseBackup, validateData } from "./backup.ts"
+import { initialOnboarding, parseOnboarding, type OnboardingDraft } from "./onboarding.ts"
 import {
   PASSWORD_KDF_ITERATIONS, createSalt, decodeCiphertext, decodeSalt, deriveEncryptionKey, encodeBytes,
   openBytes, sealBytes, validateSitePassword, type Ciphertext,
@@ -23,8 +24,9 @@ const profileListKey = "profiles"
 const activeProfileKey = "active-profile"
 const currentDataKey = "current"
 const preferencesKey = "preferences"
+const onboardingKey = "first-time-setup"
 const profileDataKey = (id: string) => `profile-data:${id}`
-export type Workspace = { profiles: Profile[]; activeProfileId: string; data: Data }
+export type Workspace = { profiles: Profile[]; activeProfileId: string; data: Data; onboarding?: OnboardingDraft }
 
 type SecurityConfig = {
   version: 1
@@ -609,18 +611,20 @@ function writeSnapshot(store: IDBObjectStore, id: string, data: Data) {
 }
 
 function loadWorkspace(store: IDBObjectStore, ready: (workspace: Workspace) => void, fail: (error: unknown) => void) {
-  readValues(store, [profileListKey, activeProfileKey, currentDataKey, preferencesKey], values => {
+  readValues(store, [profileListKey, activeProfileKey, currentDataKey, preferencesKey, onboardingKey, securityKey, profileDataKey(defaultProfile.id)], values => {
     try {
       if (!values.has(profileListKey)) {
-        const data = snapshot(values.get(currentDataKey))
+        const data = snapshot(values.get(currentDataKey) ?? values.get(profileDataKey(defaultProfile.id)))
         if (values.get(currentDataKey) === undefined && values.has(preferencesKey)) {
           data.preferences = parsePreferences(values.get(preferencesKey))
         }
+        const onboarding = values.size === 0 ? initialOnboarding() : undefined
+        if (onboarding) store.put(onboarding, onboardingKey)
         const profiles = [defaultProfile]
         store.put(profiles, profileListKey)
         store.put(defaultProfile.id, activeProfileKey)
         writeSnapshot(store, defaultProfile.id, data)
-        ready({ profiles, activeProfileId: defaultProfile.id, data })
+        ready({ profiles, activeProfileId: defaultProfile.id, data, ...(onboarding ? { onboarding } : {}) })
         return
       }
 
@@ -636,7 +640,15 @@ function loadWorkspace(store: IDBObjectStore, ready: (workspace: Workspace) => v
       const finish = (data: Data) => {
         if (values.get(currentDataKey) === undefined || !activeWasValid) writeSnapshot(store, activeProfileId, data)
         else if (!values.has(preferencesKey)) store.put(data.preferences, preferencesKey)
-        ready({ profiles, activeProfileId, data })
+        const stored = values.get(onboardingKey)
+        const eligible = !values.has(securityKey) && profiles.length === 1 && activeProfileId === defaultProfile.id &&
+          !data.entries.length && !data.budgets.length && !data.goals.length && !data.contributions.length && !data.accounts?.length
+        let onboarding: OnboardingDraft | undefined
+        if (stored && stored !== "complete" && eligible) {
+          try { onboarding = parseOnboarding(stored) }
+          catch { onboarding = initialOnboarding(); store.put(onboarding, onboardingKey) }
+        } else if (stored && stored !== "complete") store.put("complete", onboardingKey)
+        ready({ profiles, activeProfileId, data, ...(onboarding ? { onboarding } : {}) })
       }
       const current = values.get(currentDataKey)
       if (activeWasValid && current !== undefined) {
@@ -673,6 +685,32 @@ export function readData() {
   return readWorkspace().then(workspace => workspace.data)
 }
 
+export function saveOnboarding(draft: OnboardingDraft) {
+  return transact<boolean>("readwrite", (store, complete, fail) => {
+    readValue(store, onboardingKey, saved => {
+      try {
+        if (!saved || saved === "complete") { complete(false); return }
+        store.put(parseOnboarding(draft), onboardingKey)
+        complete(true)
+      } catch (error) { fail(error) }
+    }, fail)
+  })
+}
+
+export function finishOnboarding(draft: OnboardingDraft, skip: boolean) {
+  return transact<{ workspace: Workspace; applied: boolean }>("readwrite", (store, complete, fail) => loadWorkspace(store, workspace => {
+    if (!workspace.onboarding) { complete({ workspace, applied: false }); return }
+    try {
+      const setup = skip ? initialOnboarding() : parseOnboarding(draft)
+      if (setup.editor) throw new Error("Add or cancel the account before finishing setup.")
+      const data = validateData({ ...workspace.data, accounts: setup.accounts, preferences: setup.preferences })
+      writeSnapshot(store, workspace.activeProfileId, data)
+      store.put("complete", onboardingKey)
+      complete({ workspace: { profiles: workspace.profiles, activeProfileId: workspace.activeProfileId, data }, applied: true })
+    } catch (error) { fail(error) }
+  }, fail))
+}
+
 export function readPreferences() {
   return withStorageMode(
     () => transact<Preferences>("readonly", (store, complete, fail) => {
@@ -692,6 +730,7 @@ export function updateData(change: (current: Data) => Data, expectedProfileId?: 
       try {
         const updated = validateData(change(workspace.data))
         writeSnapshot(store, workspace.activeProfileId, updated)
+        if (workspace.onboarding) store.put("complete", onboardingKey)
         complete(updated)
       } catch (error) { fail(error) }
     }, fail)),

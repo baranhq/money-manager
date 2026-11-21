@@ -1,16 +1,18 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound } from "lucide-react"
+import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound, Wallet } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { CategoryIcon, Choose, Empty, ErrorText, Field, Menu, Modal, type Commit } from "@/components/shared"
-import { canonicalLocale, currencies, currencyDigits, dateLabel, money, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
+import { canonicalLocale, currencies, currencyDigits, dateLabel, hasLedgerAmounts, money, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
+import { localeOptions, localePresets } from "@/lib/regional-options"
 import type { DataTool } from "@/components/data-tools"
 import { Profiles } from "@/components/profiles"
+import { LedgerAccounts } from "@/components/ledger-accounts"
 import { SecuritySettings, type SecurityStatus } from "@/components/security-settings"
 
 type Row = { title: string; description: string; icon: React.ElementType; danger?: boolean } & ({ href: string; run?: never } | { run: () => void; href?: never })
@@ -30,6 +32,7 @@ function Rows({ rows }: { rows: Row[] }) {
 
 const heading = {
   accounts: ["Profiles", "Keep separate ledgers on this browser."],
+  "ledger-accounts": ["Accounts", "Manage the accounts and opening balances in this ledger."],
   categories: ["Categories", "Choose the names and icons used in reports."],
   data: ["Data & backup", "Manage the records on this device and the files you keep."],
   security: ["Security", "Choose how this browser protects access to the app and its stored records."],
@@ -38,21 +41,6 @@ const heading = {
 }
 
 export type SettingsPage = keyof typeof heading | "settings"
-
-const localePresets = [
-  "en-GB", "en-US", "en-IE", "en-CA", "en-AU", "bg-BG", "tr-TR", "de-DE", "de-AT", "de-CH",
-  "fr-FR", "fr-CA", "fr-CH", "es-ES", "es-MX", "pt-PT", "pt-BR", "it-IT", "nl-NL", "pl-PL",
-  "ro-RO", "el-GR", "ru-RU", "uk-UA", "ar-SA", "ar-EG", "hi-IN", "bn-BD", "ja-JP", "ko-KR",
-  "zh-CN", "zh-TW", "id-ID", "th-TH", "vi-VN", "he-IL", "fa-IR", "ur-PK", "sr-Latn-RS",
-  "hr-HR", "no-NO", "da-DK", "sv-SE", "fi-FI", "cs-CZ", "sk-SK", "hu-HU", "sl-SI", "et-EE",
-  "lv-LV", "lt-LT", "is-IS", "ga-IE", "cy-GB", "mt-MT", "sq-AL", "mk-MK", "bs-BA", "hy-AM",
-  "ka-GE", "az-AZ", "uz-UZ", "kk-KZ", "sw-KE", "ta-IN", "te-IN", "zh-HK",
-] as const
-const localeLabels = new Intl.DisplayNames(["en-GB"], { type: "language" })
-const localeOptions: readonly (readonly [string, string])[] = [
-  ...localePresets.map(locale => [locale, `${localeLabels.of(locale) ?? locale} · ${locale}`] as const),
-  ["custom", "Custom locale tag…"],
-]
 
 export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite }: {
   route: SettingsPage; data: Data; commit: Commit
@@ -68,7 +56,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
   const [localeDraft, setLocaleDraft] = useState(data.preferences.locale)
   const [customLocaleOpen, setCustomLocaleOpen] = useState(!localePresets.includes(data.preferences.locale as typeof localePresets[number]))
   const preference = data.preferences
-  const hasMoney = Boolean(data.entries.length || data.budgets.length || data.goals.length || data.contributions.length)
+  const hasMoney = hasLedgerAmounts(data)
   const names = new Intl.DisplayNames([preference.locale], { type: "currency" })
   const currencyOptions = [...new Set([preference.currency, ...currencies])].sort().map(currency => [
     currency,
@@ -85,7 +73,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
     setError("")
     try {
       await commit(current => {
-        if (patch.currency && patch.currency !== current.preferences.currency && (current.entries.length || current.budgets.length || current.goals.length || current.contributions.length)) {
+        if (patch.currency && patch.currency !== current.preferences.currency && hasLedgerAmounts(current)) {
           throw new Error("Back up and clear the current ledger before changing its currency.")
         }
         return { ...current, preferences: { ...current.preferences, ...patch } }
@@ -177,6 +165,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <section className="space-y-3"><h2 className="text-lg font-semibold">Manage</h2>
         <Rows rows={[
           { title: "Profiles", description: "Switch ledgers or personalise a profile.", icon: UsersRound, href: "#accounts" },
+          { title: "Accounts", description: "Manage accounts and opening balances.", icon: Wallet, href: "#ledger-accounts" },
           { title: "Categories", description: "Manage expense and income categories.", icon: Tags, href: "#categories" },
           { title: "Data & backup", description: "Back up, import, export or clear data.", icon: Database, href: "#data" },
           { title: "Security", description: "Set a site password and optionally encrypt this browser’s data.", icon: LockKeyhole, href: "#security" },
@@ -187,6 +176,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <ErrorText message={error} />
     </>}
     {route === "accounts" && <Profiles profiles={profiles} activeProfileId={activeProfileId} addProfile={addProfile} editProfile={updateProfile} switchProfile={switchProfile} />}
+    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} />}
     {route === "categories" && <Tabs value={kind} className="gap-4" onValueChange={value => setKind(value as Kind)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList aria-label="Category type">

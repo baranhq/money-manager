@@ -15,6 +15,10 @@ export type Profile = { id: string; name: string; colour: ProfileColour; icon: P
 export type NewProfile = Omit<Profile, "id">
 export type Category = { id: string; name: string; kind: Kind; colour: typeof colours[number]; icon: typeof icons[number] }
 export type Entry = { id: string; kind: Kind; name: string; amount: number; date: string; category: string; account: string; notes: string }
+export const accountTypes = ["Cash", "Bank", "Other"] as const
+export type AccountType = typeof accountTypes[number]
+export type LedgerAccount = { id: string; name: string; type: AccountType; openingBalance: number }
+export const maxLedgerAccounts = 100
 export type Budget = { id: string; category: string; amount: number }
 export type Goal = { id: string; name: string; amount: number | null; date: string; notes: string }
 export type ContributionDirection = "deposit" | "withdrawal"
@@ -31,11 +35,21 @@ export type Preferences = {
 }
 export type Data = {
   entries: Entry[]
+  accounts?: LedgerAccount[]
   categories: Category[]
   budgets: Budget[]
   goals: Goal[]
   contributions: Contribution[]
   preferences: Preferences
+}
+
+export function hasLedgerAmounts(data: Data) {
+  return Boolean(data.entries.length || data.budgets.length || data.goals.length || data.contributions.length ||
+    data.accounts?.some(account => account.openingBalance !== 0))
+}
+
+export function accountNameKey(name: string) {
+  return name.trim().normalize("NFKC").toLowerCase()
 }
 
 export const defaultProfile: Profile = { id: "personal", name: "Personal", colour: "green", icon: "user" }
@@ -116,7 +130,7 @@ function localizeNumberParts(parts: Intl.NumberFormatPart[], preferences: Prefer
   return parts.map(part => part.type === "group" ? separators.group : part.type === "decimal" ? separators.decimal : part.value).join("")
 }
 
-export function amountFromText(input: string, preferences: Preferences, decimalSeparator?: string, allowGrouping = true) {
+export function amountFromText(input: string, preferences: Preferences, decimalSeparator?: string, allowGrouping = true, allowZero = false) {
   const separators = numberSeparators(preferences.locale, preferences.numberFormat)
   const decimal = decimalSeparator ?? separators.decimal
   let value = localizedDigits(input.trim(), preferences.locale)
@@ -142,8 +156,16 @@ export function amountFromText(input: string, preferences: Preferences, decimalS
   }
   const scale = 10 ** preferences.currencyDigits
   const amount = Number(whole) * scale + Number(fraction.padEnd(preferences.currencyDigits, "0"))
-  if (amount < 1 || amount > maximumAmount(preferences.currencyDigits)) throw new Error("Enter an amount greater than zero and below one billion.")
+  if (amount < (allowZero ? 0 : 1) || amount > maximumAmount(preferences.currencyDigits)) throw new Error("Enter an amount greater than zero and below one billion.")
   return amount
+}
+
+export function openingBalanceFromText(input: string, preferences: Preferences) {
+  const text = input.trim()
+  if (!text) return 0
+  const negative = /^[-−]/u.test(text)
+  const amount = amountFromText(negative ? text.slice(1) : text, preferences, undefined, true, true)
+  return negative && amount !== 0 ? -amount : amount
 }
 
 export function exactAmount(amount: number, preferences: Preferences) {

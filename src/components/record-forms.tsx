@@ -58,7 +58,9 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
   const [kind, setKind] = useState<Kind>(row?.kind ?? initialKind)
   const [category, setCategory] = useState(row?.category ?? "")
   const choices = data.categories.filter(item => item.kind === kind)
-  const accounts = [...new Set(data.entries.map(item => item.account))].slice(0, 40)
+  const configuredAccounts = data.accounts?.map(account => account.name) ?? []
+  const recentAccounts = [...new Set(data.entries.map(item => item.account))].slice(0, 40)
+  const accounts = [...new Set([...configuredAccounts, ...recentAccounts])]
   return <RecordForm title={row ? "Edit transaction" : "New entry"} close={close} label={row ? "Save changes" : `Save ${kind}`}
     save={async read => {
       if (!category) throw new Error("Choose a category.")
@@ -79,7 +81,7 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
         <Field name="name" label={kind === "expense" ? "Merchant or description" : "Income description"} required maxLength={120} defaultValue={row?.name} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Choose label="Category" value={category} placeholder="Choose category" options={choices.map(item => [item.id, item.name])} onChange={setCategory} />
-          <Field name="account" label="Account" required maxLength={70} list="known-accounts" defaultValue={row?.account ?? "Cash"} />
+          <Field name="account" label="Account" required maxLength={70} list="known-accounts" defaultValue={row?.account ?? configuredAccounts[0] ?? "Cash"} />
           <datalist id="known-accounts">{accounts.map(account => <option key={account} value={account} />)}</datalist>
         </div>
         <DateField name="date" label="Date" preferences={data.preferences} required defaultValue={row?.date ?? today()} />

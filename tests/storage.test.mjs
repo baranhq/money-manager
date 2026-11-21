@@ -17,8 +17,9 @@ test("IndexedDB persists changes, serialises concurrent writes, and rolls back i
 test("corrupted records remain in place until explicit recovery, which preserves readable appearance preferences", async () => {
   const { InvalidSnapshot, readPreferences, recoverData, storageName } = await import("../src/lib/storage.ts")
   const preferences = { currency: "EUR", theme: "dark", reducedMotion: true }
+  const normalizedPreferences = { ...initialData().preferences, ...preferences }
   await updateData(data => ({ ...data, preferences }))
-  assert.deepEqual(await readPreferences(), preferences)
+  assert.deepEqual(await readPreferences(), normalizedPreferences)
 
   await new Promise((resolve, reject) => {
     const request = indexedDB.open(storageName, 1)
@@ -33,9 +34,9 @@ test("corrupted records remain in place until explicit recovery, which preserves
   })
   await assert.rejects(readData(), InvalidSnapshot)
   await assert.rejects(updateData(() => initialData()), InvalidSnapshot)
-  assert.deepEqual(await readPreferences(), preferences)
+  assert.deepEqual(await readPreferences(), normalizedPreferences)
   await recoverData()
-  assert.deepEqual(await readData(), { ...initialData(), preferences })
+  assert.deepEqual(await readData(), { ...initialData(), preferences: normalizedPreferences })
   await assert.rejects(recoverData(), /storage changed/i)
 })
 
