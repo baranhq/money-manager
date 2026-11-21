@@ -3,6 +3,7 @@
 import { useState, type FormEvent, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { DateField } from "@/components/date-field"
 import { CategoryIcon, Choose, ErrorText, Field, FormActions, Modal, formValues, useOperation, type Commit } from "@/components/shared"
 import { amountFromText, colours, exactAmount, icons, today, upsert, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind } from "@/lib/finance"
 
@@ -77,12 +78,8 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
           <Field name="account" label="Account" required maxLength={70} list="known-accounts" defaultValue={row?.account ?? "Cash"} />
           <datalist id="known-accounts">{accounts.map(account => <option key={account} value={account} />)}</datalist>
         </div>
-        <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
+        <DateField name="date" label="Date" required defaultValue={row?.date ?? today()} />
         <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
-        <details className="rounded-md border px-3 text-sm text-muted-foreground">
-          <summary className="flex min-h-11 items-center font-medium text-primary">Privacy &amp; storage</summary>
-          <p className="pb-3">Entries are stored in your current browser. Clearing site data can erase them. Download a backup from Settings → Data &amp; backup.</p>
-        </details>
         {!choices.length && <p className="text-sm text-muted-foreground">Create a category first under Settings → Categories.</p>}
       </TabsContent>
       <TabsContent value={kind === "expense" ? "income" : "expense"} forceMount hidden />
@@ -92,17 +89,38 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
 
 export function BudgetForm({ data, row, close, commit }: Shared & { row?: Budget }) {
   const [category, setCategory] = useState(row?.category ?? "")
+  const selectedCategory = data.categories.find(item => item.id === category)
+  const namingOther = !row && selectedCategory?.id === "other" && selectedCategory.name.trim() === "Other"
   return <RecordForm title={row ? "Edit budget" : "New budget"} description="Set a recurring monthly limit for one expense category." close={close} label={row ? "Save changes" : "Create budget"}
     save={async read => {
       if (!category) throw new Error("Choose an expense category.")
+      const customName = namingOther ? read("otherCategoryName").trim() : ""
+      if (namingOther && !customName) throw new Error("Enter a name for this category.")
+      const customCategory: Category | undefined = namingOther ? {
+        id: crypto.randomUUID(), name: customName, kind: "expense", colour: "grey", icon: "wallet",
+      } : undefined
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency) throw new Error("The ledger currency changed. Reopen this form.")
         if (row && !current.budgets.some(item => item.id === row.id)) throw new Error("This budget was removed in another tab.")
-        return { ...current, budgets: upsert(current.budgets, { id: row?.id ?? crypto.randomUUID(), category, amount: amountFromText(read("amount")) }) }
+        if (customCategory) {
+          const other = current.categories.find(item => item.id === "other" && item.kind === "expense" && item.name.trim() === "Other")
+          if (!other) throw new Error("The Other category changed in another tab. Reopen this form.")
+          const normalizedName = customCategory.name.normalize("NFKC").toLowerCase()
+          if (current.categories.some(item => item.kind === "expense" && item.name.trim().normalize("NFKC").toLowerCase() === normalizedName)) {
+            throw new Error("An expense category with this name already exists.")
+          }
+        }
+        const budgetCategory = customCategory?.id ?? category
+        return {
+          ...current,
+          categories: customCategory ? [...current.categories, customCategory] : current.categories,
+          budgets: upsert(current.budgets, { id: row?.id ?? crypto.randomUUID(), category: budgetCategory, amount: amountFromText(read("amount")) }),
+        }
       }, row ? "Budget updated" : "Budget created")
     }}>
     <Choose label="Category" value={category} onChange={setCategory} placeholder="Choose category"
       options={data.categories.filter(item => item.kind === "expense").map(item => [item.id, item.name])} />
+    {namingOther && <Field name="otherCategoryName" label="Category name" placeholder="e.g. Travel" required maxLength={70} />}
     <Amount currency={data.preferences.currency} amount={row?.amount} label="Monthly limit" />
   </RecordForm>
 }
@@ -121,7 +139,7 @@ export function GoalForm({ data, row, close, commit }: Shared & { row?: Goal }) 
     }}>
     <Field name="name" label="Pot name" maxLength={90} required defaultValue={row?.name} />
     <Amount label="Target amount" currency={data.preferences.currency} amount={row?.amount} required={false} />
-    <Field name="date" label="Target date (optional)" type="date" defaultValue={row?.date} />
+    <DateField name="date" label="Target date (optional)" defaultValue={row?.date} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
   </RecordForm>
 }
@@ -144,7 +162,7 @@ export function ContributionForm({ data, row, goal, initialDirection = "deposit"
     <Choose label="Transfer type" value={direction} onChange={value => setDirection(value as ContributionDirection)} options={[["deposit", "Add money"], ["withdrawal", "Take money out"]]} />
     <Choose label="Savings pot" value={goalId} onChange={setGoal} options={data.goals.map(item => [item.id, item.name])} />
     <Amount currency={data.preferences.currency} amount={row?.amount} />
-    <Field name="date" label="Date" type="date" required defaultValue={row?.date ?? today()} />
+    <DateField name="date" label="Date" required defaultValue={row?.date ?? today()} />
     <Field name="notes" label="Notes (optional)" maxLength={500} defaultValue={row?.notes} />
   </RecordForm>
 }

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { readFile } from "node:fs/promises"
 
 const desktop = { width: 1440, height: 1024 }
 const tablet = { width: 1024, height: 1024 }
@@ -124,9 +125,130 @@ test("backup review, duplicate merge, incompatible-file rejection and typed rest
   await expect(page.getByRole("table").getByRole("button", { name: /Backup entry/ }).first()).toBeVisible()
 })
 
+test("site password locks on reload and encrypted local records reopen only after unlock", async ({ page }) => {
+  await page.setViewportSize(mobile)
+  await page.addInitScript(() => Object.defineProperty(window, "isSecureContext", { configurable: true, value: false }))
+  await page.goto("/#security")
+  await expect(page.getByRole("heading", { name: "Security" })).toBeVisible()
+  await page.getByRole("button", { name: "Set site password" }).click()
+  const dialog = page.getByRole("dialog", { name: "Set a site password" })
+  await dialog.getByLabel("New password · at least 12 characters").fill("local security passphrase 2026")
+  await dialog.getByLabel("Confirm password").fill("local security passphrase 2026")
+  await dialog.getByRole("checkbox", { name: /Also encrypt this browser’s stored data/ }).check()
+  await dialog.getByRole("button", { name: "Set password" }).click()
+  await expect(page.getByText(/Encrypted in this browser/)).toBeVisible()
+
+  await page.getByRole("button", { name: "Lock this site now" }).click()
+  await expect(page.getByRole("heading", { name: "Unlock Money Manager" })).toBeVisible()
+  await page.getByLabel("Site password").fill("incorrect passphrase")
+  await page.getByRole("button", { name: "Unlock" }).click()
+  await expect(page.getByText("That password did not unlock Money Manager.", { exact: true })).toBeVisible()
+  await page.getByLabel("Site password").fill("local security passphrase 2026")
+  await page.getByRole("button", { name: "Unlock" }).click()
+  await expect(page.getByRole("heading", { name: "Security" })).toBeVisible()
+
+  await page.reload()
+  await expect(page.getByRole("heading", { name: "Unlock Money Manager" })).toBeVisible()
+  await page.getByLabel("Site password").fill("local security passphrase 2026")
+  await page.getByRole("button", { name: "Unlock" }).click()
+  await expect(page.getByRole("heading", { name: "Security" })).toBeVisible()
+  await page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("link", { name: "Overview" }).click()
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible()
+})
+
+test("setting or unlocking the site password locks other open tabs", async ({ page }) => {
+  const otherTab = await page.context().newPage()
+  await page.goto("/#security")
+  await expect(page.getByRole("heading", { name: "Security" })).toBeVisible()
+  await otherTab.goto("/")
+  await expect(otherTab.getByRole("heading", { name: "Overview" })).toBeVisible()
+
+  const password = "shared-browser passphrase 2026"
+  await page.getByRole("button", { name: "Set site password" }).click()
+  const dialog = page.getByRole("dialog", { name: "Set a site password" })
+  await dialog.getByLabel("New password · at least 12 characters").fill(password)
+  await dialog.getByLabel("Confirm password").fill(password)
+  await dialog.getByRole("button", { name: "Set password" }).click()
+  await expect(otherTab.getByRole("heading", { name: "Unlock Money Manager" })).toBeVisible()
+
+  await otherTab.getByLabel("Site password").fill(password)
+  await otherTab.getByRole("button", { name: "Unlock" }).click()
+  await expect(otherTab.getByRole("heading", { name: "Overview" })).toBeVisible()
+  await expect(page.getByRole("heading", { name: "Unlock Money Manager" })).toBeVisible()
+
+  await page.getByLabel("Site password").fill(password)
+  await page.getByRole("button", { name: "Unlock" }).click()
+  await expect(page.getByRole("heading", { name: "Security" })).toBeVisible()
+  await expect(otherTab.getByRole("heading", { name: "Unlock Money Manager" })).toBeVisible()
+  await otherTab.close()
+})
+
+test("password-protected JSON and CSV exports hide records and restore with the right password", async ({ page }) => {
+  await page.setViewportSize(desktop)
+  await page.goto("/")
+  await addEntry(page, "Expense", "ExportPrivateMerchant", "14.25")
+  const password = "private file passphrase 2026"
+
+  await page.goto("/#data")
+  await page.getByRole("button", { name: "Download backup" }).click()
+  let dialog = page.getByRole("dialog", { name: "Download backup" })
+  const backupDownload = page.waitForEvent("download")
+  await dialog.getByLabel("Export password · at least 12 characters").fill(password)
+  await dialog.getByLabel("Confirm export password").fill(password)
+  await dialog.getByRole("button", { name: "Download protected backup" }).click()
+  let encryptedBackup = await (await backupDownload).path()
+  expect(await readFile(encryptedBackup!, "utf8")).not.toContain("ExportPrivateMerchant")
+
+  await page.getByRole("button", { name: "Clear local data" }).click()
+  dialog = page.getByRole("alertdialog")
+  await dialog.getByLabel("Type CLEAR to confirm").fill("CLEAR")
+  await dialog.getByRole("button", { name: "Clear local data" }).click()
+  await page.getByRole("button", { name: "Restore from backup" }).click()
+  dialog = page.getByRole("dialog", { name: "Restore from backup" })
+  await dialog.getByLabel("Import file").setInputFiles(encryptedBackup!)
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await dialog.getByLabel("Password for this file").fill("incorrect protected file password")
+  await dialog.getByRole("button", { name: "Unlock and review file" }).click()
+  await expect(dialog.getByRole("alert")).toContainText("password did not open")
+  await dialog.getByLabel("Password for this file").fill(password)
+  await dialog.getByRole("button", { name: "Unlock and review file" }).click()
+  await expect(dialog.getByText("Compatible backup", { exact: false })).toBeVisible()
+  await dialog.getByRole("button", { name: "Merge backup" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+
+  await page.getByRole("button", { name: "Export CSV" }).click()
+  dialog = page.getByRole("dialog", { name: "Export CSV" })
+  await dialog.getByRole("checkbox", { name: "Password-protect this CSV" }).check()
+  await dialog.getByLabel("Export password · at least 12 characters").fill(password)
+  await dialog.getByLabel("Confirm export password").fill(password)
+  const csvDownload = page.waitForEvent("download")
+  await dialog.getByRole("button", { name: "Download protected CSV" }).click()
+  const encryptedCsv = await (await csvDownload).path()
+  expect(await readFile(encryptedCsv!, "utf8")).not.toContain("ExportPrivateMerchant")
+
+  await page.getByRole("button", { name: "Clear local data" }).click()
+  dialog = page.getByRole("alertdialog")
+  await dialog.getByLabel("Type CLEAR to confirm").fill("CLEAR")
+  await dialog.getByRole("button", { name: "Clear local data" }).click()
+  await page.getByRole("button", { name: "Import CSV" }).click()
+  dialog = page.getByRole("dialog", { name: "Import CSV" })
+  await dialog.getByLabel("Import file").setInputFiles(encryptedCsv!)
+  await dialog.getByRole("button", { name: "Review file" }).click()
+  await dialog.getByLabel("Password for this file").fill("incorrect protected file password")
+  await dialog.getByRole("button", { name: "Unlock and review file" }).click()
+  await expect(dialog.getByRole("alert")).toContainText("password did not open")
+  await dialog.getByLabel("Password for this file").fill(password)
+  await dialog.getByRole("button", { name: "Unlock and review file" }).click()
+  await expect(dialog.getByText("1 new · 0 duplicates skipped")).toBeVisible()
+  await dialog.getByRole("button", { name: "Import transactions" }).click()
+  await page.goto("/#activity")
+  await expect(page.getByRole("table").getByRole("button", { name: /ExportPrivateMerchant/ }).first()).toBeVisible()
+})
+
 test("mobile navigation, keyboard, dark preference and licence reader", async ({ page }) => {
   await page.setViewportSize(mobile)
   await page.goto("/")
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible()
   await page.keyboard.press("Tab")
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused()
   await page.keyboard.press("Enter")
@@ -137,7 +259,7 @@ test("mobile navigation, keyboard, dark preference and licence reader", async ({
   await expect(page.getByRole("dialog", { name: "Add entry" })).toBeVisible()
   await page.keyboard.press("Escape")
   await expect(add).toBeFocused()
-  await page.getByRole("button", { name: "Personal account" }).click()
+  await page.getByRole("button", { name: "Profile menu for Personal" }).click()
   await page.getByRole("menuitem", { name: "Settings" }).click()
   await page.getByRole("button", { name: "Dark" }).click()
   await expect(page.locator("html")).toHaveClass(/dark/)
@@ -155,6 +277,20 @@ test("mobile navigation, keyboard, dark preference and licence reader", async ({
   const notices = await page.request.get("/third-party-notices.txt")
   expect(notices.ok()).toBeTruthy()
   expect(await notices.text()).toContain("Copyright (c) 2023 shadcn")
+})
+
+test("add-entry dialog fills the viewport at the small tablet breakpoint", async ({ page }) => {
+  await page.setViewportSize({ width: 676, height: 500 })
+  await page.goto("/")
+  await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible()
+  await page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("button", { name: "Add", exact: true }).click()
+
+  const dialog = page.getByRole("dialog", { name: "Add entry" })
+  await expect(dialog).toBeVisible()
+  const bounds = await dialog.boundingBox()
+  expect(bounds).not.toBeNull()
+  expect(bounds?.x).toBe(0)
+  expect(bounds?.width).toBe(676)
 })
 
 test("report layouts stay within the viewport at desktop, tablet and mobile widths", async ({ page }) => {

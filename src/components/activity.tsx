@@ -4,8 +4,9 @@ import { useMemo, useState } from "react"
 import { ListFilter, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { DateField } from "@/components/date-field"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Choose, Empty, EntryCaption, Field, Menu, Metric, Modal, Signed } from "@/components/shared"
+import { Choose, Empty, EntryCaption, Menu, Metric, Modal, Signed } from "@/components/shared"
 import { dateLabel, money, monthTotals, today, type Data, type Entry } from "@/lib/finance"
 
 type Filters = { category: string; account: string; kind: string; date: string; start: string; end: string; sort: string }
@@ -113,8 +114,8 @@ export function Activity({ data, month, add, open, edit, remove }: {
       <Choose label="Type" options={[["all", "All types"], ["expense", "Expense"], ["income", "Income"]]} value={filters.kind} onChange={value => set("kind", value)} />
       <Choose label="Date range" value={filters.date} options={dateOptions} onChange={value => set("date", value)} />
       {filters.date === "custom" && <div className="grid grid-cols-2 gap-3">
-        <Field label="From" name="start" type="date" value={filters.start} max={filters.end || undefined} onChange={event => set("start", event.target.value)} />
-        <Field label="To" name="end" type="date" value={filters.end} min={filters.start || undefined} onChange={event => set("end", event.target.value)} />
+        <DateField label="From" name="start" value={filters.start} max={filters.end || undefined} onChange={value => set("start", value)} />
+        <DateField label="To" name="end" value={filters.end} min={filters.start || undefined} onChange={value => set("end", value)} />
       </div>}
       <Choose label="Sort by" value={filters.sort} options={[["newest", "Newest first"], ["oldest", "Oldest first"], ["largest", "Highest amount"], ["smallest", "Lowest amount"]]} onChange={value => set("sort", value)} />
       <Button onClick={() => setShowFilters(false)}>Show transactions</Button>

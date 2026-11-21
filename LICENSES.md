@@ -69,6 +69,8 @@ shadcn/ui uses the official New York registry. The [component manifest](notices/
 | [@next/swc-linux-x64-musl](https://www.npmjs.com/package/@next/swc-linux-x64-musl/v/16.4.6) | 16.4.6 | MIT | Platform optional |
 | [@next/swc-win32-arm64-msvc](https://www.npmjs.com/package/@next/swc-win32-arm64-msvc/v/16.4.6) | 16.4.6 | MIT | Platform optional |
 | [@next/swc-win32-x64-msvc](https://www.npmjs.com/package/@next/swc-win32-x64-msvc/v/16.4.6) | 16.4.6 | MIT | Platform optional |
+| [@noble/ciphers](https://www.npmjs.com/package/@noble/ciphers/v/2.4.0) | 2.4.0 | MIT | Application |
+| [@noble/hashes](https://www.npmjs.com/package/@noble/hashes/v/2.4.0) | 2.4.0 | MIT | Application |
 | [@playwright/test](https://www.npmjs.com/package/@playwright/test/v/1.65.1) | 1.65.1 | Apache-2.0 | Application dependency |
 | [@radix-ui/number](https://www.npmjs.com/package/@radix-ui/number/v/1.1.3) | 1.1.3 | MIT | Application dependency |
 | [@radix-ui/primitive](https://www.npmjs.com/package/@radix-ui/primitive/v/1.2.0) | 1.2.0 | MIT | Application dependency |

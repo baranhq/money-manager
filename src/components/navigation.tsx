@@ -19,7 +19,7 @@ export const navigation = [
 ] as const
 type ReportRoute = typeof navigation[number]["id"]
 export type Route = ReportRoute | SettingsPage
-export const settingsRoutes = ["settings", "accounts", "categories", "data", "storage", "about"] as const
+export const settingsRoutes = ["settings", "accounts", "categories", "data", "security", "storage", "about"] as const
 
 export function AccountMenu({ mobile = false, hrefPrefix = "", profiles = [], activeProfile, onSwitch }: {
   mobile?: boolean; hrefPrefix?: string; profiles?: Profile[]; activeProfile?: Profile; onSwitch?: (id: string) => void
@@ -31,7 +31,7 @@ export function AccountMenu({ mobile = false, hrefPrefix = "", profiles = [], ac
         <ProfileAvatar profile={shownProfile} size="sm" />
         <span className="max-w-24 truncate text-xs font-medium">{shownProfile.name}</span>
       </Button> :
-      <Button variant="secondary" className="w-full justify-start px-2 lg:min-h-11" aria-label={`Profile menu for ${shownProfile.name}`}>
+      <Button variant="secondary" className="h-11 w-full justify-center px-0 xl:justify-start xl:px-3" aria-label={`Profile menu for ${shownProfile.name}`}>
         <ProfileAvatar profile={shownProfile} size="sm" />
         <span className="hidden min-w-0 flex-1 truncate text-left xl:block">{shownProfile.name}</span><ChevronDown className="hidden xl:block" />
       </Button>}
@@ -65,7 +65,7 @@ export function Sidebar({ route, hrefPrefix = "", profiles, activeProfile, onSwi
     <div className="mb-4 xl:hidden">
       <Sheet open={expanded} onOpenChange={setExpanded}>
         <SheetTrigger asChild><Button variant="ghost" size="icon-lg" aria-label="Open navigation" className="size-11"><MenuIcon /></Button></SheetTrigger>
-        <SheetContent side="left" className="w-64 bg-sidebar">
+        <SheetContent side="left" overlayClassName="bg-black/30 backdrop-blur-sm" className="w-64 bg-sidebar">
           <SheetHeader><SheetTitle>Baran’s Money Manager</SheetTitle><SheetDescription>Choose a section.</SheetDescription></SheetHeader>
           <nav aria-label="Expanded navigation" className="grid gap-1 px-4">
             {items.map(({ id, label, icon: Icon }) => <Button key={id} variant={(id === route || (id === "settings" && inSettings)) ? "secondary" : "ghost"} className="justify-start" asChild>
