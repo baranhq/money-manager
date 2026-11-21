@@ -25,7 +25,6 @@ export function Activity({ data, month, add, open, edit, remove }: {
   }
   const categories = useMemo(() => new Map(data.categories.map(category => [category.id, category])), [data.categories])
   const accounts = [...new Set(data.entries.map(entry => entry.account))].sort()
-  const currency = data.preferences.currency
   const totals = monthTotals(data, month)
   const search = query.trim().toLocaleLowerCase()
   const active = search || JSON.stringify(filters) !== JSON.stringify(defaults)
@@ -47,7 +46,7 @@ export function Activity({ data, month, add, open, edit, remove }: {
 
   function groupLabel(date: string) {
     const prefix = date === today() ? "Today · " : ""
-    return prefix + dateLabel(date)
+    return prefix + dateLabel(date, undefined, data.preferences)
   }
 
   const dateOptions = [["month", "Selected month"], ["all", "All dates"], ["custom", "Custom range"]] as const
@@ -61,9 +60,9 @@ export function Activity({ data, month, add, open, edit, remove }: {
 
   return <div className="space-y-5">
     <div className="grid grid-cols-3 gap-2 divide-x rounded-xl border bg-card p-3 sm:p-5">
-      <Metric label="Income" value={money(totals.income, currency)} direction="up" detail="Income in the selected month" />
-      <Metric label="Spent" value={money(totals.spent, currency)} direction="down" detail="Expenses in the selected month" />
-      <Metric label="Net cash flow" value={money(totals.balance, currency)} detail="Income after spending" />
+      <Metric label="Income" value={money(totals.income, data.preferences)} direction="up" detail="Income in the selected month" />
+      <Metric label="Spent" value={money(totals.spent, data.preferences)} direction="down" detail="Expenses in the selected month" />
+      <Metric label="Net cash flow" value={money(totals.balance, data.preferences)} detail="Income after spending" />
     </div>
     <div className="grid gap-2 md:grid-cols-[minmax(12rem,2fr)_repeat(3,minmax(0,1fr))_auto]">
       <div className="relative">
@@ -87,7 +86,7 @@ export function Activity({ data, month, add, open, edit, remove }: {
           {groupByDate && rows[index - 1]?.date !== row.date && <h2 className="bg-muted/45 px-2 py-2 text-xs font-medium text-muted-foreground">{groupLabel(row.date)}</h2>}
           <div className="flex items-center">
             <button type="button" className="flex min-h-14 min-w-0 flex-1 items-center justify-between gap-2 py-2 text-sm" onClick={() => open(row)}>
-              <EntryCaption entry={row} category={categories.get(row.category)} showDate={!groupByDate} /><Signed entry={row} currency={currency} />
+              <EntryCaption entry={row} category={categories.get(row.category)} preferences={data.preferences} showDate={!groupByDate} /><Signed entry={row} preferences={data.preferences} />
             </button>
             <Menu label={`Actions for ${row.name}`} actions={actions(row)} />
           </div>
@@ -98,9 +97,9 @@ export function Activity({ data, month, add, open, edit, remove }: {
           {rows.map((row, index) => <TableBody key={row.id}>
             {groupByDate && rows[index - 1]?.date !== row.date && <TableRow className="bg-muted/45"><TableCell colSpan={4} className="text-xs font-medium text-muted-foreground">{groupLabel(row.date)}</TableCell></TableRow>}
             <TableRow>
-              <TableCell className="w-1/2"><button type="button" className="block w-full max-w-[32vw] rounded-sm hover:underline" onClick={() => open(row)}><EntryCaption entry={row} category={categories.get(row.category)} showDate={!groupByDate} /></button></TableCell>
+              <TableCell className="w-1/2"><button type="button" className="block w-full max-w-[32vw] rounded-sm hover:underline" onClick={() => open(row)}><EntryCaption entry={row} category={categories.get(row.category)} preferences={data.preferences} showDate={!groupByDate} /></button></TableCell>
               <TableCell className="max-w-36 truncate text-muted-foreground">{row.account}</TableCell>
-              <TableCell className="text-right"><Signed entry={row} currency={currency} /></TableCell>
+              <TableCell className="text-right"><Signed entry={row} preferences={data.preferences} /></TableCell>
               <TableCell className="w-12 text-right"><Menu label={`Actions for ${row.name}`} actions={actions(row)} /></TableCell>
             </TableRow>
           </TableBody>)}
@@ -114,8 +113,8 @@ export function Activity({ data, month, add, open, edit, remove }: {
       <Choose label="Type" options={[["all", "All types"], ["expense", "Expense"], ["income", "Income"]]} value={filters.kind} onChange={value => set("kind", value)} />
       <Choose label="Date range" value={filters.date} options={dateOptions} onChange={value => set("date", value)} />
       {filters.date === "custom" && <div className="grid grid-cols-2 gap-3">
-        <DateField label="From" name="start" value={filters.start} max={filters.end || undefined} onChange={value => set("start", value)} />
-        <DateField label="To" name="end" value={filters.end} min={filters.start || undefined} onChange={value => set("end", value)} />
+        <DateField label="From" name="start" preferences={data.preferences} value={filters.start} max={filters.end || undefined} onChange={value => set("start", value)} />
+        <DateField label="To" name="end" preferences={data.preferences} value={filters.end} min={filters.start || undefined} onChange={value => set("end", value)} />
       </div>}
       <Choose label="Sort by" value={filters.sort} options={[["newest", "Newest first"], ["oldest", "Oldest first"], ["largest", "Highest amount"], ["smallest", "Lowest amount"]]} onChange={value => set("sort", value)} />
       <Button onClick={() => setShowFilters(false)}>Show transactions</Button>

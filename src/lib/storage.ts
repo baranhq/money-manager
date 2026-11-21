@@ -822,7 +822,7 @@ export function recoverData(replacement?: Data, expectedProfileId?: string) {
           if (values.has(preferencesKey)) {
             try {
               const preferences = parsePreferences(values.get(preferencesKey))
-              updated.preferences = { ...preferences, currency: updated.preferences.currency }
+              updated.preferences = { ...preferences, currency: updated.preferences.currency, currencyDigits: updated.preferences.currencyDigits }
             } catch { /* Keep the defaults when the appearance preference is also damaged. */ }
           }
           if (!values.has(profileListKey)) store.put(profiles, profileListKey)
@@ -853,7 +853,7 @@ export function recoverData(replacement?: Data, expectedProfileId?: string) {
       if (image.has(preferencesKey)) {
         try {
           const preferences = parsePreferences(image.get(preferencesKey))
-          updated.preferences = { ...preferences, currency: updated.preferences.currency }
+          updated.preferences = { ...preferences, currency: updated.preferences.currency, currencyDigits: updated.preferences.currencyDigits }
         } catch { /* Keep the defaults when the appearance preference is also damaged. */ }
       }
       image.set(profileListKey, profiles)

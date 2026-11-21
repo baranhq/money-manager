@@ -21,7 +21,7 @@ export function exportCsv(data: Data, start: string, end: string) {
   if (!rows.length) throw new Error("There are no transactions in this date range.")
   return [
     headers.join(","),
-    ...rows.map(row => [row.id, row.date, row.kind, row.name, exactAmount(row.amount), data.preferences.currency, names.get(row.category) ?? "", row.account, row.notes].map(field).join(",")),
+    ...rows.map(row => [row.id, row.date, row.kind, row.name, exactAmount(row.amount, data.preferences), data.preferences.currency, names.get(row.category) ?? "", row.account, row.notes].map(field).join(",")),
   ].join("\r\n")
 }
 
@@ -88,7 +88,7 @@ export function importCsv(text: string, data: Data) {
       const category = categories.get(`${kind}:${categoryName.trim().normalize("NFKC").toLowerCase()}`)
       if (!category) throw new Error("The category does not exist for this transaction type.")
       const id = (withId && values[0]) || crypto.randomUUID()
-      const entry: Entry = { id, date, kind, name, amount: amountFromText(rawAmount), category, account, notes }
+      const entry: Entry = { id, date, kind, name, amount: amountFromText(rawAmount, data.preferences, ".", false), category, account, notes }
       const existing = records.get(id)
       if (existing && signature(entry) !== signature(existing)) throw new Error("This ID conflicts with another transaction.")
       if (existing || (!withId && signatures.has(signature(entry)))) {
