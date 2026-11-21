@@ -40,16 +40,18 @@ function getRoute(): Route {
 }
 
 function MobileNavigation({ route, add, ready }: { route: Route; add: () => void; ready: boolean }) {
-  const itemClass = "grid h-[60px] content-start justify-items-center gap-1 rounded-lg p-0 pt-1 text-xs leading-4"
+  const itemClass = "grid h-[60px] content-center justify-items-center gap-1 rounded-lg p-0 pt-1 text-xs leading-4"
   const item = ({ id, label, icon: Icon }: typeof navigation[number]) => <a key={id} href={`#${id}`} aria-current={route === id ? "page" : undefined}
     className={cn(itemClass, "text-muted-foreground", route === id && "font-semibold text-primary")}>
-    <span className={cn("grid h-7 w-9 place-items-center rounded-md", route === id && "bg-accent")}><Icon size={17} aria-hidden="true" /></span>{label}
+    <span className={cn("grid h-7 w-9 place-items-center rounded-md", route === id && "bg-accent")}><Icon size={17} aria-hidden="true" /></span>
+    <span>{label}</span>
   </a>
   return <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t bg-card px-2 pt-1 pb-[max(.875rem,env(safe-area-inset-bottom))] md:hidden">
     {navigation.slice(0, 2).map(item)}
     <button type="button" onClick={add} disabled={!ready}
-      className={cn(itemClass, "w-full font-medium text-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50")}>
-      <span className="grid h-7 w-9 place-items-center rounded-md bg-primary text-primary-foreground"><Plus size={18} /></span>Add
+      className={cn(itemClass, "w-full appearance-none font-medium text-primary focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:opacity-50")}>
+      <span className="grid h-7 w-9 place-items-center rounded-md bg-primary text-primary-foreground"><Plus size={17} aria-hidden="true" /></span>
+      <span>Add</span>
     </button>
     {navigation.slice(2).map(item)}
   </nav>
