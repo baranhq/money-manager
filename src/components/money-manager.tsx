@@ -117,6 +117,7 @@ export function MoneyManager() {
   const [month, setMonth] = useState(today().slice(0, 7))
   const [data, setData] = useState<Data>()
   const [onboarding, setOnboarding] = useState<OnboardingDraft>()
+  const [setupArrival, setSetupArrival] = useState(false)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [activeProfileId, setActiveProfileId] = useState("")
   const [loadError, setLoadError] = useState<{ text: string; corrupted: boolean }>()
@@ -325,6 +326,8 @@ export function MoneyManager() {
     setRoute("overview")
     window.scrollTo(0, 0)
     setOverlay(destination === "transaction" ? { type: "entryForm" } : undefined)
+    setSetupArrival(destination !== "transaction" && draft.preferences.reducedMotion !== true &&
+      window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
     channel.current?.postMessage("updated")
     window.dispatchEvent(new Event("money-manager-preferences"))
     if (destination !== "transaction") window.requestAnimationFrame(() => document.getElementById("main-content")?.focus())
@@ -400,7 +403,10 @@ export function MoneyManager() {
   return <TooltipProvider delayDuration={200}>
     {skipLink}
     <Sidebar route={route} profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} />
-    <main id="main-content" tabIndex={-1} className="mx-auto min-h-dvh min-w-0 px-4 pt-4 pb-28 outline-none md:ml-[72px] md:px-6 md:pt-6 md:pb-8 xl:ml-[246px] xl:px-8 xl:pt-6">
+    <main id="main-content" tabIndex={-1}
+      className={cn("mx-auto min-h-dvh min-w-0 px-4 pt-4 pb-28 outline-none md:ml-[72px] md:px-6 md:pt-6 md:pb-8 xl:ml-[246px] xl:px-8 xl:pt-6",
+        setupArrival && "motion-safe:full-motion:animate-in motion-safe:full-motion:fade-in motion-safe:full-motion:duration-150 motion-safe:full-motion:ease-out")}
+      onAnimationEnd={event => { if (setupArrival && event.target === event.currentTarget) setSetupArrival(false) }}>
       <div className={cn("mx-auto", report ? "max-w-[1400px]" : "max-w-3xl")}>
         <header className={cn("relative mb-3 flex flex-wrap items-start justify-between gap-2 md:mb-4 md:gap-3", !hasHeader && "justify-end md:hidden")}>
           {hasHeader && <div className="max-md:pr-36"><h1 className="text-[1.85rem] leading-tight font-semibold tracking-[-0.035em] sm:text-[2.25rem]">{title}</h1>

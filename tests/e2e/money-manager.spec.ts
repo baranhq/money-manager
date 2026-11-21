@@ -7,7 +7,7 @@ const mobile = { width: 390, height: 844 }
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/")
-  await page.getByRole("button", { name: "Skip setup", exact: true }).click()
+  await page.getByRole("button", { name: "Start tracking", exact: true }).click()
   await expect(page.getByRole("heading", { name: "Overview", exact: true })).toBeVisible()
 })
 
