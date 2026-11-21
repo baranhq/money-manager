@@ -82,10 +82,9 @@ export function Sidebar({ route, hrefPrefix = "", profiles, activeProfile, onSwi
           {id === "settings" && <p className="mx-3 mt-4 mb-2 hidden border-t pt-4 text-xs text-muted-foreground xl:block">Manage</p>}
           <Tooltip>
             <TooltipTrigger asChild><Button variant={current ? "secondary" : "ghost"} asChild
-              className={cn("h-11 w-full justify-center px-0 xl:justify-start xl:px-3", current && "font-semibold text-primary")}>
+              className={cn("h-11 w-full justify-center px-0 xl:justify-start xl:px-3", current && "text-primary")}>
               <a href={`${hrefPrefix}#${id}`} aria-label={label} aria-current={current ? "page" : undefined}>
                 <Icon /><span className="hidden xl:inline">{label}</span>
-                {current && <span className="ml-auto hidden h-2 w-1 rounded-full bg-primary xl:inline" />}
               </a>
             </Button></TooltipTrigger>
             <TooltipContent side="right" className="xl:hidden">{label}</TooltipContent>
