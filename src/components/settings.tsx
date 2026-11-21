@@ -125,6 +125,8 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
             <p className="text-sm font-medium">{preference.currency} · {names.of(preference.currency) ?? preference.currency}</p>
             <p className="text-xs text-muted-foreground">Currency is fixed once amounts are recorded. Back up and clear the ledger to start again in another currency; this setting does not convert amounts.</p>
           </div> : <Choose label="Ledger currency" value={preference.currency} options={currencyOptions}
+            triggerClassName="max-w-[22rem]"
+            contentProps={{ position: "popper", align: "start", collisionPadding: 12, className: "w-[min(22rem,calc(100vi_-_1.5rem))] max-h-[min(18rem,var(--radix-select-content-available-height))]" }}
             onChange={currency => { if (!saving) void save({ currency: currency as Currency, currencyDigits: currencyDigits(currency) }) }} />}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid min-w-0 gap-2">

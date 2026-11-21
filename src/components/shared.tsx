@@ -102,9 +102,10 @@ export function Field({ label, name, ...props }: React.ComponentProps<typeof Inp
   return <div className="grid min-w-0 gap-2"><Label htmlFor={id}>{label}</Label><Input id={id} name={name} {...props} /></div>
 }
 
-export function Choose({ label, value, onChange, options, placeholder, id: providedId, compact = false, triggerClassName, disabled }: {
+export function Choose({ label, value, onChange, options, placeholder, id: providedId, compact = false, triggerClassName, disabled, contentProps }: {
   label: string; value: string; onChange: (value: string) => void; options: readonly (readonly [string, string])[]
   placeholder?: string; id?: string; compact?: boolean; triggerClassName?: string; disabled?: boolean
+  contentProps?: Pick<React.ComponentProps<typeof SelectContent>, "position" | "align" | "className" | "collisionPadding">
 }) {
   const generatedId = useId()
   const id = providedId ?? generatedId
@@ -114,7 +115,7 @@ export function Choose({ label, value, onChange, options, placeholder, id: provi
       <SelectTrigger id={id} aria-label={compact ? label : undefined} className={cn("w-full min-w-0 bg-card max-md:h-11", triggerClassName)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent>{options.map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}</SelectContent>
+      <SelectContent {...contentProps}>{options.map(([key, name]) => <SelectItem key={key} value={key}>{name}</SelectItem>)}</SelectContent>
     </Select>
   </div>
 }
