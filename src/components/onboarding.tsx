@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import { BrandLogo } from "@/components/brand-logo"
 import { AccountTypeChoices, LedgerAccountForm } from "@/components/ledger-account-form"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -121,7 +122,7 @@ export function Onboarding({ initial, finish, reload }: {
         } else void leave("skip")
       }}>
       <div className="mx-auto w-full max-w-md">
-        <p className="text-sm font-semibold">Baran’s Money Manager</p>
+        <BrandLogo className="w-44" />
         <header className="mt-5 md:mt-4">
           <DialogTitle ref={heading} tabIndex={-1}
             className="text-[clamp(2rem,11vw,2.375rem)] leading-[1.1] font-semibold tracking-[-0.04em] outline-none">

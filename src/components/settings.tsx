@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound, Wallet } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -232,6 +233,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}
       description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in this browser."} close={() => setNote(undefined)}>
+      {note === "about" && <BrandLogo />}
       <p className="text-sm">{note === "about" ? "Track income, expenses, budgets and savings in a local ledger on this device." :
         "The site password is a local screen lock. If optional storage encryption is off, anyone with browser access can read the records in storage. When it is on, the browser keeps encrypted records and needs the password to open them. Keep downloaded backups in a private location."}</p>
       <Button variant="outline" onClick={() => setNote(undefined)}>Close</Button>

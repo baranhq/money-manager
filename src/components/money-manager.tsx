@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { CalendarDays, ChevronDown, Plus } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { AccountMenu, navigation, settingsRoutes, Sidebar, type Route } from "@/components/navigation"
 import { Activity } from "@/components/activity"
 import { Budgets, EntrySignIcon, Overview, Savings } from "@/components/reports"
@@ -89,6 +90,7 @@ function UnlockScreen({ storageEncrypted, busy, error, unlock }: {
   const [password, setPassword] = useState("")
   return <main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center px-4 py-10 outline-none">
     <div className="w-full max-w-sm space-y-5">
+      <BrandLogo />
       <div><h1 className="text-3xl font-semibold tracking-tight">Unlock Money Manager</h1>
         <p className="mt-2 text-sm text-muted-foreground">Enter the site password set for this browser.</p></div>
       <Card className="gap-4 p-5 shadow-none">

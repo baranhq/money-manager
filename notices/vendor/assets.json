@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "file": "src/logo/Baran's _Money_Manager.svg",
+    "name": "Baran’s Money Manager wordmark",
+    "firstParty": true,
+    "source": "Penpot wordmark supplied by the project owner. Inter Tight lettering is outlined; no font files are included in the SVG.",
+    "typefaceSource": "https://github.com/googlefonts/inter-gf-tight/blob/main/OFL.txt"
+  }
+]
