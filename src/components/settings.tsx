@@ -24,7 +24,7 @@ function Rows({ rows }: { rows: Row[] }) {
       const content = <><span className={`grid size-9 shrink-0 place-items-center rounded-md ${danger ? "bg-destructive/10 text-destructive" : "bg-accent text-primary"}`}><Icon size={17} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1"><span className={`block text-sm font-medium ${danger ? "text-destructive" : ""}`}>{title}</span>
           <span className="block text-sm text-muted-foreground">{description}</span></span><ChevronRight className="text-muted-foreground" size={16} aria-hidden="true" /></>
-      return href ? <a key={title} href={href} className={classes}>{content}</a> :
+      return href ? <a key={title} href={href} data-tour-target={href === "#ledger-accounts" ? "settings" : undefined} className={classes}>{content}</a> :
         <button key={title} type="button" onClick={run} className={classes}>{content}</button>
     })}
   </Card>
@@ -42,12 +42,12 @@ const heading = {
 
 export type SettingsPage = keyof typeof heading | "settings"
 
-export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite }: {
+export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
   addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
-  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void
+  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")
   const [note, setNote] = useState<"about" | "storage">()
@@ -171,6 +171,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
           { title: "Security", description: "Set a site password and optionally encrypt this browser’s data.", icon: LockKeyhole, href: "#security" },
           { title: "Privacy & storage", description: "See what is stored on this device.", icon: ShieldCheck, href: "#storage" },
           { title: "About & legal", description: "App information, privacy and licences.", icon: Info, href: "#about" },
+          { title: "Replay app tour", description: "Take a quick look around Money Manager.", icon: CircleHelp, run: replayTour },
         ]} />
       </section>
       <ErrorText message={error} />

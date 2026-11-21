@@ -142,7 +142,7 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
 
   return <div className="grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
     <div className="grid gap-4 md:col-span-2 md:grid-cols-[minmax(0,2fr)_minmax(0,3.2fr)] md:items-center md:gap-5">
-      <Card className="gap-2.5 rounded-[14px] border-0 bg-balance px-4 py-3 text-balance-foreground shadow-md sm:gap-3 sm:p-5">
+      <Card data-tour-target="overview" className="gap-2.5 rounded-[14px] border-0 bg-balance px-4 py-3 text-balance-foreground shadow-md sm:gap-3 sm:p-5">
         <div>
           <h2 className="text-sm font-medium">Available to spend</h2>
           <p className="mt-1 break-words text-[clamp(2rem,10vw,2.45rem)] leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[clamp(2.4rem,3.55vw,3.2rem)]">{money(current.balance, data.preferences)}</p>
@@ -181,11 +181,13 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
   </div>
 }
 
-function PlanEmpty({ title, children, action, label }: { title: string; children: ReactNode; action: () => void; label: string }) {
+function PlanEmpty({ title, children, action, label, tourTarget }: {
+  title: string; children: ReactNode; action: () => void; label: string; tourTarget: "budgets" | "savings"
+}) {
   return <section className="rounded-xl bg-accent/65 p-5 sm:p-8">
     <h2 className="text-[1.625rem] leading-tight font-semibold tracking-tight sm:text-[2rem]">{title}</h2>
     <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">{children}</p>
-    <Button className="mt-5 h-11 motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]" onClick={action}>{label}</Button>
+    <Button data-tour-target={tourTarget} className="mt-5 h-11 motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]" onClick={action}>{label}</Button>
   </section>
 }
 
@@ -215,7 +217,7 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
   edit: EditBudget; open: (row: Budget) => void; remove: (row: Budget) => void
 }) {
   const [all, setAll] = useState(false)
-  if (!data.budgets.length) return <PlanEmpty title="Start with one category" action={() => edit()} label="New budget">
+  if (!data.budgets.length) return <PlanEmpty title="Start with one category" action={() => edit()} label="New budget" tourTarget="budgets">
     Pick a category you spend on often, like groceries. Set a monthly limit you can work with.
   </PlanEmpty>
 
@@ -301,7 +303,7 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
 export function Savings({ data, month, open, edit, contribute, remove }: Report & {
   open: (goal: Goal) => void; edit: EditGoal; contribute: (goal: Goal, direction: "deposit" | "withdrawal") => void; remove: (goal: Goal) => void
 }) {
-  if (!data.goals.length) return <PlanEmpty title="What are you saving for?" action={() => edit()} label="New savings pot">
+  if (!data.goals.length) return <PlanEmpty title="What are you saving for?" action={() => edit()} label="New savings pot" tourTarget="savings">
     A weekend away, a rainy day, or something just for you. Give it a pot.
   </PlanEmpty>
 
