@@ -42,12 +42,12 @@ const heading = {
 
 export type SettingsPage = keyof typeof heading | "settings"
 
-export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour }: {
+export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour, onAccountEditorChange }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
   addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
-  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void
+  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void; onAccountEditorChange: (active: boolean) => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")
   const [note, setNote] = useState<"about" | "storage">()
@@ -179,7 +179,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <ErrorText message={error} />
     </>}
     {route === "accounts" && <Profiles profiles={profiles} activeProfileId={activeProfileId} addProfile={addProfile} editProfile={updateProfile} switchProfile={switchProfile} />}
-    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} />}
+    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} onEditorChange={onAccountEditorChange} />}
     {route === "categories" && <Tabs value={kind} className="gap-4" onValueChange={value => setKind(value as Kind)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList aria-label="Category type">

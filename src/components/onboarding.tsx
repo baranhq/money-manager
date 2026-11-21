@@ -1,13 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Plus } from "lucide-react"
-import { LedgerAccountForm } from "@/components/ledger-account-form"
+import { AccountTypeChoices, LedgerAccountForm } from "@/components/ledger-account-form"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { currencies, currencyDigits, money } from "@/lib/finance"
-import { newAccountDraft, type OnboardingDraft } from "@/lib/onboarding"
+import { accountDraftFor, type OnboardingDraft } from "@/lib/onboarding"
 import { saveOnboarding } from "@/lib/storage"
 import { cn } from "@/lib/utils"
 
@@ -35,8 +34,8 @@ export function Onboarding({ initial, finish, reload }: {
   const submitting = useRef(false)
   const heading = useRef<HTMLHeadingElement>(null)
   const editor = useRef<HTMLDivElement>(null)
-  const addButton = useRef<HTMLButtonElement>(null)
-  const focusEditor = useRef(Boolean(initial.editor))
+  const choices = useRef<HTMLDivElement>(null)
+  const focusEditor = useRef(false)
   const focusAdd = useRef(false)
   const setupEditing = draft.editor !== null
   const { currency, theme } = draft.preferences
@@ -44,7 +43,7 @@ export function Onboarding({ initial, finish, reload }: {
 
   useEffect(() => {
     if (setupEditing && focusEditor.current) {
-      const selected = editor.current?.querySelector<HTMLButtonElement>('button[aria-pressed="true"]')
+      const selected = editor.current?.querySelector<HTMLInputElement>('input[name="name"]')
       if (selected) {
         focusEditor.current = false
         selected.focus()
@@ -52,7 +51,7 @@ export function Onboarding({ initial, finish, reload }: {
     }
     if (!setupEditing && focusAdd.current) {
       focusAdd.current = false
-      addButton.current?.focus()
+      choices.current?.querySelector("button")?.focus()
     }
   }, [setupEditing, draft.accounts.length])
   useEffect(() => {
@@ -128,7 +127,7 @@ export function Onboarding({ initial, finish, reload }: {
             className="text-[clamp(2rem,11vw,2.375rem)] leading-[1.1] font-semibold tracking-[-0.04em] outline-none">
             Hello, <span className="text-primary">money.</span>
           </DialogTitle>
-          <DialogDescription className="mt-2.5 text-[15px] leading-relaxed">Pick a currency. Add accounts if you like.</DialogDescription>
+          <DialogDescription className="mt-2.5 text-[15px] leading-relaxed">Pick your currency and add your money.</DialogDescription>
         </header>
 
         <section aria-labelledby="setup-currency" className="mt-4 md:mt-3">
@@ -161,9 +160,12 @@ export function Onboarding({ initial, finish, reload }: {
 
         <section aria-labelledby="setup-accounts" className="mt-5">
           <div className="flex items-center justify-between gap-2">
-            <h2 id="setup-accounts" className="text-[15px] font-semibold">Accounts</h2>
-            <p className="text-[13px] text-muted-foreground">Optional</p>
+            <h2 id="setup-accounts" className="text-base font-semibold">{draft.accounts.length ? "Your accounts" : "Where do you keep your money?"}</h2>
           </div>
+          <p className="mt-1.5 text-[13px] text-muted-foreground">
+            {setupEditing ? "Give this account a name and an optional opening balance."
+              : draft.accounts.length ? "Pick a type to add another account." : "Choose an account type. You can do this later."}
+          </p>
           <p role="status" className="sr-only">{accountStatus}</p>
           {draft.accounts.length > 0 && <ul aria-label="Added accounts" className="mt-1">
             {draft.accounts.map(account => <li key={account.id} className={cn("flex min-h-12 items-center gap-2", enter)}>
@@ -186,18 +188,17 @@ export function Onboarding({ initial, finish, reload }: {
                 update({ ...draft, accounts: [...draft.accounts, account], editor: null })
               }}
               cancel={() => { focusAdd.current = true; update({ ...draft, editor: null }) }} />
-          </div> : <Button ref={addButton} type="button" variant="outline" className="mt-2 h-11 text-primary shadow-none"
-            disabled={busy} onClick={() => { focusEditor.current = true; update({ ...draft, editor: { ...newAccountDraft } }) }}>
-            <Plus aria-hidden="true" />{draft.accounts.length ? "Add another account" : "Add an account"}
-          </Button>}
+          </div> : <div ref={choices} className="mt-3">
+            <AccountTypeChoices disabled={busy} choose={type => { focusEditor.current = true; update({ ...draft, editor: accountDraftFor(type) }) }} />
+          </div>}
         </section>
 
-        {!setupEditing && <div className="mt-6 flex flex-col gap-2 md:flex-row-reverse md:justify-between">
-          <Button type="button" className={cn("h-11 active:bg-primary/85", press)} disabled={busy}
-            onClick={() => void leave("dashboard")}>Start tracking</Button>
-          <Button type="button" variant="ghost" className={quiet} disabled={busy}
+        <div className="mt-5 flex flex-col gap-2 md:flex-row-reverse md:justify-between">
+          {!setupEditing && <Button type="button" className={cn("h-11 active:bg-primary/85", press)} disabled={busy}
+            onClick={() => void leave("dashboard")}>Start tracking</Button>}
+          <Button type="button" variant="ghost" className={cn(quiet, setupEditing && "md:mr-auto")} disabled={busy}
             onClick={() => void leave("skip")}>Skip setup</Button>
-        </div>}
+        </div>
         <p className="mt-4 text-center text-xs text-muted-foreground">Stored in this browser. No sign-up.</p>
         {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
       </div>

@@ -8,7 +8,12 @@ export type OnboardingDraft = {
   editor: AccountDraft | null
 }
 
-export const newAccountDraft: AccountDraft = { type: "Cash", name: "Cash", balance: "" }
+export function accountDraftFor(type: AccountType): AccountDraft {
+  const names = { Cash: "Cash", Bank: "Bank account", Other: "" }
+  return { type, name: names[type], balance: "" }
+}
+
+export const newAccountDraft = accountDraftFor("Cash")
 
 export function initialOnboarding(): OnboardingDraft {
   return {
