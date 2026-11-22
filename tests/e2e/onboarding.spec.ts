@@ -219,7 +219,7 @@ test("the tour guides real income entry and skipping preserves the draft", async
 })
 
 test("older ledgers open without setup and keep their local transaction", async ({ page }) => {
-  await page.goto("/privacy")
+  await page.goto("/licenses")
   const legacy = initialData()
   legacy.entries.push({
     id: "existing-entry", name: "Existing cash expense", amount: 100, kind: "expense", date: today(), category: "dining", account: "Cash", notes: "",

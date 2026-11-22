@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { CategoryIcon, Choose, Empty, ErrorText, Field, Menu, Modal, type Commit } from "@/components/shared"
 import { canonicalLocale, currencies, currencyDigits, dateLabel, hasLedgerAmounts, money, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
+import { privacyLinks } from "@/lib/privacy-links"
 import { localeOptions, localePresets } from "@/lib/regional-options"
 import type { DataTool } from "@/components/data-tools"
 import { Profiles } from "@/components/profiles"
@@ -223,12 +224,12 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <Rows rows={[
         { title: "Browser storage details", description: "See what is kept in this browser.", icon: Database, run: () => setNote("storage") },
         { title: "Data & backup", description: "Back up, import, export or clear records.", icon: Download, href: "#data" },
-        { title: "Privacy Policy", description: "Read the privacy notice.", icon: ShieldCheck, href: "/privacy" },
+        { title: "Privacy Policy", description: "Read the privacy notice.", icon: ShieldCheck, href: privacyLinks.en },
       ]} />
     </>}
     {route === "about" && <Rows rows={[
       { title: "About", description: "What the app does and release information.", icon: CircleHelp, run: () => setNote("about") },
-      { title: "Privacy Policy", description: "How your information is handled.", icon: ShieldCheck, href: "/privacy" },
+      { title: "Privacy Policy", description: "How your information is handled.", icon: ShieldCheck, href: privacyLinks.en },
       { title: "Licenses", description: "Third-party licences and notices.", icon: Scale, href: "/licenses" },
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}

@@ -25,7 +25,7 @@
 
 Financial records are stored in IndexedDB in the current browser profile. Money Manager has no online account or bank connection. It does not sync data between devices, and it does not send financial records, imported files or the app password to an app server. Clearing the browser’s site data can remove local records, so make a backup before changing browsers or devices or clearing storage.
 
-The website’s hosting and delivery providers may process technical request information. The in-app privacy policy is available at `/privacy`, `/bg/privacy` and `/tr/privacy` in English, Bulgarian and Turkish; its wording is maintained in [`src/components/privacy-policy.tsx`](src/components/privacy-policy.tsx). Use HTTPS for network deployments before relying on the app password. Encrypted browser records cannot be recovered without that password; keep downloaded backups and exports private.
+The website’s hosting and delivery providers may process technical request information. The shared privacy policy is maintained on the landing website in [English](https://moneymanager.baranhq.com/privacy), [Bulgarian](https://moneymanager.baranhq.com/bg/privacy) and [Turkish](https://moneymanager.baranhq.com/tr/privacy). Use HTTPS for network deployments before relying on the app password. Encrypted browser records cannot be recovered without that password; keep downloaded backups and exports private.
 
 ## Run locally
 

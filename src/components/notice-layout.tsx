@@ -2,8 +2,9 @@ import { ArrowLeft } from "lucide-react"
 import { Sidebar } from "@/components/navigation"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Button } from "@/components/ui/button"
+import { privacyLinks } from "@/lib/privacy-links"
 
-export function NoticeLayout({ title, description, children, lang = "en-GB", backLabel = "About & legal", privacyHref = "/privacy", privacyLabel = "Privacy", licencesLabel = "Licences" }: {
+export function NoticeLayout({ title, description, children, lang = "en-GB", backLabel = "About & legal", privacyHref = privacyLinks.en, privacyLabel = "Privacy", licencesLabel = "Licences" }: {
   title: string
   description: string
   children: React.ReactNode
