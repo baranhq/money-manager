@@ -44,12 +44,16 @@ export function InlineTour({ title, copy, editing, ...controls }: TourControls &
 }
 
 const statusKey = "money-manager:app-tour"
+let invitationClaimed = false
 const fade = "motion-safe:full-motion:animate-in motion-safe:full-motion:fade-in motion-safe:full-motion:duration-150 motion-safe:full-motion:ease-out"
 
 export function claimTourInvitation() {
+  if (invitationClaimed) return false
+  invitationClaimed = true
   try {
-    if (window.localStorage.getItem(statusKey)) return false
-    window.localStorage.setItem(statusKey, "offered")
+    const status = window.localStorage.getItem(statusKey)
+    if (status === "completed" || status === "skipped") return false
+    if (status !== null) window.localStorage.removeItem(statusKey)
   } catch { /* The tour is still optional when browser storage is unavailable. */ }
   return true
 }

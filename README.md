@@ -1,6 +1,6 @@
 # Money Manager
 
-Money Manager is a local-first web app for tracking income, expenses, monthly budgets and savings goals. It starts with an empty ledger and stores financial records in IndexedDB in the current browser. There are no accounts or cloud services.
+Money Manager is a local-first web app for tracking income, expenses, monthly budgets and savings goals. It starts with an empty ledger and stores financial records in IndexedDB in the current browser. There are no user accounts, bank connections or cloud synchronisation; Cloudflare and the shared host deliver and protect the site.
 
 ## Run locally
 
@@ -42,6 +42,6 @@ npm run test:e2e
 
 ## Before public release
 
-Confirm the operator, contact, hosting and CDN providers, request logs, retention, transfers and user-rights information before publishing the privacy notice. This version uses browser storage for the requested ledger and appearance settings. Reassess storage and consent if any optional processing or external service is introduced. [GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng/), [ePrivacy amendment](https://eur-lex.europa.eu/eli/dir/2009/136/oj/eng), [Bulgarian Electronic Commerce Act](https://www.mi.government.bg/file/2015/09/zet_bg.pdf)
+Before publishing the privacy notice, confirm the production hostname, hosting and email provider names, access-log and AWStats retention periods, and the locations and safeguards for any international transfers. Check production request behaviour and Cloudflare configuration, including that Cloudflare Web Analytics remains disabled. The notice is available in English, Bulgarian and Turkish at /privacy, /bg/privacy and /tr/privacy. This version uses browser storage for the requested ledger and appearance settings. Reassess storage and consent if optional processing or another external service is introduced. [GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng/), [ePrivacy Directive](https://eur-lex.europa.eu/eli/dir/2002/58/oj/eng), [Bulgarian Electronic Commerce Act](https://www.mi.government.bg/file/2015/09/zakon_za_elektronnata_targoviq-2024.pdf)
 
 Check whether Terms, consumer disclosures or a statutory accessibility statement apply to the actual release. The current scope is a personal ledger without payments, banking services or commerce. Review any change to those facts or the audience before publishing. [EU digital content rules](https://eur-lex.europa.eu/eli/dir/2019/770/oj/eng), [Bulgarian accessibility law](https://dv.parliament.bg/DVWeb/showMaterialDV.jsp?idMat=233836)
