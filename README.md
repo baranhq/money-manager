@@ -22,9 +22,9 @@ The Next.js App Router serves the interface and its assets. Financial calculatio
 
 ## Data and files
 
-The ledger uses a single currency and stores amounts as integer minor units. Pick a currency before adding financial records. Download a backup before clearing the ledger or switching browser profiles, devices or site addresses.
+The ledger uses a single currency and stores amounts as integer minor units. On first launch you can choose a currency and add accounts with optional opening balances, or skip to Overview. Manage accounts later in Settings → Accounts. Download a backup before clearing the ledger or switching browser profiles, devices or site addresses.
 
-Settings → Data & backup supports versioned JSON backups and transaction CSV files. JSON merge skips identical records and blocks conflicts. Replacement requires typing `RESTORE`, and clearing requires typing `CLEAR`. Both leave appearance preferences in place. CSV files should use the headings from a Money Manager export, with an optional `id` column. Create the relevant categories first and use the ledger currency.
+Settings → Data & backup supports versioned JSON backups and transaction CSV files. Account details and opening balances are included in JSON backups. A backup with accounts uses version 3 and needs a version of the app that supports accounts. JSON merge skips identical records and blocks conflicts. Replacement requires typing `RESTORE`, and clearing requires typing `CLEAR`. Both leave appearance preferences in place. CSV files should use the headings from a Money Manager export, with an optional `id` column. Create the relevant categories first and use the ledger currency.
 
 Backups and exports contain readable financial information. Keep them private. Clearing browser site data can remove the ledger, and clearing through Money Manager leaves downloaded files in place.
 

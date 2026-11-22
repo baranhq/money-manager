@@ -15,9 +15,11 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { Onboarding } from "@/components/onboarding"
 import { Choose, Field, Modal } from "@/components/shared"
 import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind, type NewProfile, type Profile } from "@/lib/finance"
-import { createProfile as createStoredProfile, InvalidSnapshot, lockSite as lockStoredSite, readSecurityStatus, readWorkspace, recoverData, switchProfile as switchStoredProfile, unlockSitePassword, updateData, updateProfile as updateStoredProfile, type Workspace } from "@/lib/storage"
+import { createProfile as createStoredProfile, finishOnboarding, InvalidSnapshot, lockSite as lockStoredSite, readSecurityStatus, readWorkspace, recoverData, switchProfile as switchStoredProfile, unlockSitePassword, updateData, updateProfile as updateStoredProfile, type Workspace } from "@/lib/storage"
+import type { OnboardingDraft } from "@/lib/onboarding"
 import type { SecurityStatus } from "@/components/security-settings"
 import { cn } from "@/lib/utils"
 
@@ -114,6 +116,8 @@ export function MoneyManager() {
   const [route, setRoute] = useState<Route>("overview")
   const [month, setMonth] = useState(today().slice(0, 7))
   const [data, setData] = useState<Data>()
+  const [onboarding, setOnboarding] = useState<OnboardingDraft>()
+  const [setupArrival, setSetupArrival] = useState(false)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [activeProfileId, setActiveProfileId] = useState("")
   const [loadError, setLoadError] = useState<{ text: string; corrupted: boolean }>()
@@ -138,6 +142,7 @@ export function MoneyManager() {
 
   function applyWorkspace(workspace: Workspace) {
     setData(workspace.data)
+    setOnboarding(workspace.onboarding)
     setProfiles(workspace.profiles)
     setActiveProfileId(workspace.activeProfileId)
     setLoadError(undefined)
@@ -180,6 +185,7 @@ export function MoneyManager() {
       ++securityEpoch.current
       ++latestRead.current
       setData(undefined)
+      setOnboarding(undefined)
       setProfiles([])
       setActiveProfileId("")
       setLoadError(undefined)
@@ -309,6 +315,24 @@ export function MoneyManager() {
     notify(message)
   }
 
+  async function completeSetup(draft: OnboardingDraft, destination: "skip" | "dashboard" | "transaction") {
+    const epoch = securityEpoch.current
+    const result = await finishOnboarding(draft, destination === "skip")
+    if (siteLockedRef.current || epoch !== securityEpoch.current) return
+    ++latestRead.current
+    applyWorkspace(result.workspace)
+    if (!result.applied) return
+    window.history.replaceState(window.history.state, "", "#overview")
+    setRoute("overview")
+    window.scrollTo(0, 0)
+    setOverlay(destination === "transaction" ? { type: "entryForm" } : undefined)
+    setSetupArrival(destination !== "transaction" && draft.preferences.reducedMotion !== true &&
+      window.matchMedia("(prefers-reduced-motion: no-preference)").matches)
+    channel.current?.postMessage("updated")
+    window.dispatchEvent(new Event("money-manager-preferences"))
+    if (destination !== "transaction") window.requestAnimationFrame(() => document.getElementById("main-content")?.focus())
+  }
+
   async function switchAccount(id: string) {
     const epoch = securityEpoch.current
     const sequence = ++latestRead.current
@@ -367,18 +391,22 @@ export function MoneyManager() {
   const skipLink = <a href="#main-content" onClick={event => { event.preventDefault(); document.getElementById("main-content")?.focus() }}
     className="sr-only fixed top-2 left-2 z-50 rounded-md bg-primary p-3 text-primary-foreground focus:not-sr-only">Skip to content</a>
 
-  if (!securityReady) return <TooltipProvider delayDuration={200}>{skipLink}<main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center px-4 outline-none" role="status">
-    <div className="w-full max-w-sm space-y-4"><span className="sr-only">Checking local security settings</span>
+  if (!securityReady || (!siteLocked && !data && !loadError)) return <TooltipProvider delayDuration={200}>{skipLink}<main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center px-4 outline-none" role="status">
+    <div className="w-full max-w-sm space-y-4"><span className="sr-only">Opening Money Manager</span>
       <Skeleton className="h-12 w-2/3" /><Skeleton className="h-24 w-full" /></div>
   </main></TooltipProvider>
   if (siteLocked && securityStatus) return <TooltipProvider delayDuration={200}>{skipLink}
     <UnlockScreen storageEncrypted={securityStatus.storageEncrypted} busy={unlockBusy} error={unlockError} unlock={unlock} />
   </TooltipProvider>
+  if (onboarding && !loadError && !siteLocked) return <Onboarding initial={onboarding} finish={completeSetup} reload={load} />
 
   return <TooltipProvider delayDuration={200}>
     {skipLink}
     <Sidebar route={route} profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} />
-    <main id="main-content" tabIndex={-1} className="mx-auto min-h-dvh min-w-0 px-4 pt-4 pb-28 outline-none md:ml-[72px] md:px-6 md:pt-6 md:pb-8 xl:ml-[246px] xl:px-8 xl:pt-6">
+    <main id="main-content" tabIndex={-1}
+      className={cn("mx-auto min-h-dvh min-w-0 px-4 pt-4 pb-28 outline-none md:ml-[72px] md:px-6 md:pt-6 md:pb-8 xl:ml-[246px] xl:px-8 xl:pt-6",
+        setupArrival && "motion-safe:full-motion:animate-in motion-safe:full-motion:fade-in motion-safe:full-motion:duration-150 motion-safe:full-motion:ease-out")}
+      onAnimationEnd={event => { if (setupArrival && event.target === event.currentTarget) setSetupArrival(false) }}>
       <div className={cn("mx-auto", report ? "max-w-[1400px]" : "max-w-3xl")}>
         <header className={cn("relative mb-3 flex flex-wrap items-start justify-between gap-2 md:mb-4 md:gap-3", !hasHeader && "justify-end md:hidden")}>
           {hasHeader && <div className="max-md:pr-36"><h1 className="text-[1.85rem] leading-tight font-semibold tracking-[-0.035em] sm:text-[2.25rem]">{title}</h1>

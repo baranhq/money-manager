@@ -24,13 +24,13 @@ function download(text: string, mediaType: string, name: string) {
   window.setTimeout(() => URL.revokeObjectURL(address), 1000)
 }
 
-const counts = ["entries", "budgets", "goals", "contributions", "categories"] as const
-const labels = { entries: "Transactions", budgets: "Budgets", goals: "Savings pots", contributions: "Money transfers", categories: "Categories" }
+const counts = ["entries", "accounts", "budgets", "goals", "contributions", "categories"] as const
+const labels = { entries: "Transactions", accounts: "Accounts", budgets: "Budgets", goals: "Savings pots", contributions: "Money transfers", categories: "Categories" }
 
 function Counts({ before, after }: { before: Data; after?: Data }) {
   return <dl className="divide-y rounded-lg border px-3">
     {counts.map(key => <div key={key} className="grid grid-cols-[1fr_auto] gap-2 py-2 text-sm">
-      <dt>{labels[key]}</dt><dd className="tabular-nums">{before[key].length}{after && <> <span aria-hidden="true">→</span><span className="sr-only"> becomes </span> {after[key].length}</>}</dd>
+      <dt>{labels[key]}</dt><dd className="tabular-nums">{before[key]?.length ?? 0}{after && <> <span aria-hidden="true">→</span><span className="sr-only"> becomes </span> {after[key]?.length ?? 0}</>}</dd>
     </div>)}
   </dl>
 }
