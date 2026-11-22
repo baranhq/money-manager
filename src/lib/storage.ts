@@ -25,6 +25,7 @@ const activeProfileKey = "active-profile"
 const currentDataKey = "current"
 const preferencesKey = "preferences"
 const onboardingKey = "first-time-setup"
+const setupPending = (value: unknown) => Boolean(value) && value !== "complete" && value !== "skipped"
 const profileDataKey = (id: string) => `profile-data:${id}`
 export type Workspace = { profiles: Profile[]; activeProfileId: string; data: Data; onboarding?: OnboardingDraft }
 
@@ -644,10 +645,10 @@ function loadWorkspace(store: IDBObjectStore, ready: (workspace: Workspace) => v
         const eligible = !values.has(securityKey) && profiles.length === 1 && activeProfileId === defaultProfile.id &&
           !data.entries.length && !data.budgets.length && !data.goals.length && !data.contributions.length && !data.accounts?.length
         let onboarding: OnboardingDraft | undefined
-        if (stored && stored !== "complete" && eligible) {
+        if (setupPending(stored) && eligible) {
           try { onboarding = parseOnboarding(stored) }
           catch { onboarding = initialOnboarding(); store.put(onboarding, onboardingKey) }
-        } else if (stored && stored !== "complete") store.put("complete", onboardingKey)
+        } else if (setupPending(stored)) store.put("complete", onboardingKey)
         ready({ profiles, activeProfileId, data, ...(onboarding ? { onboarding } : {}) })
       }
       const current = values.get(currentDataKey)
@@ -689,7 +690,7 @@ export function saveOnboarding(draft: OnboardingDraft) {
   return transact<boolean>("readwrite", (store, complete, fail) => {
     readValue(store, onboardingKey, saved => {
       try {
-        if (!saved || saved === "complete") { complete(false); return }
+        if (!setupPending(saved)) { complete(false); return }
         store.put(parseOnboarding(draft), onboardingKey)
         complete(true)
       } catch (error) { fail(error) }
@@ -705,7 +706,7 @@ export function finishOnboarding(draft: OnboardingDraft, skip: boolean) {
       if (setup.editor) throw new Error("Add or cancel the account before finishing setup.")
       const data = validateData({ ...workspace.data, accounts: setup.accounts, preferences: setup.preferences })
       writeSnapshot(store, workspace.activeProfileId, data)
-      store.put("complete", onboardingKey)
+      store.put(skip ? "skipped" : "complete", onboardingKey)
       complete({ workspace: { profiles: workspace.profiles, activeProfileId: workspace.activeProfileId, data }, applied: true })
     } catch (error) { fail(error) }
   }, fail))
