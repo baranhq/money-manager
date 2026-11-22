@@ -26,12 +26,12 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
   en: {
     lang: "en-GB",
     pageTitle: "Privacy Policy",
-    pageDescription: "How Money Manager stores app data and how I handle website and privacy enquiries.",
+    pageDescription: "How Money Manager stores app data and how website requests and privacy enquiries are handled.",
     updated: "Last updated: 22 November 2026",
     languageLabel: "Policy language",
     contentsLabel: "Privacy Policy contents",
     contentsTitle: "On this page",
-    summary: "The app stores your financial records in this browser and does not upload them to a server. This notice covers personal data I process to operate the website and respond to privacy enquiries.",
+    summary: "Money Manager stores your financial records in this browser and does not upload them. This notice covers website requests, hosting logs, AWStats reports and messages sent to me.",
     backLabel: "About & legal",
     privacyLabel: "Privacy",
     licencesLabel: "Licences",
@@ -47,26 +47,28 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
         id: "app-data",
         title: "Information stored by the app",
         paragraphs: [
-          "Money Manager stores information you enter, including profiles, accounts, transactions, budgets, savings records and preferences, in your browser. It has no online account, bank connection or cloud sync.",
-          "The app does not upload these records, imported files or your app password to a server. I cannot access or delete the records remotely. You can clear a profile’s records in the app or remove the site’s data through your browser settings. Clearing the site’s browser data also removes its stored records. Downloaded files are separate and are not deleted when you clear app or browser data.",
-          "The app checks your password locally. By itself, the password locks the app but does not encrypt stored records. You can turn on storage encryption separately. The app cannot recover encrypted records if you lose the password. The app uses browser storage for its records and to remember whether you completed or skipped the tour; it does not set cookies.",
+          "Money Manager stores profiles, accounts, transactions, budgets, savings records and preferences in your browser. It has no online account, bank connection or cloud sync.",
+          "The app does not upload these records, imported files or your app password. I cannot access or delete the records remotely. You can clear a profile’s records in the app or remove this site’s data in your browser settings. Downloaded files are separate and are not deleted by either action.",
+          "The app checks your password locally. The password alone locks access but does not encrypt stored records. You can enable storage encryption separately; if you lose the password, the app cannot recover encrypted records. The app also stores whether you completed or skipped its tour in browser storage. Money Manager itself does not set cookies.",
         ],
       },
       {
         id: "website-data",
-        title: "Website requests and providers",
+        title: "Website requests, hosting logs and providers",
         paragraphs: [
-          "When you load the website, your IP address, the page requested and related connection information are received by the services that deliver and host it. I rely on my legitimate interests in operating and protecting the website for processing I determine for these purposes.",
-          "Cloudflare provides website delivery and security services. The hosting provider receives site requests, and the email provider handles messages you send me. A provider acts as my processor when it processes personal data on my behalf and under my instructions. Where it determines its own purposes and means, it acts as an independent controller and is responsible for its own controller obligations for that processing. A provider’s role depends on the processing and service terms in use. Cloudflare may use security cookies depending on the service and settings; see its official privacy and cookie information. Contact an independent controller directly about its own processing.",
-          "A provider may process information outside the European Economic Area (EEA), depending on its service and the terms in place. Contact me for information about safeguards applicable to transfers by providers processing on my behalf. For transfers by an independent controller, see its privacy information or contact it directly.",
+          "Cloudflare delivers and protects the website. It receives technical request and connection information, which may include your IP address, requested page or resource, request time, browser or device details, network information and security signals. Depending on the features in use, Cloudflare may set security cookies. See its official privacy policy and cookie information.",
+          "The hosting provider automatically creates access logs for requests it receives. Depending on its server configuration, logs may include your IP address, date and time, requested URL or resource, HTTP status, browser or user-agent information, referrer and other technical request details. The hosting company provides AWStats and has it enabled on this hosting account. AWStats is a traffic-reporting tool that produces reports from access logs; I use them to understand overall website traffic. This is hosting-level processing, separate from your financial records in the app.",
+          "The hosting provider manages these logs and reports. My control over the fields recorded, configuration and retention is limited. Retention depends on the provider’s settings and service terms; I cannot state a fixed period.",
+          "I rely on my legitimate interests in delivering, operating and protecting the website and understanding its overall traffic for processing purposes I determine. You may object to processing based on legitimate interests as described below. The hosting, website-delivery and email providers act as my processors when they process personal data on my behalf and under my instructions. If a provider determines its own purposes and means, it acts as an independent controller and is responsible for its own processing. These roles depend on the service and processing in use. Contact an independent controller about its processing.",
+          "Cloudflare and the hosting provider may process information outside Bulgaria and, where applicable, outside the EEA. Actual locations and transfer arrangements depend on the service and account terms. Cloudflare publishes a Data Processing Addendum and EU Standard Contractual Clauses, but their publication does not show which terms apply to this site. Contact me for information or a copy of safeguards applicable to transfers by providers acting on my behalf. For independent-controller processing, see the provider’s privacy information or contact it directly.",
         ],
       },
       {
         id: "contact-retention",
         title: "Messages and retention",
         paragraphs: [
-          "If you email me, I process your email address, message, attachments and other information you include to respond and handle follow-up. I rely on legitimate interests for ordinary correspondence and, where applicable, on legal obligations to handle data protection requests. Providing information is voluntary, but I may be unable to respond or act without enough detail.",
-          "I keep correspondence only as long as needed to handle the message and related follow-up, legal claims or legal obligations. App records remain in your browser until you delete them or the browser removes them. Service providers retain information according to their role and the applicable service terms and privacy information; the email provider may retain messages under its own service and account settings.",
+          "If you email me, I process your email address, message, attachments and other information you include to reply and handle necessary follow-up. I rely on legitimate interests in handling correspondence and related legal claims, and on legal obligations where applicable, including for data protection requests. Providing information is voluntary, but I may be unable to respond or act without enough detail.",
+          "I keep correspondence only as long as needed to respond, handle related follow-up or legal claims, or meet legal obligations. The email provider also processes messages to provide its service and may retain them under its own service terms and settings. App records remain in your browser until you delete them or the browser removes them.",
         ],
       },
       {
@@ -85,17 +87,19 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       { label: "Bulgarian Personal Data Protection Act", href: "https://cpdp.bg/en/legislation/personal-data-protection-act/" },
       { label: "Cloudflare Privacy Policy", href: "https://www.cloudflare.com/privacypolicy/" },
       { label: "Cloudflare cookie information", href: "https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" },
+      { label: "Cloudflare Data Processing Addendum", href: "https://www.cloudflare.com/cloudflare-customer-dpa/" },
+      { label: "Cloudflare EU Standard Contractual Clauses", href: "https://www.cloudflare.com/cloudflare-customer-scc/" },
     ],
   },
   bg: {
     lang: "bg-BG",
     pageTitle: "Политика за поверителност",
-    pageDescription: "Как Money Manager съхранява данните в приложението и как обработвам информацията при управлението на сайта и запитванията за поверителност.",
+    pageDescription: "Как Money Manager съхранява данните в приложението и как се обработват заявките към сайта и запитванията за поверителност.",
     updated: "Последна актуализация: 22 ноември 2026 г.",
     languageLabel: "Език на политиката",
     contentsLabel: "Съдържание на политиката за поверителност",
     contentsTitle: "В тази страница",
-    summary: "Приложението съхранява финансовите ви записи в този браузър и не ги качва на сървър. Тази информация описва личните данни, които обработвам при управлението на сайта и при отговор на запитвания за поверителност.",
+    summary: "Money Manager съхранява финансовите ви записи в този браузър и не ги качва на сървър. Тази информация обхваща заявките към сайта, хостинг логовете, отчетите от AWStats и съобщенията, които ми изпращате.",
     backLabel: "За приложението и правна информация",
     privacyLabel: "Поверителност",
     licencesLabel: "Лицензи",
@@ -111,26 +115,28 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
         id: "app-data",
         title: "Информация, съхранявана от приложението",
         paragraphs: [
-          "Money Manager съхранява в браузъра информацията, която въвеждате, включително профили, сметки, транзакции, бюджети, записи за спестявания и предпочитания. Приложението няма онлайн акаунт, връзка с банка или синхронизиране в облак.",
-          "Приложението не качва тези записи, импортираните файлове или паролата ви на сървър. Не мога да преглеждам или изтривам записите от разстояние. Можете да изчистите записите на даден профил в приложението или да премахнете данните на сайта от настройките на браузъра. Изчистването на данните на сайта от браузъра премахва и съхранените записи. Изтеглените файлове са отделни и не се изтриват при изчистване на данните в приложението или браузъра.",
-          "Приложението проверява паролата ви локално. Сама по себе си тя заключва приложението, но не шифрова съхранените записи. Можете отделно да включите шифроване на данните. Приложението не може да възстанови шифрованите записи, ако загубите паролата. Приложението използва паметта на браузъра за записите и за да запомни дали сте завършили или пропуснали обиколката; то не задава бисквитки.",
+          "Money Manager съхранява профили, сметки, транзакции, бюджети, записи за спестявания и предпочитания в браузъра ви. Приложението няма онлайн акаунт, връзка с банка или синхронизиране в облак.",
+          "Приложението не качва тези записи, импортираните файлове или паролата за приложението. Не мога да преглеждам или изтривам записите от разстояние. Можете да изчистите записите на даден профил в приложението или да премахнете данните на сайта от настройките на браузъра. Изтеглените файлове са отделни и не се изтриват при нито едно от тези действия.",
+          "Приложението проверява паролата ви локално. Паролата сама по себе си заключва достъпа, но не шифрова записите. Можете отделно да включите шифроване на данните; ако загубите паролата, приложението не може да възстанови шифрованите записи. Приложението също съхранява в браузъра дали сте завършили или пропуснали обиколката. Самото Money Manager не задава бисквитки.",
         ],
       },
       {
         id: "website-data",
-        title: "Заявки към сайта и доставчици",
+        title: "Заявки към сайта, хостинг логове и доставчици",
         paragraphs: [
-          "При зареждане на сайта услугите за доставка и хостинг получават IP адреса ви, заявената страница и свързана информация за връзката. За обработването, чиито цели и средства определям, се позовавам на легитимните си интереси да управлявам и защитавам сайта.",
-          "Cloudflare предоставя услуги за доставка и сигурност на сайта. Хостинг доставчикът получава заявките към сайта, а доставчикът на имейл обслужва съобщенията, които ми изпращате. Доставчикът действа като мой обработващ, когато обработва лични данни от мое име и по мои инструкции. Когато сам определя целите и средствата, той действа като самостоятелен администратор и отговаря за собствените си задължения в това качество. Ролята му зависи от конкретното обработване и условията на използваната услуга. Cloudflare може да използва бисквитки за сигурност в зависимост от услугата и настройките; вижте официалната му информация за поверителността и бисквитките. За собственото обработване на самостоятелен администратор се обърнете директно към него.",
-          "В зависимост от услугата и договорните условия доставчик може да обработва информация извън Европейското икономическо пространство (ЕИП). Свържете се с мен за информация относно гаранциите при трансфери от доставчици, които обработват данни от мое име. За трансфери от самостоятелен администратор вижте неговата информация за поверителност или се обърнете към него.",
+          "Cloudflare доставя и защитава сайта. Получава техническа информация за заявките и връзката, която може да включва IP адреса ви, заявената страница или ресурс, часа на заявката, данни за браузъра или устройството, мрежова информация и сигнали за сигурност. Според активните функции Cloudflare може да задава бисквитки за сигурност. Вижте официалната му политика за поверителност и информацията за бисквитките.",
+          "Хостинг доставчикът автоматично създава логове за заявките, които получава. В зависимост от конфигурацията на сървъра те може да включват IP адрес, дата и час, заявен URL адрес или ресурс, HTTP статус, информация за браузъра или user-agent, източник на препращане и други технически данни за заявката. Хостинг компанията предоставя AWStats и го е включила за този хостинг акаунт. AWStats е инструмент за отчети за трафика, който създава отчети от логовете; използвам ги, за да разбирам общия трафик към сайта. Това обработване на ниво хостинг е отделно от финансовите ви записи в приложението.",
+          "Хостинг доставчикът управлява тези логове и отчети. Контролът ми върху записваните полета, конфигурацията и срока на съхранение е ограничен. Срокът зависи от настройките и условията на доставчика; не мога да посоча фиксиран период.",
+          "Позовавам се на легитимните си интереси да доставям, управлявам и защитавам сайта и да разбирам общия трафик за обработването, чиито цели определям. Можете да възразите срещу обработване на това основание, както е описано по-долу. Хостинг доставчикът, Cloudflare и доставчикът на имейл са мои обработващи, когато обработват лични данни от мое име и по мои инструкции. Ако доставчик сам определя целите и средствата, той е самостоятелен администратор и отговаря за собственото си обработване. Тези роли зависят от услугата и конкретното обработване. За обработване от самостоятелен администратор се обърнете към него.",
+          "Cloudflare и хостинг доставчикът могат да обработват информация извън България и, когато е приложимо, извън Европейското икономическо пространство (ЕИП). Действителните местоположения и условията за трансфер зависят от услугата и акаунта. Cloudflare публикува Допълнение за обработване на данни и Стандартни договорни клаузи на ЕС, но публикуването им не показва кои условия важат за този сайт. Свържете се с мен за информация или копие от гаранциите, приложими към трансфери от доставчици, които обработват данни от мое име. За обработване от самостоятелен администратор вижте неговата информация за поверителност или се обърнете директно към него.",
         ],
       },
       {
         id: "contact-retention",
         title: "Съобщения и съхранение",
         paragraphs: [
-          "Ако ми пишете по имейл, обработвам адреса ви, съобщението, прикачените файлове и другата включена от вас информация, за да отговоря и да предприема последващи действия. За обикновена кореспонденция се позовавам на легитимен интерес, а когато е приложимо — на законови задължения за обработване на искания за защита на данните. Предоставянето на информация е доброволно, но без достатъчно подробности може да не успея да отговоря или да изпълня искането.",
-          "Съхранявам кореспонденцията само докато е необходима за обработване на съобщението и свързаните последващи действия, правни претенции или законови задължения. Записите в приложението остават в браузъра, докато не ги изтриете или браузърът не ги премахне. Доставчиците съхраняват информацията според ролята си и приложимите условия на услугата и информация за поверителност; доставчикът на електронна поща може да съхранява съобщенията съгласно собствените си условия и настройки на акаунта.",
+          "Ако ми пишете по имейл, обработвам адреса ви, съобщението, прикачените файлове и другата включена информация, за да отговоря и да предприема необходимите последващи действия. За кореспонденцията и свързаните правни претенции се позовавам на легитимен интерес, а когато е приложимо — на законови задължения, включително при искания за защита на данните. Предоставянето на информация е доброволно, но без достатъчно подробности може да не успея да отговоря или да изпълня искането.",
+          "Съхранявам кореспонденцията само докато е необходима за отговор, свързани последващи действия или правни претенции, или за изпълнение на законови задължения. Доставчикът на имейл също обработва съобщенията, за да предоставя услугата си, и може да ги съхранява според собствените си условия и настройки. Записите в приложението остават в браузъра, докато не ги изтриете или браузърът не ги премахне.",
         ],
       },
       {
@@ -149,17 +155,19 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       { label: "Закон за защита на личните данни", href: "https://cpdp.bg/en/legislation/personal-data-protection-act/" },
       { label: "Политика за поверителност на Cloudflare", href: "https://www.cloudflare.com/privacypolicy/" },
       { label: "Информация на Cloudflare за бисквитките", href: "https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" },
+      { label: "Допълнение за обработване на данни на Cloudflare", href: "https://www.cloudflare.com/cloudflare-customer-dpa/" },
+      { label: "Стандартни договорни клаузи на ЕС на Cloudflare", href: "https://www.cloudflare.com/cloudflare-customer-scc/" },
     ],
   },
   tr: {
     lang: "tr-TR",
     pageTitle: "Gizlilik Politikası",
-    pageDescription: "Money Manager uygulama verilerini nasıl saklar ve web sitesi ile gizlilik başvurularında bilgileri nasıl işlerim.",
+    pageDescription: "Money Manager uygulama verilerini nasıl saklar; site istekleri ve gizlilik başvuruları nasıl işlenir.",
     updated: "Son güncelleme: 22 Kasım 2026",
     languageLabel: "Politika dili",
     contentsLabel: "Gizlilik Politikası içeriği",
     contentsTitle: "Bu sayfada",
-    summary: "Uygulama finansal kayıtlarınızı bu tarayıcıda saklar ve bir sunucuya yüklemez. Bu bildirim, siteyi işletirken ve gizlilik başvurularını yanıtlarken işlediğim kişisel verileri açıklar.",
+    summary: "Money Manager finansal kayıtlarınızı bu tarayıcıda saklar ve yüklemez. Bu bildirim; site isteklerini, barındırma günlüklerini, AWStats raporlarını ve bana gönderdiğiniz mesajları kapsar.",
     backLabel: "Hakkında ve yasal bilgiler",
     privacyLabel: "Gizlilik",
     licencesLabel: "Lisanslar",
@@ -175,26 +183,28 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
         id: "app-data",
         title: "Uygulamanın sakladığı bilgiler",
         paragraphs: [
-          "Money Manager; profiller, hesaplar, işlemler, bütçeler, birikim kayıtları ve tercihler dâhil girdiğiniz bilgileri tarayıcınızda saklar. Çevrim içi hesabı, banka bağlantısı veya bulut eşitlemesi yoktur.",
-          "Uygulama bu kayıtları, içe aktarılan dosyaları veya uygulama parolanızı herhangi bir sunucuya yüklemez. Kayıtlara uzaktan erişemem veya bunları silemem. Bir profile ait kayıtları uygulamadan silebilir veya site verilerini tarayıcınızın ayarlarından kaldırabilirsiniz. Site verilerini tarayıcıdan temizlemek saklanan kayıtları da siler. İndirilen dosyalar ayrıdır ve uygulama veya tarayıcı verilerini temizlediğinizde silinmez.",
-          "Uygulama parolanızı yerel olarak doğrular. Parola tek başına uygulamayı kilitler, ancak saklanan kayıtları şifrelemez. Depolama şifrelemesini ayrıca açabilirsiniz. Parolayı kaybederseniz uygulama şifrelenmiş kayıtları kurtaramaz. Uygulama kayıtları saklamak ve tanıtımı tamamlayıp tamamlamadığınızı hatırlamak için tarayıcı depolamasını kullanır; kendisi çerez ayarlamaz.",
+          "Money Manager profilleri, hesapları, işlemleri, bütçeleri, birikim kayıtlarını ve tercihleri tarayıcınızda saklar. Çevrim içi hesabı, banka bağlantısı veya bulut eşitlemesi yoktur.",
+          "Uygulama bu kayıtları, içe aktarılan dosyaları veya uygulama parolanızı yüklemez. Kayıtlara uzaktan erişemem veya bunları silemem. Bir profile ait kayıtları uygulamadan silebilir ya da bu sitenin verilerini tarayıcı ayarlarından kaldırabilirsiniz. İndirilen dosyalar ayrıdır ve bu işlemlerle silinmez.",
+          "Uygulama parolanızı yerel olarak doğrular. Parola tek başına erişimi kilitler, ancak kayıtları şifrelemez. Depolama şifrelemesini ayrıca açabilirsiniz; parolayı kaybederseniz uygulama şifrelenmiş kayıtları kurtaramaz. Uygulama ayrıca tanıtımı tamamlayıp tamamlamadığınızı tarayıcıda saklar. Money Manager kendi çerezlerini ayarlamaz.",
         ],
       },
       {
         id: "website-data",
-        title: "Site istekleri ve hizmet sağlayıcılar",
+        title: "Site istekleri, barındırma günlükleri ve sağlayıcılar",
         paragraphs: [
-          "Siteyi yüklediğinizde, IP adresiniz, istediğiniz sayfa ve bağlantıyla ilgili bilgiler siteyi sunan ve barındıran hizmetler tarafından alınır. Amaç ve araçlarını belirlediğim bu işleme için siteyi işletme ve koruma konusundaki meşru menfaatime dayanırım.",
-          "Cloudflare site dağıtımı ve güvenlik hizmeti sağlar. Barındırma sağlayıcısı site isteklerini alır; e-posta sağlayıcısı ise bana gönderdiğiniz mesajları işler. Bir sağlayıcı kişisel verileri benim adıma ve talimatlarım doğrultusunda işlediğinde veri işleyenimdir. Amaç ve araçları kendisinin belirlediği işlemlerde bağımsız veri sorumlusu olur ve bu işleme ilişkin kendi veri sorumlusu yükümlülüklerinden sorumludur. Sağlayıcının rolü yapılan işlemeye ve kullanılan hizmet koşullarına bağlıdır. Cloudflare hizmete ve ayarlara bağlı olarak güvenlik çerezleri kullanabilir; resmî gizlilik ve çerez bilgilerine bakın. Bağımsız veri sorumlusunun kendi işlemesi hakkında bilgi için doğrudan ona başvurun.",
-          "Hizmete ve yürürlükteki koşullara bağlı olarak sağlayıcılar bilgileri Avrupa Ekonomik Alanı (AEA) dışında işleyebilir. Benim adıma veri işleyen sağlayıcıların aktarımlarına uygulanan güvenceler hakkında bilgi için benimle iletişime geçin. Bağımsız veri sorumlusunun aktarımları için kendi gizlilik bilgilerine bakın veya doğrudan ona başvurun.",
+          "Cloudflare siteyi sunar ve korur. IP adresiniz, istediğiniz sayfa veya kaynak, istek zamanı, tarayıcı ya da cihaz bilgileri, ağ bilgileri ve güvenlik sinyalleri gibi teknik istek ve bağlantı bilgilerini alır. Kullanılan özelliklere bağlı olarak güvenlik çerezleri ayarlayabilir. Resmî gizlilik politikasına ve çerez bilgilerine bakın.",
+          "Barındırma sağlayıcısı aldığı istekler için erişim günlüklerini otomatik oluşturur. Sunucu ayarlarına bağlı olarak bu günlüklerde IP adresi, tarih ve saat, istenen URL veya kaynak, HTTP durum kodu, tarayıcı veya user-agent bilgisi, yönlendiren sayfa ve diğer teknik istek bilgileri bulunabilir. Barındırma şirketi AWStats hizmetini sağlar ve bu hesapta etkinleştirmiştir. AWStats erişim günlüklerinden trafik raporları üreten bir araçtır; bu raporları sitenin genel trafiğini anlamak için kullanırım. Bu barındırma işlemi, uygulamadaki finansal kayıtlarınızdan ayrıdır.",
+          "Barındırma sağlayıcısı bu günlükleri ve raporları yönetir. Kaydedilen alanlar, yapılandırma ve saklama süresi üzerindeki kontrolüm sınırlıdır. Saklama süresi sağlayıcının ayarlarına ve hizmet koşullarına bağlıdır; sabit bir süre veremiyorum.",
+          "Amaçlarını belirlediğim işlemlerde siteyi sunma, işletme, koruma ve genel trafiği anlama konusundaki meşru menfaatime dayanırım. Aşağıda açıklandığı şekilde meşru menfaate dayalı işlemeye itiraz edebilirsiniz. Barındırma, site dağıtım ve e-posta sağlayıcıları kişisel verileri benim adıma ve talimatlarıma göre işlerken veri işleyenimdir. Bir sağlayıcı işlemenin amaç ve araçlarını kendisi belirlediğinde bağımsız veri sorumlusu olur ve kendi işlemesinden sorumludur. Bu roller kullanılan hizmete ve işleme faaliyetine bağlıdır. Bağımsız veri sorumlusunun işlemesi için doğrudan ona başvurun.",
+          "Cloudflare ve barındırma sağlayıcısı bilgileri Bulgaristan dışında ve uygun olduğu durumlarda Avrupa Ekonomik Alanı (AEA) dışında işleyebilir. Gerçek konumlar ve aktarım koşulları hizmete ve hesap koşullarına bağlıdır. Cloudflare bir Veri İşleme Eki ve AB Standart Sözleşme Maddeleri yayımlar, ancak bunların yayımlanmış olması bu site için hangi koşulların geçerli olduğunu göstermez. Benim adıma veri işleyen sağlayıcıların aktarımlarına uygulanan güvenceler hakkında bilgi veya bu güvencelerin bir kopyasını benden isteyebilirsiniz. Bağımsız veri sorumlusunun işlemesi için gizlilik bilgilerine bakın veya doğrudan ona başvurun.",
         ],
       },
       {
         id: "contact-retention",
         title: "Mesajlar ve saklama",
         paragraphs: [
-          "Bana e-posta gönderirseniz, yanıt vermek ve gerekli takibi yürütmek için e-posta adresinizi, mesajınızı, ekleri ve eklediğiniz diğer bilgileri işlerim. Olağan yazışmalar için meşru menfaatime, veri koruma taleplerini yanıtlarken ise gerektiğinde yasal yükümlülüklere dayanırım. Bilgi vermek isteğe bağlıdır; yeterli ayrıntı olmadan yanıt veremeyebilir veya talebi yerine getiremeyebilirim.",
-          "Yazışmaları yalnızca mesajı ve ilgili takibi yürütmek, hukuki talepleri ele almak veya yasal yükümlülükleri karşılamak için gerektiği süre boyunca saklarım. Uygulama kayıtları siz silene veya tarayıcı kaldırana kadar tarayıcınızda kalır. Hizmet sağlayıcılar bilgileri rollerine, geçerli hizmet koşullarına ve gizlilik bilgilerine göre saklar; e-posta sağlayıcısı mesajları kendi hizmet ve hesap ayarlarına göre saklayabilir.",
+          "Bana e-posta gönderirseniz, yanıt vermek ve gerekli takibi yürütmek için e-posta adresinizi, mesajınızı, ekleri ve eklediğiniz diğer bilgileri işlerim. Yazışmalar ve ilgili hukuki talepler için meşru menfaatime, gerektiğinde veri koruma taleplerini yanıtlama gibi yasal yükümlülüklere dayanırım. Bilgi vermek isteğe bağlıdır; yeterli ayrıntı olmadan yanıt veremeyebilir veya talebi yerine getiremeyebilirim.",
+          "Yazışmaları yalnızca yanıt vermek, ilgili takibi veya hukuki talepleri yürütmek ya da yasal yükümlülükleri karşılamak için gerektiği süre boyunca saklarım. E-posta sağlayıcısı da hizmetini sunmak için mesajları işler ve kendi hizmet koşulları ile ayarlarına göre saklayabilir. Uygulama kayıtları siz silene veya tarayıcı kaldırana kadar tarayıcınızda kalır.",
         ],
       },
       {
@@ -213,14 +223,22 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       { label: "Bulgaristan Kişisel Verilerin Korunması Kanunu", href: "https://cpdp.bg/en/legislation/personal-data-protection-act/" },
       { label: "Cloudflare Gizlilik Politikası", href: "https://www.cloudflare.com/privacypolicy/" },
       { label: "Cloudflare çerez bilgileri", href: "https://developers.cloudflare.com/fundamentals/reference/policies-compliances/cloudflare-cookies/" },
+      { label: "Cloudflare Veri İşleme Eki", href: "https://www.cloudflare.com/cloudflare-customer-dpa/" },
+      { label: "Cloudflare AB Standart Sözleşme Maddeleri", href: "https://www.cloudflare.com/cloudflare-customer-scc/" },
     ],
   },
 }
 
+const privacyPaths: Record<PrivacyLocale, string> = {
+  en: "/privacy",
+  bg: "/bg/privacy",
+  tr: "/tr/privacy",
+}
+
 const locales: { id: PrivacyLocale; label: string; href: string }[] = [
-  { id: "en", label: "English", href: "/privacy" },
-  { id: "bg", label: "Български", href: "/bg/privacy" },
-  { id: "tr", label: "Türkçe", href: "/tr/privacy" },
+  { id: "en", label: "English", href: privacyPaths.en },
+  { id: "bg", label: "Български", href: privacyPaths.bg },
+  { id: "tr", label: "Türkçe", href: privacyPaths.tr },
 ]
 
 export function PrivacyPolicy({ locale }: { locale: PrivacyLocale }) {
@@ -232,7 +250,7 @@ export function PrivacyPolicy({ locale }: { locale: PrivacyLocale }) {
       description={copy.pageDescription}
       lang={copy.lang}
       backLabel={copy.backLabel}
-      privacyHref={locale === "bg" ? "/bg/privacy" : locale === "tr" ? "/tr/privacy" : "/privacy"}
+      privacyHref={privacyPaths[locale]}
       privacyLabel={copy.privacyLabel}
       licencesLabel={copy.licencesLabel}
     >

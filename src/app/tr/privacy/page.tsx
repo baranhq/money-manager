@@ -3,7 +3,7 @@ import { PrivacyPolicy } from "@/components/privacy-policy"
 
 export const metadata: Metadata = {
   title: "Gizlilik Politikası",
-  description: "Baran’s Money Manager uygulamasını kullandığınızda bilgilerin nasıl işlendiği.",
+  description: "Money Manager uygulama verilerini nasıl saklar; site istekleri ve gizlilik başvuruları nasıl işlenir.",
 }
 
 export default function TurkishPrivacyPage() {

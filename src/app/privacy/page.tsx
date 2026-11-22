@@ -3,7 +3,7 @@ import { PrivacyPolicy } from "@/components/privacy-policy"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "How Baran’s Money Manager handles information when you use the app.",
+  description: "How Money Manager stores app data and how website requests and privacy enquiries are handled.",
 }
 
 export default function PrivacyPage() {
