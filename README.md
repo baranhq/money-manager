@@ -1,47 +1,69 @@
-# Money Manager
+<p align="center">
+  <img src="src/logo/Baran%27s%20_Money_Manager.svg" alt="Baran’s Money Manager" width="360">
+</p>
 
-Money Manager is a local-first web app for tracking income, expenses, monthly budgets and savings goals. It starts with an empty ledger and stores financial records in IndexedDB in the current browser. There are no user accounts, bank connections or cloud synchronisation; Cloudflare and the shared host deliver and protect the site.
+<h1 align="center">Baran’s Money Manager</h1>
+
+<p align="center">Track income, expenses, budgets and savings in your browser, without an account or bank connection.</p>
+
+<p align="center">
+  <img src="docs/screenshots/setup.png" alt="First-run setup with currency selection and an option to add an account" width="49%">
+  <img src="docs/screenshots/add-account.png" alt="Optional account setup with account type, name and opening balance" width="49%">
+</p>
+<p align="center"><em>Optional first-run setup.</em></p>
+
+## Features
+
+- Record income and expenses, organised by categories and accounts.
+- Review monthly cash flow, activity, budgets and reports.
+- Set money aside in savings pots with optional targets. Deposits reduce “Available to spend”; withdrawals add the money back.
+- Keep separate local profiles and choose currency, date and number formats.
+- Import and export CSV files, create JSON backups, and optionally password-protect exports.
+- Set a local app password and optionally encrypt records stored by the browser.
+
+## Privacy and data
+
+Financial records are stored in IndexedDB in the current browser profile. Money Manager has no online account or bank connection. It does not sync data between devices, and it does not send financial records, imported files or the app password to an app server. Clearing the browser’s site data can remove local records, so make a backup before changing browsers or devices or clearing storage.
+
+The website’s hosting and delivery providers may process technical request information. The in-app privacy policy is available at `/privacy`, `/bg/privacy` and `/tr/privacy` in English, Bulgarian and Turkish; its wording is maintained in [`src/components/privacy-policy.tsx`](src/components/privacy-policy.tsx). Use HTTPS for network deployments before relying on the app password. Encrypted browser records cannot be recovered without that password; keep downloaded backups and exports private.
 
 ## Run locally
 
-Use Node.js 24 or later.
+Requires Node.js 24 or later and npm.
 
 ```sh
+git clone https://github.com/baranhq/money-manager.git
+cd money-manager
 npm ci
 npm run dev
 ```
 
-Open [the local app](http://localhost:3000). For the production build, run these commands.
+Open [http://localhost:3000](http://localhost:3000). To run a production build locally:
 
 ```sh
 npm run build
 npm start
 ```
 
-The Next.js App Router serves the interface and its assets. Financial calculations, record changes and file processing run in the browser. Use HTTPS if hosting it beyond localhost.
+## Technology
 
-## Data and files
+Next.js, React, TypeScript, Tailwind CSS and the browser’s IndexedDB API.
 
-The ledger uses a single currency and stores amounts as integer minor units. On first launch you can choose a currency and add accounts with optional opening balances, or skip to Overview. Manage accounts later in Settings → Accounts. Download a backup before clearing the ledger or switching browser profiles, devices or site addresses.
-
-Settings → Data & backup supports versioned JSON backups and transaction CSV files. Account details and opening balances are included in JSON backups. A backup with accounts uses version 3 and needs a version of the app that supports accounts. JSON merge skips identical records and blocks conflicts. Replacement requires typing `RESTORE`, and clearing requires typing `CLEAR`. Both leave appearance preferences in place. CSV files should use the headings from a Money Manager export, with an optional `id` column. Create the relevant categories first and use the ledger currency.
-
-Backups and exports contain readable financial information. Keep them private. Clearing browser site data can remove the ledger, and clearing through Money Manager leaves downloaded files in place.
-
-## Checks and third-party notices
+## Development checks
 
 ```sh
 npm run typecheck
 npm test
-npx playwright install chromium
 npm run build
+```
+
+For browser end-to-end checks, build the app first, install Chromium once, then run the Playwright suite:
+
+```sh
+npx playwright install chromium
 npm run test:e2e
 ```
 
-[LICENSES.md](LICENSES.md) and the app’s `/licenses` reader use the same inventory. Package installation and production builds refresh the records. When changing an asset, record its verified provenance and notice in [the asset manifest](notices/vendor/assets.json). Run `npm run licenses:update` to refresh directly or `npm run licenses:check` to check for stale records. Review the generated changes before committing.
+## Licensing
 
-## Before public release
-
-Before publishing the privacy notice, confirm the production hostname; the shared host’s legal name and privacy notice; the email mailbox provider and deletion practice; access-log, AWStats and Cloudflare retention; and the locations and transfer safeguards for Cloudflare and the host. Check production request and security-cookie behaviour. Also confirm whether Bulgarian Electronic Commerce Act provider disclosures apply and whether an address must be added to the site. The notice is available in English, Bulgarian and Turkish at /privacy, /bg/privacy and /tr/privacy. This version stores the requested ledger in the current browser. Reassess storage and consent if optional processing or another external service is introduced. [GDPR](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng/), [ePrivacy Directive](https://eur-lex.europa.eu/eli/dir/2002/58/oj/eng), [Bulgarian Electronic Commerce Act](https://www.mi.government.bg/file/2026/05/zet_03_02_26.pdf)
-
-Check whether Terms, consumer disclosures or a statutory accessibility statement apply to the actual release. The current scope is a personal ledger without payments, banking services or commerce. Review any change to those facts or the audience before publishing. [EU digital content rules](https://eur-lex.europa.eu/eli/dir/2019/770/oj/eng), [Bulgarian accessibility law](https://dv.parliament.bg/DVWeb/showMaterialDV.jsp?idMat=233836)
+No project-level licence is provided in this repository. [`LICENSES.md`](LICENSES.md) contains third-party notices, which are also available in the app at `/licenses`. When adding a bundled app asset, record its verified source in [`notices/vendor/assets.json`](notices/vendor/assets.json) and run `npm run licenses:update`; the build checks the generated notices.
