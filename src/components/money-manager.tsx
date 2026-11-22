@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { CalendarDays, ChevronDown, Plus } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { AccountMenu, navigation, settingsRoutes, Sidebar, type Route } from "@/components/navigation"
 import { Activity } from "@/components/activity"
 import { Budgets, EntrySignIcon, Overview, Savings } from "@/components/reports"
@@ -16,7 +17,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Skeleton } from "@/components/ui/skeleton"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Onboarding } from "@/components/onboarding"
-import { AppTour, claimTourInvitation, saveTourResult, TourInvitation, tourStops } from "@/components/app-tour"
+import { AppTour, claimTourInvitation, InlineTour, saveTourResult, TourEditorContext, TourInvitation, tourStops } from "@/components/app-tour"
 import { Choose, Field, Modal } from "@/components/shared"
 import { dateLabel, initialData, monthName, shiftMonth, today, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind, type NewProfile, type Profile } from "@/lib/finance"
 import { createProfile as createStoredProfile, finishOnboarding, InvalidSnapshot, lockSite as lockStoredSite, readSecurityStatus, readWorkspace, recoverData, switchProfile as switchStoredProfile, unlockSitePassword, updateData, updateProfile as updateStoredProfile, type Workspace } from "@/lib/storage"
@@ -89,6 +90,7 @@ function UnlockScreen({ storageEncrypted, busy, error, unlock }: {
   const [password, setPassword] = useState("")
   return <main id="main-content" tabIndex={-1} className="grid min-h-dvh place-items-center px-4 py-10 outline-none">
     <div className="w-full max-w-sm space-y-5">
+      <BrandLogo />
       <div><h1 className="text-3xl font-semibold tracking-tight">Unlock Money Manager</h1>
         <p className="mt-2 text-sm text-muted-foreground">Enter the site password set for this browser.</p></div>
       <Card className="gap-4 p-5 shadow-none">
@@ -121,7 +123,8 @@ export function MoneyManager() {
   const [setupArrival, setSetupArrival] = useState(false)
   const [tourOffer, setTourOffer] = useState(false)
   const [tourIndex, setTourIndex] = useState<number | null>(null)
-  const tourActive = useRef(false)
+  const tourIndexRef = useRef<number | null>(null)
+  const [accountEditing, setAccountEditing] = useState(false)
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [activeProfileId, setActiveProfileId] = useState("")
   const [loadError, setLoadError] = useState<{ text: string; corrupted: boolean }>()
@@ -186,7 +189,7 @@ export function MoneyManager() {
     setSiteLocked(locked)
     setUnlockError("")
     if (locked) {
-      if (tourActive.current) endTour("skipped", false)
+      if (tourIndexRef.current !== null) endTour("skipped", false)
       setTourOffer(false)
       ++securityEpoch.current
       ++latestRead.current
@@ -282,8 +285,19 @@ export function MoneyManager() {
 
   useEffect(() => {
     function syncRoute() {
-      if (tourActive.current) endTour("skipped", false)
-      setRoute(getRoute())
+      const next = getRoute()
+      const currentStop = tourIndexRef.current === null ? undefined : tourStops[tourIndexRef.current]
+      if (currentStop && next !== currentStop.route) {
+        if (currentStop.route === "settings" && next === "ledger-accounts") {
+          setTourStep(tourStops.findIndex(stop => stop.route === "ledger-accounts"))
+        } else if (currentStop.route === "ledger-accounts" && next === "settings") {
+          setTourStep(tourStops.findIndex(stop => stop.route === "settings"))
+        } else {
+          endTour("skipped", false)
+        }
+      }
+      setRoute(next)
+      setAccountEditing(false)
       setOverlay(undefined)
       window.scrollTo(0, 0)
     }
@@ -310,10 +324,6 @@ export function MoneyManager() {
     }
   }, [])
 
-  useEffect(() => {
-    if (overlay && tourActive.current) endTour("skipped", false)
-  }, [overlay])
-
   async function commit(change: (current: Data) => Data, message: string) {
     const epoch = securityEpoch.current
     const profileId = activeProfileId
@@ -329,6 +339,7 @@ export function MoneyManager() {
   function openRoute(next: Route) {
     window.history.replaceState(window.history.state, "", "#" + next)
     setRoute(next)
+    setAccountEditing(false)
     setOverlay(undefined)
     window.scrollTo(0, 0)
   }
@@ -337,19 +348,23 @@ export function MoneyManager() {
     window.requestAnimationFrame(() => document.getElementById("main-content")?.focus({ preventScroll: true }))
   }
 
+  function setTourStep(index: number | null) {
+    tourIndexRef.current = index
+    setTourIndex(index)
+  }
+
   function moveTour(index: number) {
     const stop = tourStops[index]
     if (!stop) return
     setTourOffer(false)
-    tourActive.current = true
-    setTourIndex(index)
+    setTourStep(index)
     openRoute(stop.route)
+    if ("opensPicker" in stop) setOverlay({ type: "add" })
   }
 
   function endTour(result: "completed" | "skipped", restoreFocus = true) {
-    tourActive.current = false
     setTourOffer(false)
-    setTourIndex(null)
+    setTourStep(null)
     saveTourResult(result)
     if (result === "completed") openRoute("overview")
     if (restoreFocus) focusMain()
@@ -413,7 +428,13 @@ export function MoneyManager() {
   }
 
   const close = () => setOverlay(undefined)
-  const add = () => setOverlay({ type: "add" })
+  const activeStop = tourIndex === null ? undefined : tourStops[tourIndex]
+  const add = () => {
+    if (activeStop?.route === "activity") {
+      setTourStep(tourStops.findIndex(stop => "opensPicker" in stop))
+    }
+    setOverlay({ type: "add" })
+  }
   const entryDetail = (row: Entry) => setOverlay({ type: "entryDetail", row })
   const entryEdit = (row?: Entry) => setOverlay({ type: "entryForm", row })
   const budgetDetail = (row: Budget) => setOverlay({ type: "budgetDetail", row })
@@ -424,6 +445,22 @@ export function MoneyManager() {
   const remove = (target: Removal) => setOverlay({ type: "remove", target })
   const reportProps = data && { data, month }
   const operationProps = data && { data, close, commit }
+  const inlineControls = tourIndex === null ? null : {
+    index: tourIndex, move: moveTour, finish: (result: "completed" | "skipped") => endTour(result, false),
+  }
+  const accountCoach = activeStop?.route === "ledger-accounts" && accountEditing
+  const recordHelp =
+    activeStop?.route === "activity" && overlay?.type === "entryForm" ? "Enter the amount and pick a category." :
+    activeStop?.route === "budgets" && overlay?.type === "budgetForm" ? "Pick a category and give it a limit." :
+    activeStop?.route === "savings" && overlay?.type === "goalForm" ? "Name your goal and enter how much you’d like to save." : undefined
+  const editorCoach = inlineControls && (accountCoach ? {
+    scope: "account" as const,
+    panel: <InlineTour {...inlineControls} editing title="Make it yours" copy="Pick a type, give it a name, and add what’s already there if you like." />,
+  } : recordHelp ? {
+    scope: "record" as const,
+    panel: <InlineTour {...inlineControls} editing title="Add the details" copy={recordHelp} />,
+  } : null)
+  const pickerCoach = activeStop && "opensPicker" in activeStop && inlineControls
   const hasHeader = !!report || route === "settings"
   const planPage = route === "budgets" || route === "savings"
   const emptyPlan = route === "budgets" ? data?.budgets.length === 0 : route === "savings" && data?.goals.length === 0
@@ -439,6 +476,7 @@ export function MoneyManager() {
     <UnlockScreen storageEncrypted={securityStatus.storageEncrypted} busy={unlockBusy} error={unlockError} unlock={unlock} />
   </TooltipProvider>
   return <TooltipProvider delayDuration={200}>
+    <TourEditorContext.Provider value={editorCoach}>
     {skipLink}
     <Sidebar route={route} profiles={profiles} activeProfile={activeProfile} onSwitch={selectAccount} />
     <main id="main-content" tabIndex={-1}
@@ -481,21 +519,22 @@ export function MoneyManager() {
             editCategory={(kind: Kind, row?: Category) => setOverlay({ type: "category", kind, row })}
             removeCategory={row => remove({ type: "category", row })} openData={mode => setOverlay({ type: "dataTool", mode })}
             securityStatus={securityStatus ?? { configured: false, storageEncrypted: false }} onSecurityChanged={securityChanged}
-            lockSite={() => lockApp()} replayTour={() => moveTour(0)} />}
+            lockSite={() => lockApp()} replayTour={() => moveTour(0)} onAccountEditorChange={setAccountEditing} />}
         </>}
       </div>
     </main>
     <MobileNavigation route={route} add={add} ready={ready} />
     {onboarding && ready && <Onboarding initial={onboarding} finish={completeSetup} reload={load} />}
     {ready && !onboarding && !overlay && tourOffer && <TourInvitation start={() => moveTour(0)} skip={() => endTour("skipped")} />}
-    {ready && !onboarding && !overlay && tourIndex !== null && <AppTour key={tourIndex} index={tourIndex} move={moveTour} finish={endTour} />}
+    {ready && !onboarding && !overlay && !accountCoach && tourIndex !== null && <AppTour key={tourIndex} index={tourIndex} move={moveTour} finish={endTour} />}
     <div role="status" aria-live="polite" className={cn("pointer-events-none fixed right-4 bottom-24 z-40 max-w-[calc(100%-2rem)] rounded-md border bg-card px-4 py-2 text-sm font-medium shadow-sm md:bottom-6", !status && "sr-only")}>{status}</div>
     {overlay?.type === "add" && ready && <Modal title="Add entry" description="Choose the kind of transaction to record." close={close}>
       <div className="grid gap-2 sm:grid-cols-2">
-        {(["expense", "income"] as const).map(kind => <Button key={kind} variant="outline" className="min-h-11 justify-start" onClick={() => setOverlay({ type: "entryForm", kind })}>
+        {(["expense", "income"] as const).map(kind => <Button key={kind} variant="outline" className={cn("min-h-11 justify-start", pickerCoach && "border-primary/40")} onClick={() => setOverlay({ type: "entryForm", kind })}>
           <EntrySignIcon income={kind === "income"} /> {kind === "expense" ? "Expense" : "Income"}
         </Button>)}
       </div>
+      {pickerCoach && <InlineTour {...pickerCoach} />}
     </Modal>}
     {operationProps && overlay?.type === "entryForm" && <EntryForm {...operationProps} row={overlay.row} initialKind={overlay.kind} />}
     {data && overlay?.type === "entryDetail" && <EntryDetail row={overlay.row} data={data} close={close} edit={() => entryEdit(overlay.row)} remove={() => remove({ type: "entry", row: overlay.row })} />}
@@ -519,5 +558,6 @@ export function MoneyManager() {
         window.dispatchEvent(new Event("money-manager-preferences"))
         notify(replacement ? "Backup restored" : "Damaged records cleared")
       } : undefined} />}
+    </TourEditorContext.Provider>
   </TooltipProvider>
 }

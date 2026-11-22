@@ -30,7 +30,7 @@ const assetFiles = [
 ]
 const localInputs = [...new Set([
   "scripts/licenses.mjs", "package.json", lockPath, "notices/vendor/shadcn-ui.json", "notices/vendor/shadcn-ui.txt",
-  assetsPath, ...filesIn("notices/upstream"), ...assets.map(asset => asset.notice),
+  assetsPath, ...filesIn("notices/upstream"), ...assets.flatMap(asset => asset.firstParty ? [] : [asset.notice]),
   ...readdirSync("src/components/ui").map(file => `src/components/ui/${file}`),
   ...assetFiles,
 ])].sort()
@@ -94,7 +94,10 @@ if ((check || sync) && synchronised()) {
   }
 
   for (const asset of assets) {
-    if (!assetFiles.includes(asset.file) || !asset.name || !asset.licence || !asset.version || new URL(asset.source).protocol !== "https:") {
+    const provenanceRecorded = asset.firstParty === true
+      ? Boolean(asset.source)
+      : asset.licence && asset.version && new URL(asset.source).protocol === "https:"
+    if (!assetFiles.includes(asset.file) || !asset.name || !provenanceRecorded) {
       throw new Error(`Review the asset inventory entry for ${asset.file}.`)
     }
   }
@@ -173,7 +176,7 @@ if ((check || sync) && synchronised()) {
 
   const shadcnText = readText("notices/vendor/shadcn-ui.txt")
   addNotices("shadcn/ui · official New York registry components\nhttps://github.com/shadcn-ui/ui", [["MIT", shadcnText]])
-  const extra = assets.map(({ name, source, version, licence, notice }) => ({ name, source, version, licence, text: readText(notice) }))
+  const extra = assets.filter(asset => !asset.firstParty).map(({ name, source, version, licence, notice }) => ({ name, source, version, licence, text: readText(notice) }))
   for (const asset of extra) addNotices(`${asset.name} · ${asset.licence}\n${asset.source}`, [[asset.licence, asset.text]])
   const separator = "\n\n" + "=".repeat(70) + "\n\n"
   const bundle = [

@@ -1,15 +1,23 @@
 "use client"
 
-import { useEffect, useId, useRef, useState, type FormEvent } from "react"
-import { Plus } from "lucide-react"
+import { useId, useRef, useState, type FormEvent } from "react"
 import { Choose, Field } from "@/components/shared"
 import { Button } from "@/components/ui/button"
 import { accountNameKey, accountTypes, amountInput, maxLedgerAccounts, openingBalanceFromText, type AccountType, type LedgerAccount, type Preferences } from "@/lib/finance"
-import { type AccountDraft } from "@/lib/onboarding"
+import { accountDraftFor, type AccountDraft } from "@/lib/onboarding"
 import { cn } from "@/lib/utils"
 
 const options = accountTypes.map(type => [type, type] as const)
-const defaultName = { Cash: "Cash", Bank: "Bank account", Other: "" }
+export function AccountTypeChoices({ selected, disabled, choose }: {
+  selected?: AccountType; disabled?: boolean; choose: (type: AccountType) => void
+}) {
+  return <div role="group" aria-label="Account type" className="grid grid-cols-3 gap-2">
+    {accountTypes.map(type => <Button key={type} type="button" variant={selected === type ? "secondary" : "outline"}
+      className={cn("h-11 px-2 shadow-none motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]",
+        selected === type ? "border border-primary text-primary" : "border-input bg-card dark:bg-card")}
+      aria-pressed={selected === type} disabled={disabled} onClick={() => choose(type)}>{type}</Button>)}
+  </div>
+}
 
 export function LedgerAccountForm({ draft, onChange, preferences, accounts, onSave, cancel, editing, inSetup = false }: {
   draft: AccountDraft
@@ -26,16 +34,6 @@ export function LedgerAccountForm({ draft, onChange, preferences, accounts, onSa
   const submitting = useRef(false)
   const errorId = useId()
   const balanceId = useId()
-  const balanceField = useRef<HTMLInputElement>(null)
-  const focusBalance = useRef(false)
-  const showBalance = !inSetup || Boolean(draft.showBalance || draft.balance)
-
-  useEffect(() => {
-    if (showBalance && focusBalance.current) {
-      focusBalance.current = false
-      balanceField.current?.focus()
-    }
-  }, [showBalance])
 
   function change(patch: Partial<AccountDraft>) {
     setError(undefined)
@@ -43,7 +41,7 @@ export function LedgerAccountForm({ draft, onChange, preferences, accounts, onSa
   }
 
   function chooseType(type: AccountType) {
-    change({ type, name: !editing && draft.name === defaultName[draft.type] ? defaultName[type] : draft.name })
+    change({ type, name: !editing && draft.name === accountDraftFor(draft.type).name ? accountDraftFor(type).name : draft.name })
   }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -86,12 +84,8 @@ export function LedgerAccountForm({ draft, onChange, preferences, accounts, onSa
 
   const errorText = error ? <p id={errorId} role="alert" className="text-sm text-destructive">{error.message}</p> : null
   return <form className="grid gap-4" onSubmit={save} noValidate>
-    {inSetup ? <div role="group" aria-label="Account type" className="grid grid-cols-3 gap-2">
-      {accountTypes.map(type => <Button key={type} type="button" variant={draft.type === type ? "secondary" : "outline"}
-        className={cn("h-11 px-2 shadow-none motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]",
-          draft.type === type ? "border border-primary text-primary" : "border-input bg-card dark:bg-card")}
-        aria-pressed={draft.type === type} disabled={busy} onClick={() => chooseType(type)}>{type}</Button>)}
-    </div> : <Choose label="Account type" value={draft.type} options={options} triggerClassName="text-base data-[size=default]:h-[46px] dark:bg-card" disabled={busy}
+    {inSetup ? <AccountTypeChoices selected={draft.type} disabled={busy} choose={chooseType} />
+      : <Choose label="Account type" value={draft.type} options={options} triggerClassName="text-base data-[size=default]:h-[46px] dark:bg-card" disabled={busy}
       onChange={value => {
         const type = accountTypes.find(item => item === value)
         if (type) chooseType(type)
@@ -102,17 +96,12 @@ export function LedgerAccountForm({ draft, onChange, preferences, accounts, onSa
         onChange={event => change({ name: event.target.value })} />
       {error?.field === "name" && errorText}
     </div>
-    {!showBalance && <Button type="button" variant="ghost" className="-ml-2 h-11 justify-self-start px-2 text-[13px] text-primary"
-      aria-expanded={false} aria-controls={balanceId} onClick={() => { focusBalance.current = true; change({ showBalance: true }) }}>
-      <Plus aria-hidden="true" />Add an opening balance
-    </Button>}
-    <div id={balanceId} hidden={!showBalance}>
-      {showBalance && <div className="grid gap-2">
-        <Field ref={balanceField} label="Opening balance (optional)" name="balance" className="h-[46px] bg-card dark:bg-card" value={draft.balance} inputMode="decimal" autoComplete="off"
-          placeholder={amountInput(0, preferences)} maxLength={64} disabled={busy} aria-invalid={error?.field === "balance" || undefined}
-          aria-describedby={error?.field === "balance" ? errorId : undefined} onChange={event => change({ balance: event.target.value })} />
-        {error?.field === "balance" && errorText}
-      </div>}
+    <div className="grid gap-2">
+      <Field label="Opening balance (optional)" name="balance" className="h-[46px] bg-card dark:bg-card" value={draft.balance} inputMode="decimal" autoComplete="off"
+        placeholder={amountInput(0, preferences)} maxLength={64} disabled={busy} aria-invalid={error?.field === "balance" || undefined}
+        aria-describedby={error?.field === "balance" ? errorId : inSetup ? balanceId : undefined}
+        onChange={event => change({ balance: event.target.value })} />
+      {error?.field === "balance" ? errorText : inSetup && <p id={balanceId} className="text-xs text-muted-foreground">Leave blank to start at zero.</p>}
     </div>
     {error && !error.field && errorText}
     <div className={cn("mt-1 flex flex-wrap gap-3", inSetup ? "justify-between" : "justify-end")}>

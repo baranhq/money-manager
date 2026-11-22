@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { Activity, Archive, ChartNoAxesColumnIncreasing, ChevronDown, Database, LayoutGrid, Menu as MenuIcon, Settings as SettingsIcon, ShieldCheck, UsersRound } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -61,12 +62,14 @@ export function Sidebar({ route, hrefPrefix = "", profiles, activeProfile, onSwi
   const inSettings = settingsRoutes.some(item => item === route)
   const items = [...navigation, { id: "settings", label: "Settings", icon: SettingsIcon }]
   return <aside className="fixed inset-y-0 left-0 z-20 hidden w-[72px] flex-col border-r bg-sidebar p-3 md:flex xl:w-[246px]">
-    <a href={`${hrefPrefix}#overview`} className="mx-3 mb-4 hidden border-b px-0 pt-4 pb-5 text-base font-semibold tracking-tight xl:block">Baran’s Money Manager</a>
+    <a href={`${hrefPrefix}#overview`} className="mx-3 mb-4 hidden border-b pt-4 pb-5 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring xl:block">
+      <BrandLogo />
+    </a>
     <div className="mb-4 xl:hidden">
       <Sheet open={expanded} onOpenChange={setExpanded}>
         <SheetTrigger asChild><Button variant="ghost" size="icon-lg" aria-label="Open navigation" className="size-11"><MenuIcon /></Button></SheetTrigger>
         <SheetContent side="left" overlayClassName="bg-black/30 backdrop-blur-sm" className="w-64 bg-sidebar">
-          <SheetHeader><SheetTitle>Baran’s Money Manager</SheetTitle><SheetDescription>Choose a section.</SheetDescription></SheetHeader>
+          <SheetHeader><SheetTitle><BrandLogo className="w-44" /></SheetTitle><SheetDescription>Choose a section.</SheetDescription></SheetHeader>
           <nav aria-label="Expanded navigation" className="grid gap-1 px-4">
             {items.map(({ id, label, icon: Icon }) => <Button key={id} variant={(id === route || (id === "settings" && inSettings)) ? "secondary" : "ghost"} className="justify-start" asChild>
               <a href={`${hrefPrefix}#${id}`} onClick={() => setExpanded(false)} aria-current={id === route ? "page" : undefined}><Icon /> {label}</a>

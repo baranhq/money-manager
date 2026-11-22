@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound, Wallet } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -42,12 +43,12 @@ const heading = {
 
 export type SettingsPage = keyof typeof heading | "settings"
 
-export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour }: {
+export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour, onAccountEditorChange }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
   addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
-  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void
+  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void; onAccountEditorChange: (active: boolean) => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")
   const [note, setNote] = useState<"about" | "storage">()
@@ -179,7 +180,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <ErrorText message={error} />
     </>}
     {route === "accounts" && <Profiles profiles={profiles} activeProfileId={activeProfileId} addProfile={addProfile} editProfile={updateProfile} switchProfile={switchProfile} />}
-    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} />}
+    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} onEditorChange={onAccountEditorChange} />}
     {route === "categories" && <Tabs value={kind} className="gap-4" onValueChange={value => setKind(value as Kind)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList aria-label="Category type">
@@ -232,6 +233,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}
       description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in this browser."} close={() => setNote(undefined)}>
+      {note === "about" && <BrandLogo />}
       <p className="text-sm">{note === "about" ? "Track income, expenses, budgets and savings in a local ledger on this device." :
         "The site password is a local screen lock. If optional storage encryption is off, anyone with browser access can read the records in storage. When it is on, the browser keeps encrypted records and needs the password to open them. Keep downloaded backups in a private location."}</p>
       <Button variant="outline" onClick={() => setNote(undefined)}>Close</Button>

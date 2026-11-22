@@ -1,15 +1,47 @@
 "use client"
 
-import { useId, useLayoutEffect, useRef, useState } from "react"
+import { createContext, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 
 export const tourStops = [
   { route: "overview", title: "Your dashboard", copy: "See what’s available to spend and where your money went." },
-  { route: "activity", title: "Log a transaction", copy: "Add what you spent or earned. It’ll show up in Activity." },
-  { route: "settings", title: "Keep accounts separate", copy: "Use a name like Cash or Bank so you know where money moved." },
-  { route: "budgets", title: "Give spending a limit", copy: "Pick a category and see how much you have left each month." },
-  { route: "savings", title: "Set something aside", copy: "Give a goal its own pot and watch it grow." },
+  { route: "settings", title: "Find your accounts", copy: "Open Accounts to see where you keep your money." },
+  { route: "ledger-accounts", title: "Add an account", copy: "Start with cash, a bank account, or anywhere else you keep money." },
+  { route: "activity", title: "Record a transaction", copy: "Use Add to record money coming in or going out." },
+  { route: "activity", title: "Money in or out?", copy: "Choose Expense for money spent or Income for money received.", opensPicker: true },
+  { route: "budgets", title: "Set a spending limit", copy: "Pick a category and see how much you have left this month." },
+  { route: "savings", title: "Save for something", copy: "Pick something to save for and add to it over time." },
 ] as const
+
+export const TourEditorContext = createContext<{ scope: "account" | "record"; panel: ReactNode } | null>(null)
+
+type TourControls = {
+  index: number
+  move: (index: number) => void
+  finish: (result: "completed" | "skipped") => void
+}
+
+function TourButtons({ index, move, finish, editing }: TourControls & { editing?: boolean }) {
+  const last = index === tourStops.length - 1
+  return <div className="mt-2 flex flex-wrap items-center gap-x-1 gap-y-1">
+    <Button type="button" variant="ghost" className="-ml-2 h-11 px-2 text-muted-foreground" onClick={() => finish("skipped")}>Skip tour</Button>
+    <Button type="button" variant="ghost" className="ml-auto h-11 px-2.5" disabled={index === 0 || editing} onClick={() => move(index - 1)}>Back</Button>
+    <Button type="button" className="h-11" disabled={editing} onClick={() => last ? finish("completed") : move(index + 1)}>{last ? "Done" : "Next"}</Button>
+  </div>
+}
+
+export function InlineTour({ title, copy, editing, ...controls }: TourControls & {
+  title?: string; copy?: string; editing?: boolean
+}) {
+  const stop = tourStops[controls.index]
+  return <aside aria-label="App tour" className={"rounded-lg border border-primary/25 bg-accent/40 px-3 pt-3 pb-1 sm:px-4 " + fade}>
+    <p className="text-xs font-medium tabular-nums text-muted-foreground">{controls.index + 1} of {tourStops.length}</p>
+    <h3 className="mt-1 text-sm font-semibold">{title ?? stop.title}</h3>
+    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{copy ?? stop.copy}</p>
+    {editing && <p className="mt-1 text-xs text-muted-foreground">Save or cancel to keep going.</p>}
+    <TourButtons {...controls} editing={editing} />
+  </aside>
+}
 
 const statusKey = "money-manager:app-tour"
 const fade = "motion-safe:full-motion:animate-in motion-safe:full-motion:fade-in motion-safe:full-motion:duration-150 motion-safe:full-motion:ease-out"
@@ -30,8 +62,8 @@ export function saveTourResult(result: "completed" | "skipped") {
 export function TourInvitation({ start, skip }: { start: () => void; skip: () => void }) {
   return <aside aria-label="App tour invitation"
     className={"fixed inset-x-4 bottom-[max(5.75rem,calc(env(safe-area-inset-bottom)+5rem))] z-50 rounded-xl border bg-card p-4 shadow-lg md:right-6 md:bottom-6 md:left-auto md:w-[21.5rem] " + fade}>
-    <h2 className="text-lg font-semibold tracking-tight">Want a quick look?</h2>
-    <p className="mt-1 text-sm text-muted-foreground">Five quick stops around Money Manager.</p>
+    <h2 className="text-lg font-semibold tracking-tight">Take a quick tour?</h2>
+    <p className="mt-1 text-sm text-muted-foreground">Try the main controls, one at a time.</p>
     <div className="mt-3 flex flex-wrap justify-between gap-2">
       <Button variant="ghost" className="h-11 px-2 text-muted-foreground" onClick={skip}>Skip tour</Button>
       <Button className="h-11" onClick={start}>Take the tour</Button>
@@ -83,11 +115,7 @@ function locate(target: DOMRect | undefined, width: number, height: number, view
   return { left, top: y(viewHeight - height - (mobile ? 92 : 24)), spot }
 }
 
-export function AppTour({ index, move, finish }: {
-  index: number
-  move: (index: number) => void
-  finish: (result: "completed" | "skipped") => void
-}) {
+export function AppTour({ index, move, finish }: TourControls) {
   const stop = tourStops[index]
   const [placement, setPlacement] = useState<Placement>()
   const popup = useRef<HTMLElement>(null)
@@ -155,7 +183,6 @@ export function AppTour({ index, move, finish }: {
     if (placement) title.current?.focus({ preventScroll: true })
   }, [Boolean(placement)])
 
-  const last = index === tourStops.length - 1
   return <>
     {placement?.spot && <div aria-hidden="true" data-tour-spotlight=""
       className={"pointer-events-none fixed z-[60] rounded-xl border-2 border-primary " + fade}
@@ -174,11 +201,7 @@ export function AppTour({ index, move, finish }: {
         <p className="text-xs font-medium tabular-nums text-muted-foreground">{index + 1} of {tourStops.length}</p>
         <h2 id={labelId} ref={title} tabIndex={-1} className="mt-1.5 text-lg font-semibold tracking-tight outline-none">{stop.title}</h2>
         <p id={descriptionId} className="mt-1 text-sm leading-relaxed text-muted-foreground">{stop.copy}</p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <Button variant="ghost" className="-ml-2 h-11 px-2 text-muted-foreground" onClick={() => finish("skipped")}>Skip tour</Button>
-          <Button variant="ghost" className="ml-auto h-11 px-2.5" disabled={index === 0} onClick={() => move(index - 1)}>Back</Button>
-          <Button className="h-11" onClick={() => last ? finish("completed") : move(index + 1)}>{last ? "Done" : "Next"}</Button>
-        </div>
+        <TourButtons index={index} move={move} finish={finish} />
       </div>
     </section>
   </>
