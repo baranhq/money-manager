@@ -79,12 +79,14 @@ export function parsePreferences(value: unknown): Preferences {
   }
   const currency = typeof row.currency === "string" && /^[A-Z]{3}$/.test(row.currency) ? row.currency : ""
   if (!currency) throw new Error("A currency code must contain three uppercase letters.")
-  try { new Intl.NumberFormat("en", { style: "currency", currency }) } catch { throw new Error("A currency code is invalid.") }
+  let standardDigits: number
+  try { standardDigits = currencyDigits(currency) } catch { throw new Error("A currency code is invalid.") }
   if (row.reducedMotion !== null && typeof row.reducedMotion !== "boolean") throw new Error("Invalid motion preference.")
   const locale = oldPreferences ? defaultPreferences.locale : canonicalLocale(typeof row.locale === "string" ? row.locale : "")
   if (!locale) throw new Error("The regional format locale is invalid.")
-  const digits = oldPreferences ? currencyDigits(currency) : row.currencyDigits
+  const digits = oldPreferences ? standardDigits : row.currencyDigits
   if (typeof digits !== "number" || !Number.isInteger(digits) || digits < 0 || digits > 4) throw new Error("The currency precision is invalid.")
+  if (digits !== standardDigits) throw new Error("The currency precision does not match the selected currency.")
   return {
     currency, currencyDigits: digits, locale,
     dateFormat: oldPreferences ? defaultPreferences.dateFormat : choice(row.dateFormat, ["regional", "dmy", "mdy", "ymd"] as const),
