@@ -95,9 +95,9 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       },
       {
         id: "decisions",
-        title: "Automated decisions",
+        title: "Children and automated decisions",
         paragraphs: [
-          "The app calculates totals and budget or savings progress from your local entries for your own use. The controller does not use those records or calculations to profile you or make decisions with legal or similarly significant effects.",
+          "Money Manager does not ask your age or verify parental consent. Bulgarian law requires consent from a parent or guardian when processing a child’s personal data under 14 is based on consent. The app calculates totals and budget or savings progress from your local entries for your own use; the controller does not use those records or calculations to profile you or make decisions with legal or similarly significant effects.",
         ],
       },
       {
@@ -199,9 +199,9 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       },
       {
         id: "decisions",
-        title: "Автоматизирани решения",
+        title: "Деца и автоматизирани решения",
         paragraphs: [
-          "Приложението изчислява общи суми и напредъка по бюджети или спестявания от локалните ви записи за ваша употреба. Администраторът не използва тези записи или изчисления за профилиране или за решения с правни или сходно значими последици за вас.",
+          "Money Manager не иска възрастта ви и не проверява родителско съгласие. Българският закон изисква съгласие от родител или настойник, когато обработването на лични данни на дете под 14 години се основава на съгласие. Приложението изчислява общи суми и напредъка по бюджети или спестявания от локалните ви записи за ваша употреба; администраторът не използва тези записи или изчисления за профилиране или за решения с правни или сходно значими последици за вас.",
         ],
       },
       {
@@ -303,9 +303,9 @@ const policy: Record<PrivacyLocale, PolicyCopy> = {
       },
       {
         id: "decisions",
-        title: "Otomatik kararlar",
+        title: "Çocuklar ve otomatik kararlar",
         paragraphs: [
-          "Uygulama, kendi kullanımınız için yerel kayıtlarınızdan toplamları ve bütçe ya da birikim ilerlemesini hesaplar. Veri sorumlusu bu kayıtları veya hesaplamaları sizi profillemek ya da hakkınızda hukuki veya benzer ölçüde önemli etkileri olan kararlar vermek için kullanmaz.",
+          "Money Manager yaşınızı sormaz veya ebeveyn onayını doğrulamaz. Çocuğun 14 yaşından küçük olduğu ve kişisel verilerinin işlenmesinin rızaya dayandığı durumlarda Bulgaristan hukuku ebeveyn veya vasinin rızasını gerektirir. Uygulama, kendi kullanımınız için yerel kayıtlarınızdan toplamları ve bütçe ya da birikim ilerlemesini hesaplar; veri sorumlusu bu kayıtları veya hesaplamaları sizi profillemek ya da hakkınızda hukuki veya benzer ölçüde önemli etkileri olan kararlar vermek için kullanmaz.",
         ],
       },
       {
