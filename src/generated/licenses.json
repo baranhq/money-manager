@@ -1,6 +1,6 @@
 {
-  "inputHash": "ab30e2a593c17415a7b152c1a5cc275bdc1bef2c3338c1998992e1bcc49836ac",
-  "bundleHash": "f6f67d65833a8e63e6c88a6a7c019c109145b1530a530ea72439834918b7f20f",
+  "inputHash": "9ee1cd85d7baacc2f6e01eb019f1a6467d9258f429fe07f0fc601566e783cb40",
+  "bundleHash": "c7f9ee8a804df6da9be5d368b4631489e77afc89a7b59f5ea89d2f4f81005fd0",
   "featured": [
     {
       "name": "shadcn/ui",
@@ -381,6 +381,20 @@
       "source": "https://www.npmjs.com/package/@next/swc-win32-x64-msvc/v/16.4.6",
       "licence": "MIT",
       "scope": "Platform optional"
+    },
+    {
+      "name": "@noble/ciphers",
+      "version": "2.4.0",
+      "source": "https://www.npmjs.com/package/@noble/ciphers/v/2.4.0",
+      "licence": "MIT",
+      "scope": "Application"
+    },
+    {
+      "name": "@noble/hashes",
+      "version": "2.4.0",
+      "source": "https://www.npmjs.com/package/@noble/hashes/v/2.4.0",
+      "licence": "MIT",
+      "scope": "Application"
     },
     {
       "name": "@playwright/test",

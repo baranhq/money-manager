@@ -1,5 +1,5 @@
-import { colours, contributionDelta, currencies, icons, isDate, MAX_AMOUNT } from "./finance.ts"
-import type { Budget, Category, Contribution, Data, Entry, Goal, Preferences } from "./finance.ts"
+import { accountNameKey, accountTypes, canonicalLocale, colours, contributionDelta, currencyDigits, defaultPreferences, hasLedgerAmounts, icons, isDate, maxLedgerAccounts, maximumAmount } from "./finance.ts"
+import type { Budget, Category, Contribution, Data, Entry, Goal, LedgerAccount, Preferences } from "./finance.ts"
 
 export const MAX_BYTES = 8 * 1024 * 1024
 export const MAX_RECORDS = 10_000
@@ -40,15 +40,15 @@ function choice<T extends string>(value: unknown, options: readonly T[]): T {
   return result
 }
 
-function amount(value: unknown) {
-  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1 || value > MAX_AMOUNT) {
+function amount(value: unknown, maximum: number) {
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 1 || value > maximum) {
     throw new Error("A monetary amount is outside the supported range.")
   }
   return value
 }
 
-function targetAmount(value: unknown) {
-  return value === null ? null : amount(value)
+function targetAmount(value: unknown, maximum: number) {
+  return value === null ? null : amount(value, maximum)
 }
 
 function contributionObject(value: unknown) {
@@ -68,14 +68,40 @@ function date(value: unknown, optional = false) {
 }
 
 export function parsePreferences(value: unknown): Preferences {
-  const row = object(value, ["currency", "theme", "reducedMotion"], "preferences")
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid preferences.")
+  const row = value as Record<string, unknown>
+  const legacy = ["currency", "theme", "reducedMotion"]
+  const current = [...legacy, "currencyDigits", "locale", "dateFormat", "numberFormat", "currencyDisplay"]
+  const fields = Object.keys(row)
+  const oldPreferences = fields.length === legacy.length && legacy.every(field => fields.includes(field))
+  if (!oldPreferences && (fields.length !== current.length || current.some(field => !fields.includes(field)))) {
+    throw new Error("Unexpected or missing fields in preferences.")
+  }
+  const currency = typeof row.currency === "string" && /^[A-Z]{3}$/.test(row.currency) ? row.currency : ""
+  if (!currency) throw new Error("A currency code must contain three uppercase letters.")
+  try { new Intl.NumberFormat("en", { style: "currency", currency }) } catch { throw new Error("A currency code is invalid.") }
   if (row.reducedMotion !== null && typeof row.reducedMotion !== "boolean") throw new Error("Invalid motion preference.")
-  return { currency: choice(row.currency, currencies), theme: choice(row.theme, ["light", "dark", "system"]), reducedMotion: row.reducedMotion }
+  const locale = oldPreferences ? defaultPreferences.locale : canonicalLocale(typeof row.locale === "string" ? row.locale : "")
+  if (!locale) throw new Error("The regional format locale is invalid.")
+  const digits = oldPreferences ? currencyDigits(currency) : row.currencyDigits
+  if (typeof digits !== "number" || !Number.isInteger(digits) || digits < 0 || digits > 4) throw new Error("The currency precision is invalid.")
+  return {
+    currency, currencyDigits: digits, locale,
+    dateFormat: oldPreferences ? defaultPreferences.dateFormat : choice(row.dateFormat, ["regional", "dmy", "mdy", "ymd"] as const),
+    numberFormat: oldPreferences ? defaultPreferences.numberFormat : choice(row.numberFormat, ["regional", "period", "comma", "space"] as const),
+    currencyDisplay: oldPreferences ? defaultPreferences.currencyDisplay : choice(row.currencyDisplay, ["symbol", "code"] as const),
+    theme: choice(row.theme, ["light", "dark", "system"]), reducedMotion: row.reducedMotion as boolean | null,
+  }
 }
 
 export function validateData(input: unknown): Data {
-  const data = object(input, [...collections, "preferences"], "local data")
-  let count = 0
+  const hasAccounts = input !== null && typeof input === "object" && Object.hasOwn(input, "accounts")
+  const fields = [...collections, "preferences"]
+  const data = object(input, hasAccounts ? [...fields, "accounts"] : fields, "local data")
+  const preferences = parsePreferences(data.preferences)
+  const maximum = maximumAmount(preferences.currencyDigits)
+  const accounts = hasAccounts ? validateAccounts(data.accounts, preferences) : []
+  let count = accounts.length
   function read<K extends keyof typeof keys, T extends { id: string }>(key: K, readRow: (row: Record<string, unknown>) => T) {
     const rows = data[key]
     if (!Array.isArray(rows) || (count += rows.length) > MAX_RECORDS) throw new Error(`A backup can contain up to ${MAX_RECORDS.toLocaleString("en")} records.`)
@@ -89,16 +115,16 @@ export function validateData(input: unknown): Data {
   }
   const kind = (value: unknown) => choice(value, ["expense", "income"] as const)
   const categories = read("categories", (v): Category => ({ id: id(v.id), name: string(v.name, 70), kind: kind(v.kind), colour: choice(v.colour, colours), icon: choice(v.icon, icons) }))
-  const entries = read("entries", (v): Entry => ({ id: id(v.id), kind: kind(v.kind), name: string(v.name, 120), amount: amount(v.amount), date: date(v.date), category: id(v.category), account: string(v.account, 70), notes: string(v.notes, 500, true) }))
-  const budgets = read("budgets", (v): Budget => ({ id: id(v.id), category: id(v.category), amount: amount(v.amount) }))
-  const goals = read("goals", (v): Goal => ({ id: id(v.id), name: string(v.name, 90), amount: targetAmount(v.amount), date: date(v.date, true), notes: string(v.notes, 500, true) }))
+  const entries = read("entries", (v): Entry => ({ id: id(v.id), kind: kind(v.kind), name: string(v.name, 120), amount: amount(v.amount, maximum), date: date(v.date), category: id(v.category), account: string(v.account, 70), notes: string(v.notes, 500, true) }))
+  const budgets = read("budgets", (v): Budget => ({ id: id(v.id), category: id(v.category), amount: amount(v.amount, maximum) }))
+  const goals = read("goals", (v): Goal => ({ id: id(v.id), name: string(v.name, 90), amount: targetAmount(v.amount, maximum), date: date(v.date, true), notes: string(v.notes, 500, true) }))
   const contributions = data.contributions
   if (!Array.isArray(contributions) || (count += contributions.length) > MAX_RECORDS) throw new Error(`A backup can contain up to ${MAX_RECORDS.toLocaleString("en")} records.`)
   const contributionIds = new Set<string>()
   const transfers = contributions.map(value => {
     const v = contributionObject(value)
     const row: Contribution = {
-      id: id(v.id), goal: id(v.goal), amount: amount(v.amount), direction: "direction" in v ? choice(v.direction, ["deposit", "withdrawal"] as const) : "deposit",
+      id: id(v.id), goal: id(v.goal), amount: amount(v.amount, maximum), direction: "direction" in v ? choice(v.direction, ["deposit", "withdrawal"] as const) : "deposit",
       date: date(v.date), notes: string(v.notes, 500, true),
     }
     if (contributionIds.has(row.id)) throw new Error("Duplicate record ID in contributions.")
@@ -127,11 +153,32 @@ export function validateData(input: unknown): Data {
       if (balance < 0) throw new Error("A withdrawal cannot exceed the savings pot balance on its date.")
     }
   }
-  return { entries, categories, budgets, goals, contributions: transfers, preferences: parsePreferences(data.preferences) }
+  return { entries, categories, budgets, goals, contributions: transfers, preferences, ...(accounts.length ? { accounts } : {}) }
+}
+
+export function validateAccounts(value: unknown, preferences: Preferences): LedgerAccount[] {
+  if (!Array.isArray(value) || value.length > maxLedgerAccounts) throw new Error(`A ledger can contain up to ${maxLedgerAccounts} accounts.`)
+  const maximum = maximumAmount(preferences.currencyDigits)
+  const ids = new Set<string>()
+  const names = new Set<string>()
+  return value.map(input => {
+    const row = object(input, ["id", "name", "type", "openingBalance"], "account")
+    const recordId = id(row.id)
+    const name = string(row.name, 70).trim()
+    const nameKey = accountNameKey(name)
+    const balance = row.openingBalance
+    if (/[\r\n\t]/u.test(name)) throw new Error("An account name must fit on one line.")
+    if (ids.has(recordId) || names.has(nameKey)) throw new Error("An account with this name already exists.")
+    if (typeof balance !== "number" || !Number.isSafeInteger(balance) || Math.abs(balance) > maximum) throw new Error("An opening balance is outside the supported range.")
+    ids.add(recordId)
+    names.add(nameKey)
+    return { id: recordId, name, type: choice(row.type, accountTypes), openingBalance: balance }
+  })
 }
 
 export function serialiseBackup(data: Data) {
-  const text = JSON.stringify({ app: "money-manager", version: 1, data: validateData(data) })
+  const validated = validateData(data)
+  const text = JSON.stringify({ app: "money-manager", version: validated.accounts ? 3 : 2, data: validated })
   if (new TextEncoder().encode(text).length > MAX_BYTES) throw new Error("This ledger is too large for an 8 MB backup. Remove some records or shorten long notes.")
   return text
 }
@@ -180,13 +227,13 @@ export function parseBackup(text: string) {
   let root: unknown
   try { root = JSON.parse(text) } catch { throw new Error("The backup could not be read as JSON.") }
   const file = object(root, ["app", "version", "data"], "backup file")
-  if (file.app !== "money-manager" || file.version !== 1) throw new Error("This Money Manager backup format is unsupported.")
+  if (file.app !== "money-manager" || (file.version !== 1 && file.version !== 2 && file.version !== 3)) throw new Error("This Money Manager backup format is unsupported.")
   return validateData(file.data)
 }
 
 export function combineBackup(current: Data, imported: Data): Data {
-  const hasAmounts = (data: Data) => data.entries.length + data.budgets.length + data.goals.length > 0
-  if (hasAmounts(current) && hasAmounts(imported) && current.preferences.currency !== imported.preferences.currency) {
+  if (hasLedgerAmounts(current) && hasLedgerAmounts(imported) &&
+    (current.preferences.currency !== imported.preferences.currency || current.preferences.currencyDigits !== imported.preferences.currencyDigits)) {
     throw new Error("The backup and local records use different currencies. Restore the backup instead, or use a file in the current currency.")
   }
   function merge<T extends { id: string }>(existing: T[], incoming: T[], label: string) {
@@ -198,12 +245,17 @@ export function combineBackup(current: Data, imported: Data): Data {
     }
     return Array.from(index.values())
   }
+  const hasCurrentAmounts = hasLedgerAmounts(current)
   return validateData({
     categories: merge(current.categories, imported.categories, "category"),
     entries: merge(current.entries, imported.entries, "transaction"),
     budgets: merge(current.budgets, imported.budgets, "budget"),
     goals: merge(current.goals, imported.goals, "goal"),
     contributions: merge(current.contributions, imported.contributions, "contribution"),
-    preferences: { ...current.preferences, currency: hasAmounts(current) ? current.preferences.currency : imported.preferences.currency },
+    accounts: merge(current.accounts ?? [], imported.accounts ?? [], "account"),
+    preferences: {
+      ...current.preferences,
+      ...(hasCurrentAmounts ? {} : { currency: imported.preferences.currency, currencyDigits: imported.preferences.currencyDigits }),
+    },
   })
 }

@@ -1,11 +1,13 @@
-export const currencies = ["EUR", "BGN", "USD", "GBP", "TRY", "CHF", "CAD", "AUD"] as const
 export const colours = ["green", "blue", "orange", "purple", "rose", "grey"] as const
 export const icons = ["wallet", "basket", "utensils", "bus", "home", "heart", "bolt", "briefcase"] as const
 export const profileColours = ["green", "blue", "orange", "purple", "rose", "teal", "amber", "slate"] as const
 export const profileIcons = ["user", "home", "company", "bank", "briefcase", "wallet", "shop", "group"] as const
 export const MAX_PROFILES = 50
-export type Currency = typeof currencies[number]
+export type Currency = string
 export type Theme = "light" | "dark" | "system"
+export type DateFormat = "regional" | "dmy" | "mdy" | "ymd"
+export type NumberFormat = "regional" | "period" | "comma" | "space"
+export type CurrencyDisplay = "symbol" | "code"
 export type Kind = "expense" | "income"
 export type ProfileColour = typeof profileColours[number]
 export type ProfileIcon = typeof profileIcons[number]
@@ -13,13 +15,27 @@ export type Profile = { id: string; name: string; colour: ProfileColour; icon: P
 export type NewProfile = Omit<Profile, "id">
 export type Category = { id: string; name: string; kind: Kind; colour: typeof colours[number]; icon: typeof icons[number] }
 export type Entry = { id: string; kind: Kind; name: string; amount: number; date: string; category: string; account: string; notes: string }
+export const accountTypes = ["Cash", "Bank", "Other"] as const
+export type AccountType = typeof accountTypes[number]
+export type LedgerAccount = { id: string; name: string; type: AccountType; openingBalance: number }
+export const maxLedgerAccounts = 100
 export type Budget = { id: string; category: string; amount: number }
 export type Goal = { id: string; name: string; amount: number | null; date: string; notes: string }
 export type ContributionDirection = "deposit" | "withdrawal"
 export type Contribution = { id: string; goal: string; amount: number; direction: ContributionDirection; date: string; notes: string }
-export type Preferences = { currency: Currency; theme: Theme; reducedMotion: boolean | null }
+export type Preferences = {
+  currency: Currency
+  currencyDigits: number
+  locale: string
+  dateFormat: DateFormat
+  numberFormat: NumberFormat
+  currencyDisplay: CurrencyDisplay
+  theme: Theme
+  reducedMotion: boolean | null
+}
 export type Data = {
   entries: Entry[]
+  accounts?: LedgerAccount[]
   categories: Category[]
   budgets: Budget[]
   goals: Goal[]
@@ -27,10 +43,43 @@ export type Data = {
   preferences: Preferences
 }
 
+export function hasLedgerAmounts(data: Data) {
+  return Boolean(data.entries.length || data.budgets.length || data.goals.length || data.contributions.length ||
+    data.accounts?.some(account => account.openingBalance !== 0))
+}
+
+export function accountNameKey(name: string) {
+  return name.trim().normalize("NFKC").toLowerCase()
+}
+
 export const defaultProfile: Profile = { id: "personal", name: "Personal", colour: "green", icon: "user" }
 
-export const MAX_AMOUNT = 99_999_999_999
-export const defaultPreferences: Preferences = { currency: "EUR", theme: "light", reducedMotion: null }
+const currencyValues = typeof Intl.supportedValuesOf === "function"
+  ? Intl.supportedValuesOf("currency")
+  : ["EUR", "BGN", "USD", "GBP", "TRY", "CHF", "CAD", "AUD"]
+export const currencies: readonly Currency[] = [...new Set([...currencyValues, "BGN", "CLF", "UYW"])].sort()
+
+export function currencyDigits(currency: Currency) {
+  return new Intl.NumberFormat("en", { style: "currency", currency }).resolvedOptions().maximumFractionDigits ?? 2
+}
+
+export function canonicalLocale(value: string) {
+  try {
+    const locales = Intl.getCanonicalLocales(value.trim())
+    return locales.length === 1 ? locales[0] : undefined
+  } catch { return undefined }
+}
+
+export const MAX_MAJOR_AMOUNT = 999_999_999
+export const MAX_AMOUNT = (MAX_MAJOR_AMOUNT + 1) * 100 - 1
+export const defaultPreferences: Preferences = {
+  currency: "EUR", currencyDigits: currencyDigits("EUR"), locale: "en-GB", dateFormat: "regional",
+  numberFormat: "regional", currencyDisplay: "symbol", theme: "light", reducedMotion: null,
+}
+
+export function maximumAmount(digits: number) {
+  return (MAX_MAJOR_AMOUNT + 1) * 10 ** digits - 1
+}
 
 export function initialData(): Data {
   return {
@@ -51,20 +100,105 @@ export function initialData(): Data {
   }
 }
 
-export function amountFromText(input: string) {
-  const match = /^(\d{1,9})(?:[.,](\d{1,2}))?$/.exec(input.trim())
-  if (!match) throw new Error("Enter an amount with up to two decimal places.")
-  const amount = Number(match[1]) * 100 + Number((match[2] ?? "").padEnd(2, "0"))
-  if (amount < 1 || amount > MAX_AMOUNT) throw new Error("Enter an amount greater than zero and below one billion.")
+function numberSeparators(locale: string, format: NumberFormat) {
+  const parts = new Intl.NumberFormat(locale, { useGrouping: true, minimumFractionDigits: 1, maximumFractionDigits: 1 })
+    .formatToParts(1_234_567.8)
+  const localeGroup = parts.find(part => part.type === "group")?.value ?? ","
+  const localeDecimal = parts.find(part => part.type === "decimal")?.value ?? "."
+  const grouping = new Intl.NumberFormat(locale, { useGrouping: true, maximumFractionDigits: 0 })
+    .formatToParts(1_234_567_890_123).filter(part => part.type === "integer").map(part => part.value.length).reverse()
+  const primaryGroupSize = grouping[0] ?? 3
+  const secondaryGroupSize = grouping[1] ?? primaryGroupSize
+  if (format === "period") return { group: ",", decimal: ".", primaryGroupSize: 3, secondaryGroupSize: 3 }
+  if (format === "comma") return { group: ".", decimal: ",", primaryGroupSize: 3, secondaryGroupSize: 3 }
+  if (format === "space") return { group: "\u202f", decimal: ",", primaryGroupSize: 3, secondaryGroupSize: 3 }
+  return { group: localeGroup, decimal: localeDecimal, primaryGroupSize, secondaryGroupSize }
+}
+
+function localizedDigits(value: string, locale: string) {
+  const formatter = new Intl.NumberFormat(locale, { useGrouping: false, maximumFractionDigits: 0 })
+  let result = value
+  for (let digit = 0; digit <= 9; digit++) {
+    const localDigit = formatter.formatToParts(digit).filter(part => part.type === "integer").map(part => part.value).join("")
+    if (localDigit !== String(digit)) result = result.replaceAll(localDigit, String(digit))
+  }
+  return result
+}
+
+function localizeNumberParts(parts: Intl.NumberFormatPart[], preferences: Preferences) {
+  const separators = numberSeparators(preferences.locale, preferences.numberFormat)
+  return parts.map(part => part.type === "group" ? separators.group : part.type === "decimal" ? separators.decimal : part.value).join("")
+}
+
+export function amountFromText(input: string, preferences: Preferences, decimalSeparator?: string, allowGrouping = true, allowZero = false) {
+  const separators = numberSeparators(preferences.locale, preferences.numberFormat)
+  const decimal = decimalSeparator ?? separators.decimal
+  let value = localizedDigits(input.trim(), preferences.locale)
+  const group = allowGrouping ? separators.group : ""
+  if (group && /[\s\u00a0\u202f]/u.test(group)) value = value.replace(/[ \u00a0\u202f]/gu, group)
+  const pieces = value.split(decimal)
+  const fraction = pieces.length === 2 ? pieces[1] : ""
+  if (pieces.length > 2 || (pieces.length === 2 && (!fraction || preferences.currencyDigits === 0))) {
+    throw new Error(preferences.currencyDigits === 0 ? "This currency does not use decimal places." : `Use ${decimal} as the decimal separator.`)
+  }
+  let whole = pieces[0]
+  if (group && whole.includes(group)) {
+    const groups = whole.split(group)
+    const reversed = groups.slice(1).reverse()
+    const validGrouping = groups.every(part => /^\d+$/.test(part)) &&
+      groups[0].length > 0 && groups[0].length <= separators.secondaryGroupSize &&
+      reversed.every((part, index) => part.length === (index === 0 ? separators.primaryGroupSize : separators.secondaryGroupSize))
+    if (!validGrouping) throw new Error("Check the thousands separators in this amount.")
+    whole = groups.join("")
+  }
+  if (!/^\d{1,9}$/.test(whole) || (pieces.length === 2 && !/^\d+$/.test(fraction)) || fraction.length > preferences.currencyDigits) {
+    throw new Error(preferences.currencyDigits === 0 ? "Enter a whole amount with no decimal places." : `Enter an amount with up to ${preferences.currencyDigits} decimal places.`)
+  }
+  const scale = 10 ** preferences.currencyDigits
+  const amount = Number(whole) * scale + Number(fraction.padEnd(preferences.currencyDigits, "0"))
+  if (amount < (allowZero ? 0 : 1) || amount > maximumAmount(preferences.currencyDigits)) throw new Error("Enter an amount greater than zero and below one billion.")
   return amount
 }
 
-export function exactAmount(amount: number) {
-  return `${Math.trunc(amount / 100)}.${String(amount % 100).padStart(2, "0")}`
+export function openingBalanceFromText(input: string, preferences: Preferences) {
+  const text = input.trim()
+  if (!text) return 0
+  const negative = /^[-−]/u.test(text)
+  const amount = amountFromText(negative ? text.slice(1) : text, preferences, undefined, true, true)
+  return negative && amount !== 0 ? -amount : amount
 }
 
-export function money(amount: number, currency: Currency) {
-  return new Intl.NumberFormat("en-IE", { style: "currency", currency }).format(amount / 100)
+export function exactAmount(amount: number, preferences: Preferences) {
+  const scale = 10 ** preferences.currencyDigits
+  const whole = Math.trunc(amount / scale)
+  const fraction = preferences.currencyDigits ? `.${String(amount % scale).padStart(preferences.currencyDigits, "0")}` : ""
+  return `${whole}${fraction}`
+}
+
+export function amountInput(amount: number, preferences: Preferences) {
+  const scale = 10 ** preferences.currencyDigits
+  const parts = new Intl.NumberFormat(preferences.locale, {
+    useGrouping: false, minimumFractionDigits: preferences.currencyDigits, maximumFractionDigits: preferences.currencyDigits,
+  }).formatToParts(amount / scale)
+  return localizeNumberParts(parts, preferences)
+}
+
+export function money(amount: number, preferences: Preferences) {
+  const scale = 10 ** preferences.currencyDigits
+  const parts = new Intl.NumberFormat(preferences.locale, {
+    style: "currency", currency: preferences.currency, currencyDisplay: preferences.currencyDisplay,
+    minimumFractionDigits: preferences.currencyDigits, maximumFractionDigits: preferences.currencyDigits,
+  }).formatToParts(amount / scale)
+  return localizeNumberParts(parts, preferences)
+}
+
+export function compactMoney(amount: number, preferences: Preferences) {
+  const scale = 10 ** preferences.currencyDigits
+  const parts = new Intl.NumberFormat(preferences.locale, {
+    style: "currency", currency: preferences.currency, currencyDisplay: preferences.currencyDisplay,
+    notation: "compact", minimumFractionDigits: 0, maximumFractionDigits: 1,
+  }).formatToParts(amount / scale)
+  return localizeNumberParts(parts, preferences)
 }
 
 export function today() {
@@ -83,12 +217,24 @@ export function shiftMonth(month: string, offset: number) {
   return new Date(Date.UTC(year, number - 1 + offset, 1)).toISOString().slice(0, 7)
 }
 
-export function dateLabel(date: string, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) {
-  return new Intl.DateTimeFormat("en-GB", { ...options, timeZone: "UTC" }).format(new Date(date))
+export function dateLabel(date: string, options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }, preferences: Preferences = defaultPreferences) {
+  if (preferences.dateFormat !== "regional" && options.day && options.month && options.year && !options.weekday) {
+    const [year, month, day] = date.split("-")
+    if (preferences.dateFormat === "dmy") return `${day}/${month}/${year}`
+    if (preferences.dateFormat === "mdy") return `${month}/${day}/${year}`
+    return `${year}-${month}-${day}`
+  }
+  return new Intl.DateTimeFormat(preferences.locale, { ...options, timeZone: "UTC" }).format(new Date(date))
 }
 
-export function monthName(month: string, short = false) {
-  return dateLabel(`${month}-01`, { month: short ? "short" : "long", year: "numeric" })
+export function monthName(month: string, short = false, preferences: Preferences = defaultPreferences) {
+  return dateLabel(`${month}-01`, { month: short ? "short" : "long", year: "numeric" }, preferences)
+}
+
+export function weekStart(locale: string) {
+  const region = new Intl.Locale(locale) as Intl.Locale & { getWeekInfo?: () => { firstDay: number } }
+  const firstDay = region.getWeekInfo?.().firstDay
+  return firstDay === undefined ? 0 : firstDay % 7
 }
 
 export function monthTotals(data: Data, month: string) {

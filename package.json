@@ -16,6 +16,8 @@
     "prebuild": "node scripts/licenses.mjs --sync"
   },
   "dependencies": {
+    "@noble/ciphers": "2.4.0",
+    "@noble/hashes": "2.4.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "geist": "1.9.2",
