@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, type ReactNode } from "react"
-import { ArrowDownRight, ArrowUpRight, ChevronRight, Info, Plus, Target } from "lucide-react"
+import { ArrowDownRight, ArrowUpRight, ChevronDown, ChevronRight, Info, Plus, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -43,7 +43,7 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
   const axis = [ceiling, Math.round(ceiling / 2), 0]
   const label = (period: string) => dateLabel(period + "-01", { month: "short" }, data.preferences)
   return <Card className="gap-0 p-3 shadow-none sm:p-5">
-    <SectionHeading title={savings ? "Monthly savings transfers" : "Cash flow"} note={savings ? "Money added to and taken out of pots" : undefined} action={
+    <SectionHeading title={savings ? "Money in and out" : "Cash flow"} action={
       <div className="flex items-center gap-1.5">
         <span className="text-right text-xs font-medium text-primary sm:text-sm">
           {savings ? `${money(rows[4].movement.net, data.preferences)} net` : `${money(rows[4].balance, data.preferences)} net`}
@@ -90,8 +90,8 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
   </Card>
 }
 
-function BudgetRows({ data, month, items, open, edit, remove }: Report & {
-  items: Budget[]; open: (row: Budget) => void; edit?: (row: Budget) => void; remove?: (row: Budget) => void
+function BudgetRows({ data, month, items, open }: Report & {
+  items: Budget[]; open: (row: Budget) => void
 }) {
   const totals = spending(data, month)
   return <div className="divide-y border-y">
@@ -107,10 +107,6 @@ function BudgetRows({ data, month, items, open, edit, remove }: Report & {
           <span className="text-primary"><Meter amount={used} target={row.amount} label={`${category?.name} budget used`} /></span>
           <span className="text-right font-medium tabular-nums">{money(used, data.preferences)} / {money(row.amount, data.preferences)}<span className="block text-xs font-normal text-muted-foreground">{percent(used, row.amount)}% used</span></span>
         </button>
-        {edit && remove && <Menu label={`Actions for ${category?.name} budget`} actions={[
-          { label: "View budget", run: () => open(row) }, { label: "Edit budget", run: () => edit(row) },
-          { label: "Remove budget", run: () => remove(row), destructive: true },
-        ]} />}
       </div>
     })}
   </div>
@@ -146,7 +142,7 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
 
   return <div className="grid gap-5 sm:gap-6 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
     <div className="grid gap-4 md:col-span-2 md:grid-cols-[minmax(0,2fr)_minmax(0,3.2fr)] md:items-center md:gap-5">
-      <Card className="gap-2.5 rounded-[14px] border-0 bg-balance px-4 py-3 text-balance-foreground shadow-md sm:gap-3 sm:p-5">
+      <Card data-tour-target="overview" className="gap-2.5 rounded-[14px] border-0 bg-balance px-4 py-3 text-balance-foreground shadow-md sm:gap-3 sm:p-5">
         <div>
           <h2 className="text-sm font-medium">Available to spend</h2>
           <p className="mt-1 break-words text-[clamp(2rem,10vw,2.45rem)] leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[clamp(2.4rem,3.55vw,3.2rem)]">{money(current.balance, data.preferences)}</p>
@@ -185,11 +181,49 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
   </div>
 }
 
+function PlanEmpty({ title, children, action, label, tourTarget }: {
+  title: string; children: ReactNode; action: () => void; label: string; tourTarget: "budgets" | "savings"
+}) {
+  return <section className="rounded-xl bg-accent/65 p-5 sm:p-8">
+    <h2 className="text-[1.625rem] leading-tight font-semibold tracking-tight sm:text-[2rem]">{title}</h2>
+    <p className="mt-3 max-w-[56ch] text-[15px] leading-relaxed text-muted-foreground">{children}</p>
+    <Button data-tour-target={tourTarget} className="mt-5 h-11 motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]" onClick={action}>{label}</Button>
+  </section>
+}
+
+function PlanMeter({ amount, target, label, detail, over = false }: {
+  amount: number; target: number; label: string; detail: string; over?: boolean
+}) {
+  const fraction = Math.min(1, Math.max(0, amount / target))
+  return <div role="progressbar" aria-label={label} aria-valuenow={Math.round(fraction * 100)} aria-valuetext={detail}
+    className="h-1.5 overflow-hidden rounded-full bg-muted">
+    <span className={cn("block h-full origin-left rounded-full motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-200 motion-safe:full-motion:ease-out",
+      over ? "bg-destructive" : "bg-primary")}
+      style={{ transform: "scaleX(" + fraction + ")" }} />
+  </div>
+}
+
+function PlanDetails({ title, children }: { title: string; children: ReactNode }) {
+  return <details className="group border-t">
+    <summary className="flex min-h-11 list-none items-center justify-between gap-3 rounded-sm py-3 text-sm font-medium hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+      {title}
+      <ChevronDown aria-hidden="true" size={17} className="shrink-0 text-muted-foreground motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-150 group-open:rotate-180" />
+    </summary>
+    <div className="pt-2 pb-4">{children}</div>
+  </details>
+}
+
 export function Budgets({ data, month, edit, open, remove }: Report & {
   edit: EditBudget; open: (row: Budget) => void; remove: (row: Budget) => void
 }) {
   const [all, setAll] = useState(false)
+  if (!data.budgets.length) return <PlanEmpty title="Start with one category" action={() => edit()} label="New budget" tourTarget="budgets">
+    Pick a category you spend on often, like groceries. Set a monthly limit you can work with.
+  </PlanEmpty>
+
+  const { preferences } = data
   const totals = spending(data, month)
+  const categories = new Map(data.categories.map(category => [category.id, category.name]))
   const planned = data.budgets.reduce((sum, row) => sum + row.amount, 0)
   const used = data.budgets.reduce((sum, row) => sum + (totals.get(row.category) ?? 0), 0)
   const breakdown = [...totals.entries()].sort((a, b) => b[1] - a[1])
@@ -198,81 +232,136 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
   const elapsed = month < now.slice(0, 7) ? 100 : month > now.slice(0, 7) ? 0 :
     percent(Number(now.slice(-2)), new Date(Date.parse(shiftMonth(month, 1) + "-01") - 86400000).getUTCDate())
   const items = all ? data.budgets : data.budgets.slice(0, 4)
-  return <div className="grid gap-5 md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <Card className="gap-2 bg-balance p-5 text-balance-foreground md:col-span-1">
-      <h2 className="text-sm font-medium">{used > planned ? "Over budget this month" : "Remaining this month"}</h2>
-      <p className="break-words text-4xl font-semibold tracking-tight tabular-nums">{money(Math.abs(planned - used), data.preferences)}</p>
-      <p className="text-sm">{money(used, data.preferences)} spent · {money(planned, data.preferences)} planned</p>
-    </Card>
-    <Card className="justify-center gap-3 p-5 shadow-none">
-      <h2 className="font-semibold">Spending pace</h2>
-      <p className="text-sm text-muted-foreground">{percent(used, planned)}% of plan used · {elapsed}% of month elapsed</p>
-      <div className="text-primary"><Meter amount={used} target={planned} label="Budget plan used" /></div>
-    </Card>
-    <section>
-      <SectionHeading title="Category budgets" note="Spent against monthly limits" action={data.budgets.length > 4 && <Button size="sm" variant="ghost" onClick={() => setAll(!all)}>{all ? "Show fewer" : "View all"}</Button>} />
-      {items.length ? <><BudgetRows data={data} month={month} items={items} open={open} edit={edit} remove={remove} />
-        <Button variant="outline" className="mt-4" onClick={() => edit()}><Plus /> New budget</Button></> :
-        <Empty title="No category budgets" action={<Button variant="outline" onClick={() => edit()}><Plus /> New budget</Button>}>Choose an expense category to set your first limit.</Empty>}
+
+  return <div className="space-y-6 sm:space-y-8">
+    <section aria-label="Budget summary" className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-6">
+      <div>
+        <p className="text-sm font-medium text-muted-foreground">{used > planned ? "Over budget" : "Left in budget"}</p>
+        <p className={cn("mt-1 [overflow-wrap:anywhere] text-[2.375rem] leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[2.875rem]",
+          used > planned ? "text-destructive" : "text-primary")}>{money(Math.abs(planned - used), preferences)}</p>
+        <p className="mt-2 text-sm text-muted-foreground">{money(used, preferences)} spent of {money(planned, preferences)} planned</p>
+      </div>
+      <div className="space-y-1 text-sm sm:text-right">
+        <p className="font-semibold tabular-nums">{percent(used, planned)}% of plan used</p>
+        <p className="text-[13px] text-muted-foreground">{elapsed}% of the month has passed</p>
+      </div>
     </section>
-    <div className="grid content-start gap-4">
-      <Card className="gap-3 p-5 shadow-none"><SectionHeading title="Spending by category" note={`${money(spent, data.preferences)} across ${breakdown.length} categories`} />
-        {breakdown.length ? <ul className="space-y-3">{breakdown.map(([id, amount]) => <li key={id} className="space-y-1">
-          <p className="flex justify-between gap-2 text-sm"><span>{data.categories.find(row => row.id === id)?.name}</span><span className="shrink-0 tabular-nums">{percent(amount, spent)}% · {money(amount, data.preferences)}</span></p>
-          <div className="text-primary"><Meter amount={amount} target={spent} label="Share of monthly spending" /></div>
-        </li>)}</ul> : <p className="text-sm text-muted-foreground">No expenses this month.</p>}
-      </Card>
-      <Card className="gap-2 bg-accent/65 p-5 shadow-none">
-        <SectionHeading title="Savings pots" action={<ViewLink href="#savings">View savings</ViewLink>} />
-        <p className="text-sm text-muted-foreground">{data.goals.length} {data.goals.length === 1 ? "pot" : "pots"}</p>
-      </Card>
-    </div>
+
+    <section aria-labelledby="category-budgets">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h2 id="category-budgets" className="text-xl font-semibold tracking-tight sm:text-[1.3125rem]">Category budgets</h2>
+        {data.budgets.length > 4 && <Button variant="ghost" className="h-11 text-primary" onClick={() => setAll(!all)}>
+          {all ? "Show fewer" : "Show all " + data.budgets.length}
+        </Button>}
+      </div>
+      <ul className="divide-y border-t">
+        {items.map(row => {
+          const amount = totals.get(row.category) ?? 0
+          const name = categories.get(row.category) ?? "Expense category"
+          const over = amount > row.amount
+          const usedText = money(amount, preferences) + " spent of " + money(row.amount, preferences)
+          const remaining = money(Math.abs(row.amount - amount), preferences) + (over ? " over" : " left")
+          return <li key={row.id} className="pb-4 sm:pb-5">
+            <div className="flex items-start gap-2">
+              <h3 className="min-w-0 flex-1">
+                <button type="button" className="flex min-h-11 w-full items-center rounded-sm py-2 text-left [overflow-wrap:anywhere] font-semibold underline-offset-4 hover:underline"
+                  onClick={() => open(row)}>{name}</button>
+              </h3>
+              <Menu label={"Actions for " + name + " budget"} actions={[
+                { label: "Edit budget", run: () => edit(row) },
+                { label: "Remove budget", run: () => remove(row), destructive: true },
+              ]} />
+            </div>
+            <div className="mb-3 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[13px] tabular-nums">
+              <p className="min-w-0 [overflow-wrap:anywhere] text-muted-foreground">{usedText}</p>
+              <p className={cn("min-w-0 [overflow-wrap:anywhere] font-medium", over ? "text-destructive" : "text-primary")}>{remaining}</p>
+            </div>
+            <PlanMeter amount={amount} target={row.amount} label={name + " budget used"} detail={usedText + ", " + remaining} over={over} />
+          </li>
+        })}
+      </ul>
+    </section>
+
+    {breakdown.length > 0 && <PlanDetails title="Spending by category">
+      <p className="mb-4 text-sm text-muted-foreground">{money(spent, preferences)} across {breakdown.length} {breakdown.length === 1 ? "category" : "categories"}</p>
+      <ul className="grid max-w-xl gap-4">
+        {breakdown.map(([id, amount]) => {
+          const name = categories.get(id) ?? "Expense category"
+          const share = percent(amount, spent) + "% of spending"
+          return <li key={id} className="min-w-0 space-y-2">
+            <p className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-sm [overflow-wrap:anywhere]">
+              <span>{name}</span><span className="tabular-nums text-muted-foreground">{money(amount, preferences)} ({percent(amount, spent)}%)</span>
+            </p>
+            <PlanMeter amount={amount} target={spent} label={name + " share of monthly spending"} detail={share} />
+          </li>
+        })}
+      </ul>
+    </PlanDetails>}
   </div>
 }
 
 export function Savings({ data, month, open, edit, contribute, remove }: Report & {
-  open: (goal: Goal) => void; edit: EditGoal; contribute: (goal?: Goal, direction?: "deposit" | "withdrawal") => void; remove: (goal: Goal) => void
+  open: (goal: Goal) => void; edit: EditGoal; contribute: (goal: Goal, direction: "deposit" | "withdrawal") => void; remove: (goal: Goal) => void
 }) {
-  const balances = new Map(data.goals.map(goal => [goal.id, goalSaved(data, goal.id, month)]))
-  const total = [...balances.values()].reduce((sum, balance) => sum + balance, 0)
-  const targeted = data.goals.filter(goal => goal.amount !== null)
-  const target = targeted.reduce((sum, goal) => sum + (goal.amount ?? 0), 0)
-  const targetedBalance = targeted.reduce((sum, goal) => sum + (balances.get(goal.id) ?? 0), 0)
-  return <div className="grid gap-5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-    <Card className="gap-2 bg-balance p-5 text-balance-foreground">
-      <h2 className="text-sm font-medium">Total in savings pots</h2>
-      <p className="break-words text-4xl font-semibold tracking-tight tabular-nums">{money(total, data.preferences)}</p>
-      <p className="text-sm">Across {data.goals.length} {data.goals.length === 1 ? "pot" : "pots"} as of {monthName(month, false, data.preferences)}</p>
-    </Card>
-    <Card className="justify-center gap-3 p-5 shadow-none">
-      <h2 className="font-semibold">Target progress</h2>
-      {target > 0 ? <>
-        <p className="text-sm text-muted-foreground">{money(targetedBalance, data.preferences)} of {money(target, data.preferences)} across {targeted.length} targeted {targeted.length === 1 ? "pot" : "pots"}</p>
-        <div className="text-primary"><Meter amount={targetedBalance} target={target} label="Savings pot targets funded" /></div>
-      </> : <p className="text-sm text-muted-foreground">No targets set. You can add one when you edit a pot.</p>}
-    </Card>
-    <section className="order-2 md:order-none">
-      <SectionHeading title="Savings pots" note="Adding money reduces Available to spend; taking it out adds it back."
-        action={<Button variant="outline" size="sm" onClick={() => edit()}><Plus /> New pot</Button>} />
-      {data.goals.length ? <div className="grid gap-3">{data.goals.map(goal => {
-        const balance = balances.get(goal.id) ?? 0
-        return <Card key={goal.id} className="gap-2 p-4 shadow-none">
-          <div className="flex items-center justify-between gap-2">
-            <button type="button" className="min-h-9 min-w-0 text-left font-semibold hover:underline" onClick={() => open(goal)}>{goal.name}</button>
-            <Menu label={`Actions for ${goal.name}`} actions={[
-              { label: "View pot", run: () => open(goal) }, { label: "Add money", run: () => contribute(goal, "deposit") },
-              ...(balance > 0 ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
-              { label: "Edit pot", run: () => edit(goal) }, { label: "Delete pot", run: () => remove(goal), destructive: true },
-            ]} />
-          </div>
-          <p className="text-sm text-muted-foreground">{money(balance, data.preferences)} current balance{goal.amount !== null ? ` · ${percent(balance, goal.amount)}% of ${money(goal.amount, data.preferences)} target` : ""}</p>
-          {goal.amount !== null && <div className="text-primary"><Meter amount={balance} target={goal.amount} label={`Target progress for ${goal.name}`} /></div>}
-          <p className="text-xs text-muted-foreground">{goal.date ? `Target ${dateLabel(goal.date, undefined, data.preferences)}` : goal.amount !== null ? "No target date" : "No target set"}</p>
-        </Card>
-      })}</div> : <Empty title="No savings pots yet">Create a pot to separate money you want to keep aside.</Empty>}
-      {data.goals.length > 0 && <Button variant="outline" className="mt-4" onClick={() => contribute()}><Plus /> Add money</Button>}
+  if (!data.goals.length) return <PlanEmpty title="What are you saving for?" action={() => edit()} label="New savings pot" tourTarget="savings">
+    A weekend away, a rainy day, or something just for you. Give it a pot.
+  </PlanEmpty>
+
+  const { preferences } = data
+  const balances = data.goals.map(goal => ({ goal, balance: goalSaved(data, goal.id, month) }))
+  const total = balances.reduce((sum, { balance }) => sum + balance, 0)
+  const historyStart = shiftMonth(month, -4)
+  const hasHistory = data.contributions.some(row => {
+    const period = row.date.slice(0, 7)
+    return period >= historyStart && period <= month
+  })
+
+  return <div className="space-y-7 sm:space-y-9">
+    {total > 0 && <section aria-label="Savings summary">
+      <p className="text-sm font-medium text-muted-foreground">Total in savings pots</p>
+      <p className="mt-1 [overflow-wrap:anywhere] text-[2.375rem] leading-none font-semibold tracking-[-0.04em] text-primary tabular-nums sm:text-[2.875rem]">{money(total, preferences)}</p>
+      <p className="mt-2 text-sm text-muted-foreground">Across {balances.length} {balances.length === 1 ? "pot" : "pots"}</p>
+    </section>}
+
+    <section aria-labelledby="your-pots">
+      <h2 id="your-pots" className="mb-3 text-xl font-semibold tracking-tight sm:text-[1.3125rem]">Your pots</h2>
+      <ul className="grid gap-x-7 gap-y-4 lg:grid-cols-2 lg:gap-y-6">
+        {balances.map(({ goal, balance }) => {
+          const saved = money(balance, preferences)
+          const target = goal.amount
+          const targetText = target === null ? undefined : "of " + money(target, preferences)
+          const progressText = target === null ? undefined : balance >= target ? "Target reached" : money(target - balance, preferences) + " to go"
+          return <li key={goal.id} className="flex min-w-0 flex-col border-t">
+            <div className="flex items-start gap-2">
+              <h3 className="min-w-0 flex-1">
+                <button type="button" onClick={() => open(goal)}
+                  className="flex min-h-11 w-full items-center rounded-sm py-2 text-left [overflow-wrap:anywhere] text-lg font-semibold underline-offset-4 hover:underline">{goal.name}</button>
+              </h3>
+              <Menu label={"Actions for " + goal.name} actions={[
+                ...(balance > 0 ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
+                { label: "Edit pot", run: () => edit(goal) },
+                { label: "Delete pot", run: () => remove(goal), destructive: true },
+              ]} />
+            </div>
+            <p className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 [overflow-wrap:anywhere] tabular-nums">
+              <span className="text-2xl leading-tight font-semibold tracking-tight">{saved}</span>
+              {targetText && <span className="text-[13px] text-muted-foreground">{targetText}</span>}
+            </p>
+            {target !== null && <div className="mt-3">
+              <PlanMeter amount={balance} target={target} label={"Target progress for " + goal.name} detail={saved + " " + targetText + ", " + progressText} />
+            </div>}
+            <div className="mt-auto flex min-h-11 flex-wrap items-center justify-between gap-x-2 pt-1">
+              {progressText && <p className="text-[13px] font-medium text-primary">{progressText}</p>}
+              <Button variant="ghost" className="-mr-2 ml-auto h-11 px-2 text-primary motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-100 motion-safe:full-motion:active:scale-[.97]"
+                aria-label={"Add money to " + goal.name} onClick={() => contribute(goal, "deposit")}>Add money</Button>
+            </div>
+            {goal.date && <p className="pb-2 text-xs text-muted-foreground">Target {dateLabel(goal.date, undefined, preferences)}</p>}
+          </li>
+        })}
+      </ul>
     </section>
-    <div className="order-1 md:order-none"><Chart data={data} month={month} savings /></div>
+
+    {hasHistory && <PlanDetails title="Monthly savings transfers"><Chart data={data} month={month} savings /></PlanDetails>}
   </div>
 }
 

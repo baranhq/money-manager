@@ -13,7 +13,7 @@ test("setup persists a draft, commits once across tabs, and leaves existing fina
     const fresh = await readWorkspace()
     assert.deepEqual(fresh.onboarding, initialOnboarding())
     const editor = { type: "Bank", name: "Everyday", balance: "-20.50" }
-    const legacyDraft = { ...fresh.onboarding, step: "accounts", editor }
+    const legacyDraft = { ...fresh.onboarding, step: "accounts", showPreferences: true, editor }
     const draft = { ...fresh.onboarding, editor: { ...editor, showBalance: true } }
     assert.deepEqual(parseOnboarding(legacyDraft), draft)
     assert.equal(await saveOnboarding(draft), true)
@@ -34,6 +34,13 @@ test("setup persists a draft, commits once across tabs, and leaves existing fina
     assert.deepEqual(parseBackup(serialiseBackup(complete.data)), complete.data)
     assert.equal(combineBackup(complete.data, complete.data).accounts.length, 1)
     assert.equal(monthTotals(complete.data, "2026-11").income, 0)
+
+    globalThis.indexedDB = new IDBFactory()
+    const skipped = await finishOnboarding({ ...saved, preferences: { ...saved.preferences, currency: "USD" } }, true)
+    assert.equal(skipped.applied, true)
+    assert.deepEqual(skipped.workspace.data, { ...initialData(), preferences: initialOnboarding().preferences })
+    assert.equal((await readWorkspace()).onboarding, undefined)
+    assert.equal(await saveOnboarding(draft), false)
 
     globalThis.indexedDB = new IDBFactory()
     const ledger = initialData()

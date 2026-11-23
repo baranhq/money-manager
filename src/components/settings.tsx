@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { ArrowLeft, ChevronRight, CircleHelp, Database, Download, FileUp, FolderOpen, Info, Laptop, LockKeyhole, Moon, Plus, Scale, ShieldCheck, Sun, Tags, Trash2, UsersRound, Wallet } from "lucide-react"
+import { BrandLogo } from "@/components/brand-logo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
@@ -9,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { CategoryIcon, Choose, Empty, ErrorText, Field, Menu, Modal, type Commit } from "@/components/shared"
 import { canonicalLocale, currencies, currencyDigits, dateLabel, hasLedgerAmounts, money, type Category, type Currency, type Data, type Kind, type NewProfile, type Profile, type Theme } from "@/lib/finance"
+import { privacyLinks } from "@/lib/privacy-links"
 import { localeOptions, localePresets } from "@/lib/regional-options"
 import type { DataTool } from "@/components/data-tools"
 import { Profiles } from "@/components/profiles"
@@ -24,7 +26,7 @@ function Rows({ rows }: { rows: Row[] }) {
       const content = <><span className={`grid size-9 shrink-0 place-items-center rounded-md ${danger ? "bg-destructive/10 text-destructive" : "bg-accent text-primary"}`}><Icon size={17} aria-hidden="true" /></span>
         <span className="min-w-0 flex-1"><span className={`block text-sm font-medium ${danger ? "text-destructive" : ""}`}>{title}</span>
           <span className="block text-sm text-muted-foreground">{description}</span></span><ChevronRight className="text-muted-foreground" size={16} aria-hidden="true" /></>
-      return href ? <a key={title} href={href} className={classes}>{content}</a> :
+      return href ? <a key={title} href={href} data-tour-target={href === "#ledger-accounts" ? "settings" : undefined} className={classes}>{content}</a> :
         <button key={title} type="button" onClick={run} className={classes}>{content}</button>
     })}
   </Card>
@@ -42,12 +44,12 @@ const heading = {
 
 export type SettingsPage = keyof typeof heading | "settings"
 
-export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite }: {
+export function Settings({ route, data, commit, editCategory, removeCategory, openData, profiles, activeProfileId, addProfile, updateProfile, switchProfile, securityStatus, onSecurityChanged, lockSite, replayTour, onAccountEditorChange }: {
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
   addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
-  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void
+  securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void; onAccountEditorChange: (active: boolean) => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")
   const [note, setNote] = useState<"about" | "storage">()
@@ -125,6 +127,8 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
             <p className="text-sm font-medium">{preference.currency} · {names.of(preference.currency) ?? preference.currency}</p>
             <p className="text-xs text-muted-foreground">Currency is fixed once amounts are recorded. Back up and clear the ledger to start again in another currency; this setting does not convert amounts.</p>
           </div> : <Choose label="Ledger currency" value={preference.currency} options={currencyOptions}
+            triggerClassName="max-w-[22rem]"
+            contentProps={{ position: "popper", align: "start", collisionPadding: 12, className: "w-[min(22rem,calc(100vi_-_1.5rem))] max-h-[min(18rem,var(--radix-select-content-available-height))]" }}
             onChange={currency => { if (!saving) void save({ currency: currency as Currency, currencyDigits: currencyDigits(currency) }) }} />}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="grid min-w-0 gap-2">
@@ -171,12 +175,13 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
           { title: "Security", description: "Set a site password and optionally encrypt this browser’s data.", icon: LockKeyhole, href: "#security" },
           { title: "Privacy & storage", description: "See what is stored on this device.", icon: ShieldCheck, href: "#storage" },
           { title: "About & legal", description: "App information, privacy and licences.", icon: Info, href: "#about" },
+          { title: "Replay app tour", description: "Take a quick look around Money Manager.", icon: CircleHelp, run: replayTour },
         ]} />
       </section>
       <ErrorText message={error} />
     </>}
     {route === "accounts" && <Profiles profiles={profiles} activeProfileId={activeProfileId} addProfile={addProfile} editProfile={updateProfile} switchProfile={switchProfile} />}
-    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} />}
+    {route === "ledger-accounts" && <LedgerAccounts data={data} commit={commit} onEditorChange={onAccountEditorChange} />}
     {route === "categories" && <Tabs value={kind} className="gap-4" onValueChange={value => setKind(value as Kind)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <TabsList aria-label="Category type">
@@ -219,16 +224,17 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
       <Rows rows={[
         { title: "Browser storage details", description: "See what is kept in this browser.", icon: Database, run: () => setNote("storage") },
         { title: "Data & backup", description: "Back up, import, export or clear records.", icon: Download, href: "#data" },
-        { title: "Privacy Policy", description: "Read the privacy notice.", icon: ShieldCheck, href: "/privacy" },
+        { title: "Privacy Policy", description: "Read the privacy notice.", icon: ShieldCheck, href: privacyLinks.en },
       ]} />
     </>}
     {route === "about" && <Rows rows={[
       { title: "About", description: "What the app does and release information.", icon: CircleHelp, run: () => setNote("about") },
-      { title: "Privacy Policy", description: "How your information is handled.", icon: ShieldCheck, href: "/privacy" },
+      { title: "Privacy Policy", description: "How your information is handled.", icon: ShieldCheck, href: privacyLinks.en },
       { title: "Licenses", description: "Third-party licences and notices.", icon: Scale, href: "/licenses" },
     ]} />}
     {note && <Modal title={note === "about" ? "About Money Manager" : "Browser storage details"}
       description={note === "about" ? "Version 0.1.0" : "Profile names, avatar choices, transactions, categories, budgets, savings pots, money transfers and preferences are stored in this browser."} close={() => setNote(undefined)}>
+      {note === "about" && <BrandLogo />}
       <p className="text-sm">{note === "about" ? "Track income, expenses, budgets and savings in a local ledger on this device." :
         "The site password is a local screen lock. If optional storage encryption is off, anyone with browser access can read the records in storage. When it is on, the browser keeps encrypted records and needs the password to open them. Keep downloaded backups in a private location."}</p>
       <Button variant="outline" onClick={() => setNote(undefined)}>Close</Button>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, type FormEvent, type ReactNode } from "react"
+import { useContext, useState, type FormEvent, type ReactNode } from "react"
+import { TourEditorContext } from "@/components/app-tour"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DateField } from "@/components/date-field"
@@ -17,6 +18,7 @@ function RecordForm({ title, description = local, close, children, save, label }
   save: (values: (name: string) => string) => Promise<unknown>; label: string
 }) {
   const operation = useOperation(close)
+  const coach = useContext(TourEditorContext)
   const [dirty, setDirty] = useState(false)
   const [discard, setDiscard] = useState(false)
   function requestClose() {
@@ -30,6 +32,7 @@ function RecordForm({ title, description = local, close, children, save, label }
   }
   return <Modal title={title} description={description} close={close} busy={operation.busy}
     beforeClose={() => { if (discard) { setDiscard(false); return false } return requestClose() }}>
+    {!discard && coach?.scope === "record" && coach.panel}
     <form className={discard ? "hidden" : "grid gap-4"} onSubmit={submit} onChange={() => setDirty(true)}
       onClick={event => { if ((event.target as HTMLElement).closest('[role="combobox"], [role="tab"]')) setDirty(true) }}>
       {children}

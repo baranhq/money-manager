@@ -4,17 +4,20 @@ import { accountTypes, defaultPreferences, type AccountType, type LedgerAccount,
 export type AccountDraft = { type: AccountType; name: string; balance: string; showBalance?: boolean }
 export type OnboardingDraft = {
   preferences: Preferences
-  showPreferences: boolean
   accounts: LedgerAccount[]
   editor: AccountDraft | null
 }
 
-export const newAccountDraft: AccountDraft = { type: "Cash", name: "Cash", balance: "" }
+export function accountDraftFor(type: AccountType): AccountDraft {
+  const names = { Cash: "Cash", Bank: "Bank account", Other: "" }
+  return { type, name: names[type], balance: "" }
+}
+
+export const newAccountDraft = accountDraftFor("Cash")
 
 export function initialOnboarding(): OnboardingDraft {
   return {
     preferences: { ...defaultPreferences, theme: "system" },
-    showPreferences: false,
     accounts: [],
     editor: null,
   }
@@ -23,9 +26,6 @@ export function initialOnboarding(): OnboardingDraft {
 export function parseOnboarding(saved: unknown): OnboardingDraft {
   if (!saved || typeof saved !== "object" || Array.isArray(saved)) throw new Error("The setup draft is invalid.")
   const row = saved as Record<string, unknown>
-  if (typeof row.showPreferences !== "boolean") {
-    throw new Error("The setup draft is invalid.")
-  }
   const preferences = parsePreferences(row.preferences)
   let editor: AccountDraft | null = null
   if (row.editor !== null) {
@@ -42,5 +42,5 @@ export function parseOnboarding(saved: unknown): OnboardingDraft {
       ...(draft.showBalance === true || draft.balance ? { showBalance: true } : {}),
     }
   }
-  return { preferences, showPreferences: row.showPreferences, accounts: validateAccounts(row.accounts, preferences), editor }
+  return { preferences, accounts: validateAccounts(row.accounts, preferences), editor }
 }

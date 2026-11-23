@@ -21,6 +21,16 @@ test("backup round-trips and merges without duplicating IDs", () => {
   assert.throws(() => combineBackup(data, { ...data, entries: [{ ...entry, amount: 15 }] }), /conflict/i)
 })
 
+test("backup currency precision matches the selected currency", () => {
+  const data = initialData()
+  const backup = JSON.parse(serialiseBackup(data))
+  backup.data.preferences.currencyDigits = 4
+  assert.throws(() => parseBackup(JSON.stringify(backup)), /precision.*currency/i)
+
+  const yen = { ...data, preferences: { ...data.preferences, currency: "JPY", currencyDigits: 0 } }
+  assert.equal(parseBackup(serialiseBackup(yen)).preferences.currencyDigits, 0)
+})
+
 test("backup rejects malformed, incompatible, oversized and unsafe input", () => {
   const data = initialData()
   for (const input of ["{", "[".repeat(20), '{"__proto__":{"polluted":true}}', '{"version":2}', " ".repeat(MAX_BYTES + 1)]) {
