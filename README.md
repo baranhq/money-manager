@@ -6,12 +6,6 @@
 
 <p align="center">Track income, expenses, budgets and savings in your browser, without an account or bank connection.</p>
 
-<p align="center">
-  <img src="docs/screenshots/setup.png" alt="First-run setup with currency selection and an option to add an account" width="49%">
-  <img src="docs/screenshots/add-account.png" alt="Optional account setup with account type, name and opening balance" width="49%">
-</p>
-<p align="center"><em>Optional first-run setup.</em></p>
-
 ## Features
 
 - Record income and expenses, organised by categories and accounts.
@@ -49,6 +43,10 @@ npm start
 
 Next.js, React, TypeScript, Tailwind CSS and the browser’s IndexedDB API.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Every contributor must accept the [Contributor Licence Agreement](CLA.md) before their pull request is merged.
+
 ## Development checks
 
 ```sh
@@ -64,6 +62,6 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-## Licensing
+## Licence
 
-No project-level licence is provided in this repository. [`LICENSES.md`](LICENSES.md) contains third-party notices, which are also available in the app at `/licenses`. When adding a bundled app asset, record its verified source in [`notices/vendor/assets.json`](notices/vendor/assets.json) and run `npm run licenses:update`; the build checks the generated notices.
+Money Manager’s project code is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only); see [`LICENSE`](LICENSE). The maintainer may separately license project material for which they have the necessary rights. Third-party packages and assets retain their own licences; see [`LICENSES.md`](LICENSES.md) and `/licenses`. When adding a bundled app asset, record its verified source in [`notices/vendor/assets.json`](notices/vendor/assets.json) and run `npm run licenses:update`; the build checks the generated notices.

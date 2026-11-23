@@ -6,11 +6,17 @@ import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import inventory from "@/generated/licenses.json"
 
-export const metadata: Metadata = { title: "Licenses", description: "Third-party software, fonts, and icon licences for Money Manager." }
+export const metadata: Metadata = { title: "Licenses", description: "Project and third-party software, font, and icon licences for Money Manager." }
 
 export default function LicensesPage() {
-  return <NoticeLayout title="Licenses" description="Third-party software, fonts and icons used in Money Manager.">
+  return <NoticeLayout title="Licenses" description="Project and third-party software, fonts and icons used in Money Manager.">
     <Card className="gap-0 divide-y px-4 py-0 shadow-none sm:px-5">
+      <section aria-labelledby="project-licence" className="space-y-3 py-5">
+        <h2 id="project-licence" className="text-xl font-semibold tracking-tight">Project licence</h2>
+        <p className="text-sm text-muted-foreground">Money Manager’s project code is licensed under the GNU Affero General Public License v3.0 only (AGPL-3.0-only). Third-party packages and assets retain their own licences.</p>
+        <Button asChild variant="outline" className="min-h-11"><a href="/AGPL-3.0.txt" download><Download /> Download the AGPL v3 licence</a></Button>
+        <a href="https://github.com/baranhq/money-manager" className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-primary underline underline-offset-4">Browse the source repository <ExternalLink size={13} aria-hidden="true" /></a>
+      </section>
       <section aria-labelledby="third-party-notices" className="space-y-3 py-5">
         <h2 id="third-party-notices" className="text-xl font-semibold tracking-tight">Third-party notices</h2>
         <p className="text-sm text-muted-foreground">This inventory covers bundled assets, copied components and packages. Download the complete licence texts and attribution notices for the listed material.</p>

@@ -8,6 +8,8 @@ const lockPath = "package-lock.json"
 const inventoryPath = "src/generated/licenses.json"
 const bundlePath = "public/third-party-notices.txt"
 const markdownPath = "LICENSES.md"
+const projectLicensePath = "LICENSE"
+const publicProjectLicensePath = "public/AGPL-3.0.txt"
 const lock = JSON.parse(readFileSync(lockPath, "utf8"))
 const manifest = JSON.parse(readFileSync("package.json", "utf8"))
 const shadcn = JSON.parse(readFileSync("notices/vendor/shadcn-ui.json", "utf8"))
@@ -25,11 +27,11 @@ function filesIn(directory) {
     : []
 }
 const assetFiles = [
-  ...filesIn("public").filter(file => file !== bundlePath),
+  ...filesIn("public").filter(file => file !== bundlePath && file !== publicProjectLicensePath),
   ...filesIn("src").filter(file => candidateAsset.test(file)),
 ]
 const localInputs = [...new Set([
-  "scripts/licenses.mjs", "package.json", lockPath, "notices/vendor/shadcn-ui.json", "notices/vendor/shadcn-ui.txt",
+  "scripts/licenses.mjs", "package.json", lockPath, projectLicensePath, "notices/vendor/shadcn-ui.json", "notices/vendor/shadcn-ui.txt",
   assetsPath, ...filesIn("notices/upstream"), ...assets.flatMap(asset => asset.firstParty ? [] : [asset.notice]),
   ...readdirSync("src/components/ui").map(file => `src/components/ui/${file}`),
   ...assetFiles,
@@ -71,7 +73,8 @@ function synchronised() {
   try {
     const inventory = JSON.parse(readFileSync(inventoryPath, "utf8"))
     return inventory.inputHash === inputHash && inventory.bundleHash === sha256(readFileSync(bundlePath)) &&
-      readFileSync(markdownPath, "utf8") === markdown(inventory)
+      readFileSync(markdownPath, "utf8") === markdown(inventory) &&
+      readFileSync(publicProjectLicensePath, "utf8") === readFileSync(projectLicensePath, "utf8")
   } catch {
     return false
   }
@@ -80,7 +83,7 @@ function synchronised() {
 if ((check || sync) && synchronised()) {
   console.log("Third-party notices are synchronised.")
 } else if (check) {
-  console.error("Third-party notices are missing or stale. Review dependency and asset changes, then run npm run licenses:update.")
+  console.error("Licensing records or the public licence copy are missing or stale. Review relevant changes, then run npm run licenses:update.")
   process.exitCode = 1
 } else {
   const declaredUi = new Set(shadcn.map(item => item.file))
@@ -192,7 +195,12 @@ if ((check || sync) && synchronised()) {
     ...extra,
   ]
   const inventory = { inputHash, bundleHash: sha256(bundle), featured, packages: packages.sort((a, b) => a.name.localeCompare(b.name)) }
-  for (const [path, content] of [[inventoryPath, JSON.stringify(inventory, null, 2) + "\n"], [bundlePath, bundle], [markdownPath, markdown(inventory)]]) {
+  for (const [path, content] of [
+    [inventoryPath, JSON.stringify(inventory, null, 2) + "\n"],
+    [bundlePath, bundle],
+    [markdownPath, markdown(inventory)],
+    [publicProjectLicensePath, readFileSync(projectLicensePath, "utf8")],
+  ]) {
     mkdirSync(dirname(path), { recursive: true })
     writeFileSync(path, content)
   }
