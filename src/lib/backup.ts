@@ -149,10 +149,10 @@ export function validateData(input: unknown): Data {
   }
   for (const rows of transfersByPot.values()) {
     rows.sort((a, b) => a.date.localeCompare(b.date) || (a.direction === b.direction ? 0 : a.direction === "deposit" ? -1 : 1))
-    let balance = 0
+    let balance = 0n
     for (const transfer of rows) {
       balance += contributionDelta(transfer)
-      if (balance < 0) throw new Error("A withdrawal cannot exceed the savings pot balance on its date.")
+      if (balance < 0n) throw new Error("A withdrawal cannot exceed the savings pot balance on its date.")
     }
   }
   return { entries, categories, budgets, goals, contributions: transfers, preferences, ...(accounts.length ? { accounts } : {}) }

@@ -187,8 +187,8 @@ export function DataTools({ mode, data, commit, close, notify, recover, profileN
       {review.rows && <>
         <p className="text-sm">{review.rows.length} new · {review.duplicates} duplicate{review.duplicates === 1 ? "" : "s"} skipped</p>
         <p className="text-sm text-muted-foreground">
-          Income {money(review.rows.reduce((sum, row) => sum + (row.kind === "income" ? row.amount : 0), 0), data.preferences)} ·
-          Expenses {money(review.rows.reduce((sum, row) => sum + (row.kind === "expense" ? row.amount : 0), 0), data.preferences)}
+          Income {money(review.rows.reduce((sum, row) => sum + (row.kind === "income" ? BigInt(row.amount) : 0n), 0n), data.preferences)} ·
+          Expenses {money(review.rows.reduce((sum, row) => sum + (row.kind === "expense" ? BigInt(row.amount) : 0n), 0n), data.preferences)}
         </p>
         {!review.rows.length && <p className="text-sm text-muted-foreground">No new transactions to import.</p>}
         {review.rows.length > 0 && <ul className="max-h-40 divide-y overflow-auto rounded-md border">

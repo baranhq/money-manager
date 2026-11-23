@@ -81,6 +81,47 @@ export function maximumAmount(digits: number) {
   return (MAX_MAJOR_AMOUNT + 1) * 10 ** digits - 1
 }
 
+function hasSameRecordValues<T extends object>(current: T, original: T) {
+  const originalKeys = Object.keys(original) as (keyof T)[]
+  const currentKeys = Object.keys(current) as (keyof T)[]
+  return currentKeys.length === originalKeys.length && originalKeys.every(key =>
+    Object.hasOwn(current, key) && current[key] === original[key])
+}
+
+function requireUnchangedRecord<T extends { id: string }>(rows: readonly T[], original: T, label: string) {
+  const current = rows.find(item => item.id === original.id)
+  if (!current) throw new Error(`This ${label} was removed in another tab.`)
+  if (!hasSameRecordValues(current, original)) {
+    throw new Error(`This ${label} changed in another tab. Reopen this form.`)
+  }
+  return current
+}
+
+export function updateRecordIfUnchanged<T extends { id: string }>(rows: readonly T[], original: T, replacement: T, label: string): T[] {
+  requireUnchangedRecord(rows, original, label)
+  return rows.map(item => item.id === original.id ? replacement : item)
+}
+
+export function removeRecordIfUnchanged<T extends { id: string }>(rows: readonly T[], original: T, label: string): T[] {
+  requireUnchangedRecord(rows, original, label)
+  return rows.filter(item => item.id !== original.id)
+}
+
+export function assertRecordSetUnchanged<T extends { id: string }>(rows: readonly T[], originals: readonly T[], label: string) {
+  if (rows.length !== originals.length) {
+    throw new Error(`These ${label}s changed in another tab. Reopen this confirmation.`)
+  }
+  const originalsById = new Map(originals.map(original => [original.id, original]))
+  if (originalsById.size !== originals.length) throw new Error(`These ${label}s changed in another tab. Reopen this confirmation.`)
+  const seen = new Set<string>()
+  for (const current of rows) {
+    const original = originalsById.get(current.id)
+    if (!original || seen.has(current.id)) throw new Error(`These ${label}s changed in another tab. Reopen this confirmation.`)
+    seen.add(current.id)
+    if (!hasSameRecordValues(current, original)) throw new Error(`This ${label} changed in another tab. Reopen this form.`)
+  }
+}
+
 export function initialData(): Data {
   return {
     entries: [], budgets: [], goals: [], contributions: [],
@@ -183,21 +224,40 @@ export function amountInput(amount: number, preferences: Preferences) {
   return localizeNumberParts(parts, preferences)
 }
 
-export function money(amount: number, preferences: Preferences) {
-  const scale = 10 ** preferences.currencyDigits
-  const parts = new Intl.NumberFormat(preferences.locale, {
+export function money(amount: number | bigint, preferences: Preferences) {
+  const minorUnits = typeof amount === "bigint" ? amount : BigInt(amount)
+  const digits = preferences.currencyDigits
+  const scale = 10n ** BigInt(digits)
+  const magnitude = minorUnits < 0n ? -minorUnits : minorUnits
+  const whole = magnitude / scale
+  const remainder = magnitude % scale
+  const formatter = new Intl.NumberFormat(preferences.locale, {
     style: "currency", currency: preferences.currency, currencyDisplay: preferences.currencyDisplay,
-    minimumFractionDigits: preferences.currencyDigits, maximumFractionDigits: preferences.currencyDigits,
-  }).formatToParts(amount / scale)
+    minimumFractionDigits: 0, maximumFractionDigits: 0,
+  })
+  const digitFormatter = new Intl.NumberFormat(preferences.locale, { useGrouping: false, maximumFractionDigits: 0 })
+  let parts = formatter.formatToParts(minorUnits < 0n ? -whole : whole)
+  if (minorUnits < 0n && whole === 0n) {
+    const zero = digitFormatter.format(0n)
+    parts = formatter.formatToParts(-1n).map(part => part.type === "integer" ? { ...part, value: zero } : part)
+  }
+  if (digits > 0) {
+    const decimal = new Intl.NumberFormat(preferences.locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+      .formatToParts(1.1).find(part => part.type === "decimal")?.value ?? "."
+    const fraction = remainder.toString().padStart(digits, "0")
+      .split("").map(digit => digitFormatter.format(BigInt(digit))).join("")
+    const lastInteger = parts.findLastIndex(part => part.type === "integer")
+    parts.splice(lastInteger + 1, 0, { type: "decimal", value: decimal }, { type: "fraction", value: fraction })
+  }
   return localizeNumberParts(parts, preferences)
 }
 
-export function compactMoney(amount: number, preferences: Preferences) {
+export function compactMoney(amount: number | bigint, preferences: Preferences) {
   const scale = 10 ** preferences.currencyDigits
   const parts = new Intl.NumberFormat(preferences.locale, {
     style: "currency", currency: preferences.currency, currencyDisplay: preferences.currencyDisplay,
     notation: "compact", minimumFractionDigits: 0, maximumFractionDigits: 1,
-  }).formatToParts(amount / scale)
+  }).formatToParts(Number(amount) / scale)
   return localizeNumberParts(parts, preferences)
 }
 
@@ -238,49 +298,69 @@ export function weekStart(locale: string) {
 }
 
 export function monthTotals(data: Data, month: string) {
-  let income = 0
-  let spent = 0
+  let income = 0n
+  let spent = 0n
   for (const entry of data.entries) {
     if (!entry.date.startsWith(month)) continue
-    if (entry.kind === "income") income += entry.amount
-    else spent += entry.amount
+    const amount = BigInt(entry.amount)
+    if (entry.kind === "income") income += amount
+    else spent += amount
   }
   const saved = savingsMovement(data, month).net
   return { income, spent, saved, balance: income - spent - saved }
 }
 
 export function contributionDelta(contribution: Pick<Contribution, "amount" | "direction">) {
-  return contribution.direction === "withdrawal" ? -contribution.amount : contribution.amount
+  const amount = BigInt(contribution.amount)
+  return contribution.direction === "withdrawal" ? -amount : amount
 }
 
 export function savingsMovement(data: Data, month: string) {
-  let added = 0
-  let withdrawn = 0
+  let added = 0n
+  let withdrawn = 0n
   for (const contribution of data.contributions) {
     if (!contribution.date.startsWith(month)) continue
-    if (contribution.direction === "withdrawal") withdrawn += contribution.amount
-    else added += contribution.amount
+    const amount = BigInt(contribution.amount)
+    if (contribution.direction === "withdrawal") withdrawn += amount
+    else added += amount
   }
   return { added, withdrawn, net: added - withdrawn }
 }
 
 export function goalSaved(data: Data, goal: string, month?: string) {
-  return data.contributions.reduce((sum, row) =>
-    row.goal === goal && (!month || row.date.slice(0, 7) <= month) ? sum + contributionDelta(row) : sum, 0)
+  return goalSavedByGoal(data, month).get(goal) ?? 0n
+}
+
+export function goalSavedByGoal(data: Data, month?: string) {
+  const balances = new Map<string, bigint>()
+  for (const row of data.contributions) {
+    if (month && row.date.slice(0, 7) > month) continue
+    balances.set(row.goal, (balances.get(row.goal) ?? 0n) + contributionDelta(row))
+  }
+  return balances
 }
 
 export function spending(data: Data, month: string) {
-  const totals = new Map<string, number>()
+  const totals = new Map<string, bigint>()
   for (const entry of data.entries) {
     if (entry.kind === "expense" && entry.date.startsWith(month)) {
-      totals.set(entry.category, (totals.get(entry.category) ?? 0) + entry.amount)
+      totals.set(entry.category, (totals.get(entry.category) ?? 0n) + BigInt(entry.amount))
     }
   }
   return totals
 }
 
-export function percent(amount: number, target: number) {
-  return target > 0 ? Math.round(amount * 100 / target) : 0
+export function percent(amount: number | bigint, target: number | bigint) {
+  const exactAmount = typeof amount === "bigint" ? amount : BigInt(amount)
+  const exactTarget = typeof target === "bigint" ? target : BigInt(target)
+  if (exactTarget <= 0n) return 0
+  const numerator = exactAmount * 100n
+  const quotient = numerator / exactTarget
+  const remainder = numerator % exactTarget
+  const rounded = remainder < 0n
+    ? (-remainder * 2n > exactTarget ? quotient - 1n : quotient)
+    : (remainder * 2n >= exactTarget ? quotient + 1n : quotient)
+  return Number(rounded)
 }
 
 export function upsert<T extends { id: string }>(rows: T[], record: T) {

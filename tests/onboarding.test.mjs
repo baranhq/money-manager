@@ -33,7 +33,7 @@ test("setup persists a draft, commits once across tabs, and leaves existing fina
     assert.equal(await saveOnboarding(draft), false)
     assert.deepEqual(parseBackup(serialiseBackup(complete.data)), complete.data)
     assert.equal(combineBackup(complete.data, complete.data).accounts.length, 1)
-    assert.equal(monthTotals(complete.data, "2026-11").income, 0)
+    assert.equal(monthTotals(complete.data, "2026-11").income, 0n)
 
     globalThis.indexedDB = new IDBFactory()
     const skipped = await finishOnboarding({ ...saved, preferences: { ...saved.preferences, currency: "USD" } }, true)

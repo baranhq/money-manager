@@ -14,6 +14,19 @@ test("IndexedDB persists changes, serialises concurrent writes, and rolls back i
   assert.deepEqual(await readData(), before)
 })
 
+test("profile edits reject a stale snapshot instead of replacing newer changes", async () => {
+  const { readWorkspace, updateProfile } = await import("../src/lib/storage.ts")
+  const original = (await readWorkspace()).profiles.find(profile => profile.id === "personal")
+  assert.ok(original)
+
+  const first = { ...original, name: "Personal household" }
+  await updateProfile(first, original)
+  await assert.rejects(updateProfile({ ...original, colour: "blue" }, original), /changed in another tab/i)
+
+  const saved = (await readWorkspace()).profiles.find(profile => profile.id === original.id)
+  assert.deepEqual(saved, first)
+})
+
 test("corrupted records remain in place until explicit recovery, which preserves readable appearance preferences", async () => {
   const { InvalidSnapshot, readPreferences, recoverData, storageName } = await import("../src/lib/storage.ts")
   const preferences = { currency: "EUR", theme: "dark", reducedMotion: true }
@@ -82,6 +95,13 @@ test("site password protects access and optional encrypted storage survives migr
   await writeStorageValue("local-vault", validVault)
   await security.unlockSitePassword(password)
   assert.deepEqual(await security.readWorkspace(), before)
+
+  const familySnapshot = (await security.readWorkspace()).profiles.find(profile => profile.id === family.activeProfileId)
+  assert.ok(familySnapshot)
+  const familyEdit = { ...familySnapshot, name: "Family household" }
+  await security.updateProfile(familyEdit, familySnapshot)
+  await assert.rejects(security.updateProfile({ ...familySnapshot, icon: "bank" }, familySnapshot), /changed in another tab/i)
+  assert.deepEqual((await security.readWorkspace()).profiles.find(profile => profile.id === family.activeProfileId), familyEdit)
 
   await Promise.all([
     updateData(data => ({ ...data, goals: [...data.goals, { id: "encrypted-one", name: "One", amount: null, date: "", notes: "" }] })),

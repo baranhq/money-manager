@@ -48,7 +48,7 @@ export function Settings({ route, data, commit, editCategory, removeCategory, op
   route: SettingsPage; data: Data; commit: Commit
   editCategory: (kind: Kind, category?: Category) => void; removeCategory: (category: Category) => void; openData: (tool: DataTool) => void
   profiles: Profile[]; activeProfileId: string
-  addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
+  addProfile: (profile: NewProfile) => Promise<void>; updateProfile: (profile: Profile, original: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
   securityStatus: SecurityStatus; onSecurityChanged: () => Promise<void>; lockSite: () => void; replayTour: () => void; onAccountEditorChange: (active: boolean) => void
 }) {
   const [kind, setKind] = useState<Kind>("expense")

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 import { iconComponents, ProfileAvatar, profileColourNames, profileIconNames } from "@/components/profile-avatar"
 
 function ProfileEditor({ profile, close, save }: {
-  profile?: Profile; close: () => void; save: (value: NewProfile | Profile) => Promise<void>
+  profile?: Profile; close: () => void; save: (value: NewProfile | Profile, original?: Profile) => Promise<void>
 }) {
   const [name, setName] = useState(profile?.name ?? "")
   const [colour, setColour] = useState<Profile["colour"]>(profile?.colour ?? "green")
@@ -24,7 +24,7 @@ function ProfileEditor({ profile, close, save }: {
     setBusy(true)
     setError("")
     try {
-      await save(profile ? { ...profile, name: displayName, colour, icon } : { name: displayName, colour, icon })
+      await save(profile ? { ...profile, name: displayName, colour, icon } : { name: displayName, colour, icon }, profile)
       close()
     } catch (problem) {
       setError(problem instanceof Error ? problem.message : "The profile could not be saved. Try again.")
@@ -73,7 +73,7 @@ function ProfileEditor({ profile, close, save }: {
 
 export function Profiles({ profiles, activeProfileId, addProfile, editProfile, switchProfile }: {
   profiles: Profile[]; activeProfileId: string; addProfile: (profile: NewProfile) => Promise<void>
-  editProfile: (profile: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
+  editProfile: (profile: Profile, original: Profile) => Promise<void>; switchProfile: (id: string) => Promise<void>
 }) {
   const [editing, setEditing] = useState<Profile | "new">()
   const [busyId, setBusyId] = useState("")
@@ -87,8 +87,11 @@ export function Profiles({ profiles, activeProfileId, addProfile, editProfile, s
     finally { setBusyId("") }
   }
 
-  async function saveProfile(value: NewProfile | Profile) {
-    if ("id" in value) await editProfile(value)
+  async function saveProfile(value: NewProfile | Profile, original?: Profile) {
+    if ("id" in value) {
+      if (!original) throw new Error("Reopen this profile editor and try again.")
+      await editProfile(value, original)
+    }
     else await addProfile(value)
   }
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { DateField } from "@/components/date-field"
 import { CategoryIcon, Choose, ErrorText, Field, FormActions, Modal, formValues, useOperation, type Commit } from "@/components/shared"
-import { amountFromText, amountInput, colours, icons, today, upsert, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind, type Preferences } from "@/lib/finance"
+import { amountFromText, amountInput, colours, icons, today, updateRecordIfUnchanged, upsert, type Budget, type Category, type Contribution, type ContributionDirection, type Data, type Entry, type Goal, type Kind, type Preferences } from "@/lib/finance"
 
 type Shared = { data: Data; close: () => void; commit: Commit }
 const local = "Saved in this browser on this device."
@@ -70,8 +70,9 @@ export function EntryForm({ row, initialKind = "expense", ...props }: Shared & {
       const entry = { id: row?.id ?? crypto.randomUUID(), kind, name: read("name"), amount: amountFromText(read("amount"), data.preferences), date: read("date"), category, account: read("account"), notes: read("notes") }
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency || current.preferences.currencyDigits !== data.preferences.currencyDigits) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.entries.some(item => item.id === row.id)) throw new Error("This transaction was removed in another tab.")
-        return { ...current, entries: upsert(current.entries, entry) }
+        return { ...current, entries: row
+          ? updateRecordIfUnchanged(current.entries, row, entry, "transaction")
+          : upsert(current.entries, entry) }
       }, row ? "Transaction updated" : kind === "income" ? "Income saved" : "Expense saved")
     }}>
     <Tabs className="gap-4" value={kind} onValueChange={value => { setKind(value as Kind); setCategory("") }}>
@@ -110,7 +111,6 @@ export function BudgetForm({ data, row, close, commit }: Shared & { row?: Budget
       } : undefined
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency || current.preferences.currencyDigits !== data.preferences.currencyDigits) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.budgets.some(item => item.id === row.id)) throw new Error("This budget was removed in another tab.")
         if (customCategory) {
           const other = current.categories.find(item => item.id === "other" && item.kind === "expense" && item.name.trim() === "Other")
           if (!other) throw new Error("The Other category changed in another tab. Reopen this form.")
@@ -123,7 +123,9 @@ export function BudgetForm({ data, row, close, commit }: Shared & { row?: Budget
         return {
           ...current,
           categories: customCategory ? [...current.categories, customCategory] : current.categories,
-          budgets: upsert(current.budgets, { id: row?.id ?? crypto.randomUUID(), category: budgetCategory, amount: amountFromText(read("amount"), data.preferences) }),
+          budgets: row
+            ? updateRecordIfUnchanged(current.budgets, row, { id: row.id, category: budgetCategory, amount: amountFromText(read("amount"), data.preferences) }, "budget")
+            : upsert(current.budgets, { id: crypto.randomUUID(), category: budgetCategory, amount: amountFromText(read("amount"), data.preferences) }),
         }
       }, row ? "Budget updated" : "Budget created")
     }}>
@@ -142,8 +144,10 @@ export function GoalForm({ data, row, close, commit }: Shared & { row?: Goal }) 
       const target = read("amount").trim() ? amountFromText(read("amount"), data.preferences) : null
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency || current.preferences.currencyDigits !== data.preferences.currencyDigits) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.goals.some(item => item.id === row.id)) throw new Error("This savings pot was removed in another tab.")
-        return { ...current, goals: upsert(current.goals, { id: row?.id ?? crypto.randomUUID(), name: read("name"), amount: target, date: read("date"), notes: read("notes") }) }
+        const goal = { id: row?.id ?? crypto.randomUUID(), name: read("name"), amount: target, date: read("date"), notes: read("notes") }
+        return { ...current, goals: row
+          ? updateRecordIfUnchanged(current.goals, row, goal, "savings pot")
+          : upsert(current.goals, goal) }
       }, row ? "Savings pot updated" : "Savings pot created")
     }}>
     <Field name="name" label="Pot name" maxLength={90} required defaultValue={row?.name} />
@@ -164,8 +168,10 @@ export function ContributionForm({ data, row, goal, initialDirection = "deposit"
       if (!goalId) throw new Error("Choose a savings pot.")
       await commit(current => {
         if (current.preferences.currency !== data.preferences.currency || current.preferences.currencyDigits !== data.preferences.currencyDigits) throw new Error("The ledger currency changed. Reopen this form.")
-        if (row && !current.contributions.some(item => item.id === row.id)) throw new Error("This transfer was removed in another tab.")
-        return { ...current, contributions: upsert(current.contributions, { id: row?.id ?? crypto.randomUUID(), goal: goalId, amount: amountFromText(read("amount"), data.preferences), direction, date: read("date"), notes: read("notes") }) }
+        const contribution = { id: row?.id ?? crypto.randomUUID(), goal: goalId, amount: amountFromText(read("amount"), data.preferences), direction, date: read("date"), notes: read("notes") }
+        return { ...current, contributions: row
+          ? updateRecordIfUnchanged(current.contributions, row, contribution, "transfer")
+          : upsert(current.contributions, contribution) }
       }, row ? "Transfer updated" : direction === "deposit" ? "Money added to pot" : "Money taken out of pot")
     }}>
     <Choose label="Transfer type" value={direction} onChange={value => setDirection(value as ContributionDirection)} options={[["deposit", "Add money"], ["withdrawal", "Take money out"]]} />
@@ -184,8 +190,9 @@ export function CategoryForm({ row, initialKind, close, commit }: Shared & { row
     save={async read => {
       const category = { id: row?.id ?? crypto.randomUUID(), name: read("name"), kind, colour, icon }
       await commit(current => {
-        if (row && !current.categories.some(item => item.id === row.id)) throw new Error("This category was removed in another tab.")
-        return { ...current, categories: upsert(current.categories, category) }
+        return { ...current, categories: row
+          ? updateRecordIfUnchanged(current.categories, row, category, "category")
+          : upsert(current.categories, category) }
       }, row ? "Category updated" : "Category added")
     }}>
     {!row && <Choose label="Type" value={kind} options={kindOptions} onChange={value => setKind(value as Kind)} />}

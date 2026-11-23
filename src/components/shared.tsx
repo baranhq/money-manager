@@ -155,10 +155,13 @@ export function Empty({ title, children, action }: { title: string; children: Re
   </div>
 }
 
-export function Meter({ amount, target, label }: { amount: number; target: number; label: string }) {
+export function Meter({ amount, target, label }: { amount: number | bigint; target: number | bigint; label: string }) {
   const value = Math.min(100, Math.max(0, percent(amount, target)))
+  const exactAmount = typeof amount === "bigint" ? amount : BigInt(amount)
+  const exactTarget = typeof target === "bigint" ? target : BigInt(target)
+  const over = exactAmount > exactTarget
   return <div className="h-1.5 overflow-hidden rounded-full bg-current/15" role="progressbar" aria-label={label} aria-valuenow={value}>
-    <div className={cn("h-full rounded-full", amount > target && target > 0 ? "bg-destructive" : "bg-current/80")} style={{ width: `${value}%` }} />
+    <div className={cn("h-full rounded-full", over && exactTarget > 0n ? "bg-destructive" : "bg-current/80")} style={{ width: `${value}%` }} />
   </div>
 }
 

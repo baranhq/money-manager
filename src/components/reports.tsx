@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { CategoryIcon, Empty, EntryCaption, Menu, Meter, Metric, Signed } from "@/components/shared"
 import { cn } from "@/lib/utils"
-import { compactMoney, dateLabel, goalSaved, money, monthName, monthTotals, percent, savingsMovement, shiftMonth, spending, today, type Budget, type Data, type Entry, type Goal } from "@/lib/finance"
+import { compactMoney, dateLabel, goalSaved, goalSavedByGoal, money, monthName, monthTotals, percent, savingsMovement, shiftMonth, spending, today, type Budget, type Data, type Entry, type Goal } from "@/lib/finance"
 
 type Report = { data: Data; month: string }
 export type EditBudget = (budget?: Budget) => void
@@ -27,9 +27,10 @@ export function ViewLink({ href, children }: { href: string; children: ReactNode
   </Button>
 }
 
-function Change({ current, previous, preferences }: { current: number; previous: number; preferences: Data["preferences"] }) {
+function Change({ current, previous, preferences }: { current: bigint; previous: bigint; preferences: Data["preferences"] }) {
   const difference = current - previous
-  return difference === 0 ? "No change from last month" : `${money(Math.abs(difference), preferences)} ${difference > 0 ? "more" : "less"} than last month`
+  const amount = difference < 0n ? -difference : difference
+  return difference === 0n ? "No change from last month" : `${money(amount, preferences)} ${difference > 0n ? "more" : "less"} than last month`
 }
 
 function Chart({ data, month, savings = false }: Report & { savings?: boolean }) {
@@ -39,7 +40,9 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
     return { period, ...monthTotals(data, period), movement: savingsMovement(data, period) }
   })
   const inspected = rows.find(row => row.period === selected) ?? rows[4]
-  const ceiling = Math.max(1, ...rows.flatMap(row => savings ? [row.movement.added, row.movement.withdrawn] : [row.income, row.spent]))
+  const ceiling = Math.max(1, ...rows.flatMap(row => savings
+    ? [Number(row.movement.added), Number(row.movement.withdrawn)]
+    : [Number(row.income), Number(row.spent)]))
   const axis = [ceiling, Math.round(ceiling / 2), 0]
   const label = (period: string) => dateLabel(period + "-01", { month: "short" }, data.preferences)
   return <Card className="gap-0 p-3 shadow-none sm:p-5">
@@ -78,8 +81,8 @@ function Chart({ data, month, savings = false }: Report & { savings?: boolean })
           aria-label={`${label(row.period)} ${row.period.slice(0, 4)}. ${savings ? `Added ${money(row.movement.added, data.preferences)}, taken out ${money(row.movement.withdrawn, data.preferences)}` : `Income ${money(row.income, data.preferences)}, spent ${money(row.spent, data.preferences)}`}`}
           onClick={() => setSelected(row.period)}
           className={cn("relative flex h-full items-end justify-center gap-1 rounded-sm px-1 hover:bg-muted/80 sm:gap-1.5", inspected.period === row.period && "bg-accent/65")}>
-          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * (savings ? row.movement.added : row.income) / ceiling}%` }} />
-          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-2" style={{ height: `${100 * (savings ? row.movement.withdrawn : row.spent) / ceiling}%` }} />
+          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-1" style={{ height: `${100 * Number(savings ? row.movement.added : row.income) / ceiling}%` }} />
+          <span className="w-2/5 max-w-6 rounded-t-xs bg-chart-2" style={{ height: `${100 * Number(savings ? row.movement.withdrawn : row.spent) / ceiling}%` }} />
           <span className="absolute -bottom-5 text-xs text-muted-foreground">{label(row.period)}</span>
         </button>)}
       </div>
@@ -96,14 +99,15 @@ function BudgetRows({ data, month, items, open }: Report & {
   const totals = spending(data, month)
   return <div className="divide-y border-y">
     {items.map(row => {
-      const used = totals.get(row.category) ?? 0
+      const used = totals.get(row.category) ?? 0n
+      const difference = BigInt(row.amount) - used
       const category = data.categories.find(item => item.id === row.category)
       return <div className="flex items-center gap-1" key={row.id}>
         <button type="button" onClick={() => open(row)} className="grid min-h-14 flex-1 grid-cols-[minmax(0,1fr)_minmax(3rem,1fr)_auto] items-center gap-2 py-2 text-left text-sm hover:bg-accent/55 sm:gap-3">
           <span className="flex min-w-0 items-center gap-2"><CategoryIcon category={category} />
             <span className="min-w-0"><span className="block truncate font-medium">{category?.name}</span>
-              <span className={cn("block text-xs text-muted-foreground", used > row.amount && "text-destructive")}>
-                {money(Math.abs(row.amount - used), data.preferences)} {used > row.amount ? "over" : "left"}</span></span></span>
+              <span className={cn("block text-xs text-muted-foreground", difference < 0n && "text-destructive")}>
+                {money(difference < 0n ? -difference : difference, data.preferences)} {difference < 0n ? "over" : "left"}</span></span></span>
           <span className="text-primary"><Meter amount={used} target={row.amount} label={`${category?.name} budget used`} /></span>
           <span className="text-right font-medium tabular-nums">{money(used, data.preferences)} / {money(row.amount, data.preferences)}<span className="block text-xs font-normal text-muted-foreground">{percent(used, row.amount)}% used</span></span>
         </button>
@@ -113,7 +117,8 @@ function BudgetRows({ data, month, items, open }: Report & {
 }
 
 function GoalHighlight({ data, month, goal, open, create }: Report & { goal?: Goal; open: (goal: Goal) => void; create: () => void }) {
-  const saved = goal ? goalSaved(data, goal.id, month) : 0
+  const saved = goal ? goalSaved(data, goal.id, month) : 0n
+  const remaining = goal?.amount === null || goal?.amount === undefined ? 0n : BigInt(goal.amount) - saved
   return <Card className="justify-between gap-4 border-0 bg-accent/70 p-4 shadow-none sm:p-5">
     <div className="flex items-center justify-between gap-2">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-primary"><Target size={17} /> Savings pot</h2>
@@ -124,7 +129,7 @@ function GoalHighlight({ data, month, goal, open, create }: Report & { goal?: Go
       <div><p className="text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">{money(saved, data.preferences)}</p>
         <p className="mt-1 text-sm text-muted-foreground">current balance</p></div>
       {goal.amount !== null && <div className="space-y-2 text-primary"><Meter amount={saved} target={goal.amount} label="Savings pot target progress" />
-        <p className="flex justify-between text-sm font-medium"><span>{money(Math.max(0, goal.amount - saved), data.preferences)} to target</span><span>{percent(saved, goal.amount)}%</span></p></div>}
+        <p className="flex justify-between text-sm font-medium"><span>{money(remaining > 0n ? remaining : 0n, data.preferences)} to target</span><span>{percent(saved, goal.amount)}%</span></p></div>}
       {goal.date && <p className="text-xs text-muted-foreground">Target {dateLabel(goal.date, undefined, data.preferences)}</p>}
     </> : <div className="space-y-3"><p className="text-sm text-muted-foreground">Create a pot to set money aside and track its balance.</p>
       <Button variant="outline" size="sm" onClick={create}><Plus /> New savings pot</Button></div>}
@@ -149,7 +154,7 @@ export function Overview({ data, month, add, entryDetail, budgetDetail, goalDeta
           <p className="mt-1 text-xs opacity-85">Savings deposits reduce this; withdrawals add back</p>
         </div>
         <div className="space-y-1 text-xs">
-          <p><strong>{current.income > 0 ? `${used}%` : "—"}</strong> <span className="ml-1 opacity-90">of monthly income spent</span></p>
+          <p><strong>{current.income > 0n ? `${used}%` : "—"}</strong> <span className="ml-1 opacity-90">of monthly income spent</span></p>
           <Meter amount={current.spent} target={current.income} label="Monthly income spent" />
         </div>
       </Card>
@@ -192,9 +197,13 @@ function PlanEmpty({ title, children, action, label, tourTarget }: {
 }
 
 function PlanMeter({ amount, target, label, detail, over = false }: {
-  amount: number; target: number; label: string; detail: string; over?: boolean
+  amount: number | bigint; target: number | bigint; label: string; detail: string; over?: boolean
 }) {
-  const fraction = Math.min(1, Math.max(0, amount / target))
+  const exactAmount = typeof amount === "bigint" ? amount : BigInt(amount)
+  const exactTarget = typeof target === "bigint" ? target : BigInt(target)
+  const fraction = exactTarget > 0n
+    ? Math.min(1, Math.max(0, Number(exactAmount * 100_000n / exactTarget) / 100_000))
+    : exactAmount > 0n ? 1 : 0
   return <div role="progressbar" aria-label={label} aria-valuenow={Math.round(fraction * 100)} aria-valuetext={detail}
     className="h-1.5 overflow-hidden rounded-full bg-muted">
     <span className={cn("block h-full origin-left rounded-full motion-safe:full-motion:transition-transform motion-safe:full-motion:duration-200 motion-safe:full-motion:ease-out",
@@ -224,10 +233,10 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
   const { preferences } = data
   const totals = spending(data, month)
   const categories = new Map(data.categories.map(category => [category.id, category.name]))
-  const planned = data.budgets.reduce((sum, row) => sum + row.amount, 0)
-  const used = data.budgets.reduce((sum, row) => sum + (totals.get(row.category) ?? 0), 0)
-  const breakdown = [...totals.entries()].sort((a, b) => b[1] - a[1])
-  const spent = [...totals.values()].reduce((sum, value) => sum + value, 0)
+  const planned = data.budgets.reduce((sum, row) => sum + BigInt(row.amount), 0n)
+  const used = data.budgets.reduce((sum, row) => sum + (totals.get(row.category) ?? 0n), 0n)
+  const breakdown = [...totals.entries()].sort((a, b) => a[1] === b[1] ? 0 : a[1] > b[1] ? -1 : 1)
+  const spent = [...totals.values()].reduce((sum, value) => sum + value, 0n)
   const now = today()
   const elapsed = month < now.slice(0, 7) ? 100 : month > now.slice(0, 7) ? 0 :
     percent(Number(now.slice(-2)), new Date(Date.parse(shiftMonth(month, 1) + "-01") - 86400000).getUTCDate())
@@ -238,7 +247,7 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
       <div>
         <p className="text-sm font-medium text-muted-foreground">{used > planned ? "Over budget" : "Left in budget"}</p>
         <p className={cn("mt-1 [overflow-wrap:anywhere] text-[2.375rem] leading-none font-semibold tracking-[-0.04em] tabular-nums sm:text-[2.875rem]",
-          used > planned ? "text-destructive" : "text-primary")}>{money(Math.abs(planned - used), preferences)}</p>
+          used > planned ? "text-destructive" : "text-primary")}>{money(used > planned ? used - planned : planned - used, preferences)}</p>
         <p className="mt-2 text-sm text-muted-foreground">{money(used, preferences)} spent of {money(planned, preferences)} planned</p>
       </div>
       <div className="space-y-1 text-sm sm:text-right">
@@ -256,11 +265,12 @@ export function Budgets({ data, month, edit, open, remove }: Report & {
       </div>
       <ul className="divide-y border-t">
         {items.map(row => {
-          const amount = totals.get(row.category) ?? 0
+          const amount = totals.get(row.category) ?? 0n
           const name = categories.get(row.category) ?? "Expense category"
-          const over = amount > row.amount
+          const over = amount > BigInt(row.amount)
           const usedText = money(amount, preferences) + " spent of " + money(row.amount, preferences)
-          const remaining = money(Math.abs(row.amount - amount), preferences) + (over ? " over" : " left")
+          const difference = BigInt(row.amount) - amount
+          const remaining = money(difference < 0n ? -difference : difference, preferences) + (over ? " over" : " left")
           return <li key={row.id} className="pb-4 sm:pb-5">
             <div className="flex items-start gap-2">
               <h3 className="min-w-0 flex-1">
@@ -308,8 +318,9 @@ export function Savings({ data, month, open, edit, contribute, remove }: Report 
   </PlanEmpty>
 
   const { preferences } = data
-  const balances = data.goals.map(goal => ({ goal, balance: goalSaved(data, goal.id, month) }))
-  const total = balances.reduce((sum, { balance }) => sum + balance, 0)
+  const savedByGoal = goalSavedByGoal(data, month)
+  const balances = data.goals.map(goal => ({ goal, balance: savedByGoal.get(goal.id) ?? 0n }))
+  const total = balances.reduce((sum, { balance }) => sum + balance, 0n)
   const historyStart = shiftMonth(month, -4)
   const hasHistory = data.contributions.some(row => {
     const period = row.date.slice(0, 7)
@@ -317,7 +328,7 @@ export function Savings({ data, month, open, edit, contribute, remove }: Report 
   })
 
   return <div className="space-y-7 sm:space-y-9">
-    {total > 0 && <section aria-label="Savings summary">
+    {total > 0n && <section aria-label="Savings summary">
       <p className="text-sm font-medium text-muted-foreground">Total in savings pots</p>
       <p className="mt-1 [overflow-wrap:anywhere] text-[2.375rem] leading-none font-semibold tracking-[-0.04em] text-primary tabular-nums sm:text-[2.875rem]">{money(total, preferences)}</p>
       <p className="mt-2 text-sm text-muted-foreground">Across {balances.length} {balances.length === 1 ? "pot" : "pots"}</p>
@@ -330,7 +341,7 @@ export function Savings({ data, month, open, edit, contribute, remove }: Report 
           const saved = money(balance, preferences)
           const target = goal.amount
           const targetText = target === null ? undefined : "of " + money(target, preferences)
-          const progressText = target === null ? undefined : balance >= target ? "Target reached" : money(target - balance, preferences) + " to go"
+          const progressText = target === null ? undefined : balance >= BigInt(target) ? "Target reached" : money(BigInt(target) - balance, preferences) + " to go"
           return <li key={goal.id} className="flex min-w-0 flex-col border-t">
             <div className="flex items-start gap-2">
               <h3 className="min-w-0 flex-1">
@@ -338,7 +349,7 @@ export function Savings({ data, month, open, edit, contribute, remove }: Report 
                   className="flex min-h-11 w-full items-center rounded-sm py-2 text-left [overflow-wrap:anywhere] text-lg font-semibold underline-offset-4 hover:underline">{goal.name}</button>
               </h3>
               <Menu label={"Actions for " + goal.name} actions={[
-                ...(balance > 0 ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
+                ...(balance > 0n ? [{ label: "Take money out", run: () => contribute(goal, "withdrawal") }] : []),
                 { label: "Edit pot", run: () => edit(goal) },
                 { label: "Delete pot", run: () => remove(goal), destructive: true },
               ]} />

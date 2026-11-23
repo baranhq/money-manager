@@ -1,4 +1,4 @@
-import { defaultPreferences, defaultProfile, initialData, MAX_PROFILES, profileColours, profileIcons, type Data, type NewProfile, type Preferences, type Profile } from "./finance.ts"
+import { defaultPreferences, defaultProfile, initialData, MAX_PROFILES, profileColours, profileIcons, updateRecordIfUnchanged, type Data, type NewProfile, type Preferences, type Profile } from "./finance.ts"
 import { parsePreferences, serialiseBackup, validateData } from "./backup.ts"
 import { initialOnboarding, parseOnboarding, type OnboardingDraft } from "./onboarding.ts"
 import {
@@ -596,6 +596,14 @@ function assertUniqueProfileName(profiles: Profile[], profile: Profile) {
   }
 }
 
+function replaceProfile(profiles: Profile[], input: Profile, original: Profile) {
+  const updated = parseProfile(input)
+  if (updated.id !== original.id) throw new Error("The profile identifier changed. Reopen this editor.")
+  const next = updateRecordIfUnchanged(profiles, original, updated, "profile")
+  assertUniqueProfileName(next, updated)
+  return next
+}
+
 function profileId() {
   const bytes = new Uint8Array(16)
   if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") crypto.getRandomValues(bytes)
@@ -775,23 +783,17 @@ export function createProfile(input: NewProfile) {
   )
 }
 
-export function updateProfile(input: Profile) {
+export function updateProfile(input: Profile, original: Profile) {
   return withStorageMode(
     () => transact<Profile[]>("readwrite", (store, complete, fail) => loadWorkspace(store, workspace => {
       try {
-        const updated = parseProfile(input)
-        if (!workspace.profiles.some(profile => profile.id === updated.id)) throw new Error("That profile no longer exists. Reload and try again.")
-        assertUniqueProfileName(workspace.profiles, updated)
-        const profiles = workspace.profiles.map(profile => profile.id === updated.id ? updated : profile)
+        const profiles = replaceProfile(workspace.profiles, input, original)
         store.put(profiles, profileListKey)
         complete(profiles)
       } catch (error) { fail(error) }
     }, fail)),
     () => updateEncryptedWorkspace((image, workspace) => {
-      const updated = parseProfile(input)
-      if (!workspace.profiles.some(profile => profile.id === updated.id)) throw new Error("That profile no longer exists. Reload and try again.")
-      assertUniqueProfileName(workspace.profiles, updated)
-      const profiles = workspace.profiles.map(profile => profile.id === updated.id ? updated : profile)
+      const profiles = replaceProfile(workspace.profiles, input, original)
       image.set(profileListKey, profiles)
       return profiles
     }),

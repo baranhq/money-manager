@@ -266,6 +266,7 @@ export function MoneyManager() {
       }
       setLockedState(false)
       await load()
+      window.dispatchEvent(new Event("money-manager-preferences"))
       securityChannel.current?.postMessage("unlocked")
       return true
     } catch (error) {
@@ -418,9 +419,9 @@ export function MoneyManager() {
     notify(`Switched to ${profile.name.trim()}`)
   }
 
-  async function editAccountProfile(profile: Profile) {
+  async function editAccountProfile(profile: Profile, original: Profile) {
     const epoch = securityEpoch.current
-    const next = await updateStoredProfile(profile)
+    const next = await updateStoredProfile(profile, original)
     if (siteLockedRef.current || epoch !== securityEpoch.current) return
     setProfiles(next)
     channel.current?.postMessage("updated")
